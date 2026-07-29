@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# KIS Creativity Space
 
-## Getting Started
+Next.js site for the KIS school makerspace, matching design handoff v3 (Resources, Schedule, About, Admin).
 
-First, run the development server:
+## Pages
+
+| Route | Description |
+|-------|-------------|
+| `/` | Resources — live inventory, filters, inline reserve |
+| `/schedule` | Room booking by class period (P1–P8), one week ahead |
+| `/about` | About the space |
+| `/admin` | Teacher inventory management |
+| `/equipment/[qrCode]` | QR landing page |
+
+## Setup
 
 ```bash
+npm install
+cp .env.example .env.local
+# add Supabase URL + publishable key
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Run all migrations in `supabase/migrations/` (001–005) in the Supabase SQL editor.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Teacher account
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Create a user in Supabase Auth
+2. Insert into `teachers`:
 
-## Learn More
+```sql
+insert into public.teachers (id, email)
+values ('<auth-user-uuid>', 'teacher@school.edu');
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Env
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+See `.env.example` for Supabase and Telegram channel variables.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Design notes
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Background: white (`#ffffff`)
+- Accent: `#c8102e` / black `#141414`
+- Body `#3f3b33` · secondary `#6d6759` · faint `#98917f`
+- Type: Manrope + IBM Plex Mono
+- Inventory uses `quantity_available` + `quantity_total`; serials in `equipment_units`
+- Period bookings live in `period_bookings`
