@@ -6,6 +6,7 @@ import type {
   EquipmentUnit,
   EquipmentWithUnits,
   PeriodBooking,
+  Reservation,
   SiteSettings,
 } from "@/lib/types";
 
@@ -90,6 +91,50 @@ export async function getEquipmentWithUnits(): Promise<EquipmentWithUnits[]> {
     ...item,
     units: byEquipment.get(item.id) ?? [],
   }));
+}
+
+function normalizeReservation(row: Record<string, unknown>): Reservation {
+  const daysRaw = row.days;
+  const days = Array.isArray(daysRaw)
+    ? daysRaw.map((d) => String(d))
+    : [];
+  return {
+    id: String(row.id),
+    equipment_id: String(row.equipment_id),
+    name: String(row.name ?? ""),
+    qty: Number(row.qty ?? 1),
+    days,
+    period_start:
+      row.period_start == null ? null : Number(row.period_start),
+    period_end: row.period_end == null ? null : Number(row.period_end),
+    status: (row.status as Reservation["status"]) ?? "reserved",
+    out_qty: Number(row.out_qty ?? 0),
+    source: (row.source as Reservation["source"]) ?? "web",
+    created_at: String(row.created_at ?? ""),
+    out_at: row.out_at ? String(row.out_at) : null,
+    returned_at: row.returned_at ? String(row.returned_at) : null,
+  };
+}
+
+/** Active reservations (not returned) for availability math + OUT bands. */
+export async function getActiveReservations(): Promise<Reservation[]> {
+  if (!hasSupabaseEnv()) return [];
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("reservations")
+    .select("*")
+    .neq("status", "returned")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Failed to load reservations:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row) =>
+    normalizeReservation(row as Record<string, unknown>),
+  );
 }
 
 export async function getEquipmentByQrCode(

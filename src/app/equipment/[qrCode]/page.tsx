@@ -3,7 +3,6 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getEquipmentByQrCode } from "@/lib/data";
-import { equipmentQrUrl } from "@/lib/qr";
 import { stockStatus, statusDotColor } from "@/lib/inventory";
 
 type PageProps = {
@@ -27,6 +26,9 @@ export default async function EquipmentQrPage({ params }: PageProps) {
       <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-[#3f3b33]">
         {item.detail}
       </p>
+      <p className="mt-4 font-mono text-[12px] tracking-wide text-[#98917f]">
+        {item.qr_code}
+      </p>
       <p className="mt-8 flex items-center gap-3 font-mono text-[11px] tracking-[0.12em] text-[#6d6759]">
         <span
           className="inline-block h-[7px] w-[7px] rounded-full"
@@ -46,10 +48,6 @@ export default async function EquipmentQrPage({ params }: PageProps) {
           Schedule the space
         </Link>
       </div>
-
-      <p className="mt-10 text-sm text-[#6d6759]">
-        Scanned from {equipmentQrUrl(item.qr_code)}.
-      </p>
     </div>
   );
 }

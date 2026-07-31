@@ -29,15 +29,34 @@ export type SiteSettings = {
   max_reservation_days: number;
 };
 
+export type ReservationStatus = "reserved" | "out" | "returned";
+export type ReservationSource = "web" | "app" | "web-admin";
+
 export type Reservation = {
   id: string;
   equipment_id: string;
   name: string;
-  email: string | null;
-  start_date: string | null;
-  end_date: string | null;
-  status: "pending" | "confirmed" | "cancelled" | "returned";
+  qty: number;
+  days: string[];
+  period_start: number | null;
+  period_end: number | null;
+  status: ReservationStatus;
+  out_qty: number;
+  source: ReservationSource;
   created_at: string;
+  out_at: string | null;
+  returned_at: string | null;
+};
+
+export type ActivityEvent = {
+  id: string;
+  type: "reserve" | "checkout" | "checkin" | "add" | "remove" | "edit" | "sync";
+  item_id: string | null;
+  reservation_id: string | null;
+  actor: string;
+  source: "WEBSITE" | "THIS PHONE" | "ADMIN" | "AUTO";
+  at: string;
+  message: string;
 };
 
 export type PeriodBooking = {

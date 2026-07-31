@@ -1,7 +1,3 @@
-export function getAppUrl() {
-  return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-}
-
 export function getTelegramChannelUrl() {
   const direct = process.env.NEXT_PUBLIC_TELEGRAM_CHANNEL_URL?.trim();
   if (direct) return direct;

@@ -1,15 +1,15 @@
 # KIS Creativity Space
 
-Next.js site for the KIS school makerspace, matching design handoff v3 (Resources, Schedule, About, Admin).
+Next.js site for the KIS school makerspace, matching design handoff v5 (Resources, Schedule, About, Admin) and the shared [docs/DATA-CONTRACT.md](docs/DATA-CONTRACT.md) with the Flutter companion app.
 
 ## Pages
 
 | Route | Description |
 |-------|-------------|
-| `/` | Resources — live inventory, filters, inline reserve |
+| `/` | Resources — live inventory, date/period reservations, OUT bands |
 | `/schedule` | Room booking by class period (P1–P8), one week ahead |
 | `/about` | About the space |
-| `/admin` | Teacher inventory management |
+| `/admin` | Teacher inventory + loans band + check out/in by code + print QR labels |
 | `/equipment/[qrCode]` | QR landing page |
 
 ## Setup
@@ -21,17 +21,19 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Run all migrations in `supabase/migrations/` (001–005) in the Supabase SQL editor.
+Run all migrations in `supabase/migrations/` (**001–007**) in the Supabase SQL editor.
 
-### Teacher account
+### Admin access
 
-1. Create a user in Supabase Auth
-2. Insert into `teachers`:
+1. Create a user in Supabase Auth (Authentication → Users)
+2. Insert that user into `teachers`:
 
 ```sql
 insert into public.teachers (id, email)
 values ('<auth-user-uuid>', 'teacher@school.edu');
 ```
+
+3. Open `/admin` and sign in with that email and password
 
 ## Env
 

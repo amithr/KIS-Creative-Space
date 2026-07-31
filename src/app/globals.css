@@ -102,3 +102,23 @@ a:hover {
     padding-right: 20px;
   }
 }
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .qr-label {
+    break-inside: avoid;
+  }
+
+  #qr-label-sheet {
+    border: none !important;
+    padding: 0 !important;
+  }
+
+  body {
+    background: #fff;
+  }
+}
+

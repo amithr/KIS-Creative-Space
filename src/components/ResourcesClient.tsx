@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
-import { reserveItemInline } from "@/app/actions/public";
+import { useMemo, useState } from "react";
 import { AREA_FILTERS } from "@/lib/constants";
 import {
   formatUpdatedLabel,
@@ -10,11 +9,22 @@ import {
   statusDotColor,
   stockStatus,
 } from "@/lib/inventory";
-import type { Equipment, TelegramPost } from "@/lib/types";
+import {
+  itemHasNearTermAvailability,
+  outLoansForItem,
+} from "@/lib/reservation-availability";
+import type { Equipment, Reservation, TelegramPost } from "@/lib/types";
 import { SiteFooter } from "@/components/SiteFooter";
+import {
+  OutStatusBand,
+  ReservationReceipt,
+  ReservePanel,
+  type ReceiptState,
+} from "@/components/ReservePanel";
 
 type ResourcesClientProps = {
   equipment: Equipment[];
+  reservations: Reservation[];
   showTelegram: boolean;
   telegramPosts: TelegramPost[];
   telegramUrl: string | null;
@@ -23,19 +33,20 @@ type ResourcesClientProps = {
 
 export function ResourcesClient({
   equipment: initial,
+  reservations: initialReservations,
   showTelegram,
   telegramPosts,
   telegramUrl,
   telegramHandle,
 }: ResourcesClientProps) {
-  const [items, setItems] = useState(initial);
+  const [items] = useState(initial);
+  const [reservations, setReservations] = useState(initialReservations);
   const [cat, setCat] = useState<(typeof AREA_FILTERS)[number]>("All");
   const [query, setQuery] = useState("");
   const [reservingId, setReservingId] = useState<string | null>(null);
-  const [reserveName, setReserveName] = useState("");
-  const [error, setError] = useState("");
-  const [pending, startTransition] = useTransition();
+  const [receipts, setReceipts] = useState<Record<string, ReceiptState>>({});
   const [tgIndex, setTgIndex] = useState(0);
+  const [isMobileReserve, setIsMobileReserve] = useState(false);
 
   const q = query.trim().toLowerCase();
   const rows = items.filter((d) => {
@@ -46,6 +57,26 @@ export function ResourcesClient({
       !q || `${d.name} ${d.detail} ${d.area}`.toLowerCase().includes(q);
     return catOk && queryOk;
   });
+
+  const reservingItem = useMemo(
+    () => items.find((i) => i.id === reservingId) ?? null,
+    [items, reservingId],
+  );
+
+  function openReserve(id: string, mobile: boolean) {
+    setReservingId(id);
+    setIsMobileReserve(mobile);
+    setReceipts((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }
+
+  function closeReserve() {
+    setReservingId(null);
+    setIsMobileReserve(false);
+  }
 
   return (
     <div className="flex min-h-[calc(100vh-73px)] flex-col">
@@ -192,7 +223,11 @@ export function ResourcesClient({
                 item.quantity_total,
               );
               const isNew = isNewItem(item);
-              const isReserving = reservingId === item.id;
+              const isReserving = reservingId === item.id && !isMobileReserve;
+              const canReserve = itemHasNearTermAvailability(item, reservations);
+              const loans = outLoansForItem(reservations, item.id);
+              const receipt = receipts[item.id];
+
               return (
                 <div key={item.id}>
                   <div className="hidden grid-cols-[44px_2.2fr_1.1fr_100px_120px_120px] items-center gap-4 border-b border-[#eeece5] py-4 transition-colors hover:bg-[#f7f7f5] md:grid">
@@ -229,27 +264,30 @@ export function ResourcesClient({
                       {status}
                     </span>
                     <div>
-                      {item.quantity_available > 0 && !isReserving ? (
+                      {isReserving ? (
                         <button
                           type="button"
-                          onClick={() => {
-                            setReservingId(item.id);
-                            setReserveName("");
-                            setError("");
-                          }}
+                          onClick={closeReserve}
+                          className="w-full border border-[#141414] py-[7px] text-[12.5px] font-semibold"
+                        >
+                          Cancel ×
+                        </button>
+                      ) : canReserve ? (
+                        <button
+                          type="button"
+                          onClick={() => openReserve(item.id, false)}
                           className="w-full border border-[#141414] py-[7px] text-[12.5px] font-semibold transition-colors hover:bg-[#141414] hover:text-white"
                         >
                           Reserve
                         </button>
-                      ) : item.quantity_available <= 0 ? (
+                      ) : (
                         <span className="block text-center text-[12.5px] text-[#98917f]">
                           —
                         </span>
-                      ) : null}
+                      )}
                     </div>
                   </div>
 
-                  {/* mobile card */}
                   <div className="border-b border-[#eeece5] py-4 md:hidden">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -275,14 +313,10 @@ export function ResourcesClient({
                         <span className="font-mono text-[13px] text-[#6d6759]">
                           {item.quantity_available} / {item.quantity_total}
                         </span>
-                        {item.quantity_available > 0 && !isReserving && (
+                        {canReserve && (
                           <button
                             type="button"
-                            onClick={() => {
-                              setReservingId(item.id);
-                              setReserveName("");
-                              setError("");
-                            }}
+                            onClick={() => openReserve(item.id, true)}
                             className="border border-[#141414] bg-white px-4 py-[7px] text-[12.5px] font-semibold"
                           >
                             Reserve
@@ -292,71 +326,65 @@ export function ResourcesClient({
                     </div>
                   </div>
 
-                  {isReserving && (
-                    <div className="border-b border-[#eeece5] bg-[#f7f7f5] px-4 py-4 md:px-0">
-                      <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4 md:pl-[60px]">
-                        <span className="font-mono text-[10px] tracking-[0.14em] text-[#6d6759]">
-                          RESERVE 1×
-                        </span>
-                        <input
-                          value={reserveName}
-                          onChange={(e) => setReserveName(e.target.value)}
-                          placeholder="Your name and class (e.g. Ms. Bondar, 7B)"
-                          className="min-w-0 flex-1 border border-[#e3e0d8] bg-white px-3 py-2.5 text-[13px] outline-none focus:border-[#141414]"
-                        />
-                        <div className="flex items-center gap-4">
-                          <button
-                            type="button"
-                            disabled={pending}
-                            onClick={() =>
-                              startTransition(async () => {
-                                setError("");
-                                const result = await reserveItemInline(
-                                  item.id,
-                                  reserveName,
-                                );
-                                if (!result.ok) {
-                                  setError(result.error);
-                                  return;
-                                }
-                                setItems((prev) =>
-                                  prev.map((it) =>
-                                    it.id === item.id
-                                      ? {
-                                          ...it,
-                                          quantity_available: Math.max(
-                                            0,
-                                            it.quantity_available - 1,
-                                          ),
-                                        }
-                                      : it,
-                                  ),
-                                );
-                                setReservingId(null);
-                                setReserveName("");
-                              })
-                            }
-                            className="bg-[#c8102e] px-4 py-2.5 text-[13px] font-medium text-white transition-colors hover:bg-[#a50d26] disabled:opacity-60"
-                          >
-                            Confirm
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setReservingId(null);
-                              setError("");
-                            }}
-                            className="text-[13px] text-[#3f3b33]"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                      {error && (
-                        <p className="mt-2 text-[13px] text-[#c8102e] md:pl-[60px]">
-                          {error}
-                        </p>
-                      )}
+                  {loans.map((loan) => (
+                    <OutStatusBand key={loan.id} loan={loan} />
+                  ))}
+
+                  {receipt && (
+                    <ReservationReceipt
+                      receipt={receipt}
+                      onDismiss={() =>
+                        setReceipts((prev) => {
+                          const next = { ...prev };
+                          delete next[item.id];
+                          return next;
+                        })
+                      }
+                      onUndone={() => {
+                        setReservations((prev) =>
+                          prev.filter((r) => r.id !== receipt.reservationId),
+                        );
+                        setReceipts((prev) => {
+                          const next = { ...prev };
+                          delete next[item.id];
+                          return next;
+                        });
+                      }}
+                    />
+                  )}
+
+                  {isReserving && reservingItem && (
+                    <div className="hidden md:block">
+                      <ReservePanel
+                        item={reservingItem}
+                        reservations={reservations}
+                        variant="inline"
+                        onClose={closeReserve}
+                        onConfirmed={(r) => {
+                          setReservations((prev) => [
+                            {
+                              id: r.reservationId,
+                              equipment_id: item.id,
+                              name: r.name,
+                              qty: r.qty,
+                              days: r.days,
+                              period_start:
+                                r.periods === "all" ? null : r.periods.start,
+                              period_end:
+                                r.periods === "all" ? null : r.periods.end,
+                              status: "reserved",
+                              out_qty: 0,
+                              source: "web",
+                              created_at: new Date().toISOString(),
+                              out_at: null,
+                              returned_at: null,
+                            },
+                            ...prev,
+                          ]);
+                          setReceipts((prev) => ({ ...prev, [item.id]: r }));
+                          closeReserve();
+                        }}
+                      />
                     </div>
                   )}
                 </div>
@@ -365,6 +393,37 @@ export function ResourcesClient({
           )}
         </div>
       </section>
+
+      {reservingItem && isMobileReserve && (
+        <ReservePanel
+          item={reservingItem}
+          reservations={reservations}
+          variant="sheet"
+          onClose={closeReserve}
+          onConfirmed={(r) => {
+            setReservations((prev) => [
+              {
+                id: r.reservationId,
+                equipment_id: reservingItem.id,
+                name: r.name,
+                qty: r.qty,
+                days: r.days,
+                period_start: r.periods === "all" ? null : r.periods.start,
+                period_end: r.periods === "all" ? null : r.periods.end,
+                status: "reserved",
+                out_qty: 0,
+                source: "web",
+                created_at: new Date().toISOString(),
+                out_at: null,
+                returned_at: null,
+              },
+              ...prev,
+            ]);
+            setReceipts((prev) => ({ ...prev, [reservingItem.id]: r }));
+            closeReserve();
+          }}
+        />
+      )}
 
       <div className="page-gutter sticky bottom-4 z-20 pb-6 md:hidden">
         <Link

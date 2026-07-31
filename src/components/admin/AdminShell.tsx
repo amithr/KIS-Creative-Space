@@ -1,14 +1,19 @@
 import Link from "next/link";
 import { signOut } from "@/app/admin/actions";
 import { isTeacher } from "@/lib/data";
-import { redirect } from "next/navigation";
 
-export async function AdminShell({ children }: { children: React.ReactNode }) {
-  const teacher = await isTeacher();
+export async function AdminShell({
+  children,
+  authenticated,
+}: {
+  children: React.ReactNode;
+  authenticated?: boolean;
+}) {
+  const signedIn = authenticated ?? (await isTeacher());
 
   return (
     <div className="min-h-screen bg-white text-[#141414]">
-      <header className="page-gutter flex items-center justify-between border-b border-[#e3e0d8] py-5">
+      <header className="no-print page-gutter flex items-center justify-between border-b border-[#e3e0d8] py-5">
         <div className="flex items-center gap-2.5">
           <span className="block h-[9px] w-[9px] rounded-full bg-[#c8102e]" />
           <Link href="/" className="text-[13px] font-semibold tracking-[0.14em]">
@@ -20,7 +25,7 @@ export async function AdminShell({ children }: { children: React.ReactNode }) {
         </div>
         <div className="flex items-center gap-5 text-[13px]">
           <Link href="/">← Back to resources</Link>
-          {teacher && (
+          {signedIn && (
             <form action={signOut}>
               <button
                 type="submit"
@@ -35,9 +40,4 @@ export async function AdminShell({ children }: { children: React.ReactNode }) {
       <main>{children}</main>
     </div>
   );
-}
-
-export async function requireTeacherPage() {
-  const teacher = await isTeacher();
-  if (!teacher) redirect("/admin/login");
 }

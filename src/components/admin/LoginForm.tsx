@@ -11,8 +11,8 @@ export function LoginForm({ errorMessage }: { errorMessage?: string }) {
       </p>
       <h1 className="mt-3 font-display text-3xl font-normal">Admin access</h1>
       <p className="mt-3 text-sm leading-relaxed text-[#3f3b33]">
-        Sign in to manage equipment inventory and site settings. Only registered
-        teachers can access this area.
+        Sign in with your Supabase account to manage equipment inventory. Only
+        registered teachers can access this area.
       </p>
 
       <label className="mt-8 block text-sm">
@@ -22,6 +22,7 @@ export function LoginForm({ errorMessage }: { errorMessage?: string }) {
           type="email"
           required
           autoComplete="email"
+          autoFocus
           className="mt-2 w-full border border-[#d8d4c9] px-3 py-2.5 outline-none focus:border-[#141414]"
         />
       </label>

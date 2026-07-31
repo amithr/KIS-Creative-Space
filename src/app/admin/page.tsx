@@ -1,16 +1,50 @@
 export const dynamic = "force-dynamic";
 
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
-import { AdminShell, requireTeacherPage } from "@/components/admin/AdminShell";
-import { getEquipmentWithUnits } from "@/lib/data";
+import { AdminShell } from "@/components/admin/AdminShell";
+import { LoginForm } from "@/components/admin/LoginForm";
+import {
+  getActiveReservations,
+  getEquipmentWithUnits,
+  isTeacher,
+} from "@/lib/data";
 
-export default async function AdminPage() {
-  await requireTeacherPage();
-  const equipment = await getEquipmentWithUnits();
+const ERROR_MESSAGES: Record<string, string> = {
+  not_teacher:
+    "This account is not registered as a teacher. Ask an administrator to add you to the teachers table.",
+  auth_failed: "Your session expired. Please sign in again.",
+};
+
+type PageProps = {
+  searchParams: Promise<{ error?: string }>;
+};
+
+export default async function AdminPage({ searchParams }: PageProps) {
+  const { error } = await searchParams;
+  const authenticated = await isTeacher();
+
+  if (!authenticated) {
+    const errorMessage = error
+      ? (ERROR_MESSAGES[error] ?? decodeURIComponent(error))
+      : undefined;
+
+    return (
+      <AdminShell authenticated={false}>
+        <div className="page-gutter">
+          <LoginForm errorMessage={errorMessage} />
+        </div>
+      </AdminShell>
+    );
+  }
+
+  const [equipment, reservations] = await Promise.all([
+    getEquipmentWithUnits(),
+    getActiveReservations(),
+  ]);
 
   return (
-    <AdminShell>
-      <AdminDashboard equipment={equipment} />
+    <AdminShell authenticated>
+      <AdminDashboard equipment={equipment} reservations={reservations} />
     </AdminShell>
   );
 }
