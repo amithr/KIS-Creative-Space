@@ -5,9 +5,10 @@ import type {
   Equipment,
   EquipmentUnit,
   EquipmentWithUnits,
-  PeriodBooking,
   Reservation,
   SiteSettings,
+  SpaceBlock,
+  SpaceBooking,
 } from "@/lib/types";
 
 function hasSupabaseEnv() {
@@ -181,25 +182,122 @@ export async function getEquipmentById(id: string): Promise<Equipment | null> {
   return data ? normalizeEquipment(data) : null;
 }
 
+function normalizeSpaceBooking(row: Record<string, unknown>): SpaceBooking {
+  return {
+    id: String(row.id),
+    booking_date: String(row.booking_date),
+    period: Number(row.period),
+    teacher_name: String(row.teacher_name ?? ""),
+    purpose: (row.purpose as string | null) ?? null,
+    area: (row.area as string | null) ?? null,
+    request_group: (row.request_group as string | null) ?? null,
+    status: (row.status as SpaceBooking["status"]) ?? "confirmed",
+    created_at: String(row.created_at ?? ""),
+    decided_at: (row.decided_at as string | null) ?? null,
+    decided_by: (row.decided_by as string | null) ?? null,
+    decline_reason: (row.decline_reason as string | null) ?? null,
+  };
+}
+
+/** Active slots for the public schedule grid (pending + confirmed). */
 export async function getPeriodBookings(
   from: string,
   to: string,
-): Promise<PeriodBooking[]> {
+): Promise<SpaceBooking[]> {
+  return getSpaceBookings(from, to, ["pending", "confirmed"]);
+}
+
+export async function getSpaceBookings(
+  from: string,
+  to: string,
+  statuses?: SpaceBooking["status"][],
+): Promise<SpaceBooking[]> {
+  if (!hasSupabaseEnv()) return [];
+
+  const supabase = await createClient();
+  let query = supabase
+    .from("space_bookings")
+    .select("*")
+    .gte("booking_date", from)
+    .lte("booking_date", to)
+    .order("booking_date")
+    .order("period");
+
+  if (statuses?.length) {
+    query = query.in("status", statuses);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Failed to load space bookings:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row) =>
+    normalizeSpaceBooking(row as Record<string, unknown>),
+  );
+}
+
+/** Upcoming admin queue: pending any date + confirmed from today forward. */
+export async function getAdminSpaceBookings(): Promise<SpaceBooking[]> {
+  if (!hasSupabaseEnv()) return [];
+
+  const today = new Date();
+  const from = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("space_bookings")
+    .select("*")
+    .or(
+      `status.eq.pending,and(status.eq.confirmed,booking_date.gte.${from})`,
+    )
+    .order("booking_date")
+    .order("period");
+
+  if (error) {
+    console.error("Failed to load admin space bookings:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row) =>
+    normalizeSpaceBooking(row as Record<string, unknown>),
+  );
+}
+
+function normalizeSpaceBlock(row: Record<string, unknown>): SpaceBlock {
+  return {
+    id: String(row.id),
+    repeat: (row.repeat as SpaceBlock["repeat"]) ?? "once",
+    block_date: (row.block_date as string | null) ?? null,
+    dow: (row.dow as SpaceBlock["dow"] | null) ?? null,
+    until_date: (row.until_date as string | null) ?? null,
+    period_from: Number(row.period_from),
+    period_to: Number(row.period_to),
+    reason: String(row.reason ?? "Blocked"),
+    created_at: String(row.created_at ?? ""),
+  };
+}
+
+/** Newest first — admin list + schedule grid. */
+export async function getSpaceBlocks(): Promise<SpaceBlock[]> {
   if (!hasSupabaseEnv()) return [];
 
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from("period_bookings")
+    .from("space_blocks")
     .select("*")
-    .gte("booking_date", from)
-    .lte("booking_date", to);
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Failed to load period bookings:", error.message);
+    console.error("Failed to load space blocks:", error.message);
     return [];
   }
 
-  return data ?? [];
+  return (data ?? []).map((row) =>
+    normalizeSpaceBlock(row as Record<string, unknown>),
+  );
 }
 
 export async function getSiteSettings(): Promise<SiteSettings> {

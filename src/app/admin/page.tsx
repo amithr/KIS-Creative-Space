@@ -5,7 +5,9 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { LoginForm } from "@/components/admin/LoginForm";
 import {
   getActiveReservations,
+  getAdminSpaceBookings,
   getEquipmentWithUnits,
+  getSpaceBlocks,
   isTeacher,
 } from "@/lib/data";
 
@@ -37,14 +39,22 @@ export default async function AdminPage({ searchParams }: PageProps) {
     );
   }
 
-  const [equipment, reservations] = await Promise.all([
-    getEquipmentWithUnits(),
-    getActiveReservations(),
-  ]);
+  const [equipment, reservations, spaceBookings, spaceBlocks] =
+    await Promise.all([
+      getEquipmentWithUnits(),
+      getActiveReservations(),
+      getAdminSpaceBookings(),
+      getSpaceBlocks(),
+    ]);
 
   return (
     <AdminShell authenticated>
-      <AdminDashboard equipment={equipment} reservations={reservations} />
+      <AdminDashboard
+        equipment={equipment}
+        reservations={reservations}
+        spaceBookings={spaceBookings}
+        spaceBlocks={spaceBlocks}
+      />
     </AdminShell>
   );
 }

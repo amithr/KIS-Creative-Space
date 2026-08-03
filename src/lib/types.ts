@@ -59,11 +59,44 @@ export type ActivityEvent = {
   message: string;
 };
 
-export type PeriodBooking = {
+export type SpaceBookingStatus =
+  | "pending"
+  | "confirmed"
+  | "declined"
+  | "cancelled";
+
+/** Room / makerspace period request (not an item reservation). */
+export type SpaceBooking = {
   id: string;
   booking_date: string;
   period: number;
   teacher_name: string;
+  purpose: string | null;
+  area: string | null;
+  request_group: string | null;
+  status: SpaceBookingStatus;
+  created_at: string;
+  decided_at: string | null;
+  decided_by: string | null;
+  decline_reason: string | null;
+};
+
+/** @deprecated Use SpaceBooking */
+export type PeriodBooking = SpaceBooking;
+
+export type SpaceBlockRepeat = "once" | "weekly";
+export type SpaceBlockDow = "MON" | "TUE" | "WED" | "THU" | "FRI";
+
+/** Admin-created closed periods on the public schedule. */
+export type SpaceBlock = {
+  id: string;
+  repeat: SpaceBlockRepeat;
+  block_date: string | null;
+  dow: SpaceBlockDow | null;
+  until_date: string | null;
+  period_from: number;
+  period_to: number;
+  reason: string;
   created_at: string;
 };
 

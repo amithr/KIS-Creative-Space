@@ -2,16 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { hasSupabaseEnv } from "@/lib/data";
+import { getSpaceBlocks, hasSupabaseEnv } from "@/lib/data";
 import { isBookableDate, startOfDay, toISODate } from "@/lib/inventory";
 import {
   qtyCapForSelection,
   type PeriodSelection,
 } from "@/lib/reservation-availability";
+import { findBlock } from "@/lib/space-blocks";
 import type { Reservation } from "@/lib/types";
 
 export type ActionResult =
-  | { ok: true; reservationId?: string }
+  | { ok: true; reservationId?: string; bookingId?: string }
   | { ok: false; error: string };
 
 export type CreateReservationInput = {
@@ -218,6 +219,8 @@ export async function createPeriodBooking(
   bookingDate: string,
   period: number,
   teacherName: string,
+  purpose?: string,
+  area?: string,
 ): Promise<ActionResult> {
   const name = teacherName.trim();
   if (!name) return { ok: false, error: "Enter your name." };
@@ -232,39 +235,67 @@ export async function createPeriodBooking(
     return { ok: true };
   }
 
+  const blocks = await getSpaceBlocks();
+  const blocked = findBlock(blocks, bookingDate, period);
+  if (blocked) {
+    return {
+      ok: false,
+      error: `That period is blocked (${blocked.reason}).`,
+    };
+  }
+
   const supabase = await createClient();
-  const { error } = await supabase.from("period_bookings").insert({
-    booking_date: bookingDate,
-    period,
-    teacher_name: name,
-  });
+  const { data, error } = await supabase
+    .from("space_bookings")
+    .insert({
+      booking_date: bookingDate,
+      period,
+      teacher_name: name,
+      purpose: purpose?.trim() || null,
+      area: area?.trim() || null,
+      status: "pending",
+    })
+    .select("id")
+    .single();
 
   if (error) {
-    if (error.code === "23505") {
-      return { ok: false, error: "That period is already booked." };
-    }
     return { ok: false, error: error.message };
   }
 
   revalidatePath("/schedule");
-  return { ok: true };
+  revalidatePath("/admin");
+  return { ok: true, bookingId: data?.id as string | undefined };
 }
 
+/** Soft-cancel a pending or confirmed space request (public schedule). */
 export async function cancelPeriodBooking(
-  bookingDate: string,
-  period: number,
+  bookingId: string,
 ): Promise<ActionResult> {
+  if (!bookingId) return { ok: false, error: "Missing booking." };
   if (!hasSupabaseEnv()) return { ok: true };
 
   const supabase = await createClient();
+  const { data: existing, error: loadError } = await supabase
+    .from("space_bookings")
+    .select("id, status")
+    .eq("id", bookingId)
+    .maybeSingle();
+
+  if (loadError) return { ok: false, error: loadError.message };
+  if (!existing) return { ok: false, error: "Booking not found." };
+  if (existing.status !== "pending" && existing.status !== "confirmed") {
+    return { ok: false, error: "That request is no longer active." };
+  }
+
   const { error } = await supabase
-    .from("period_bookings")
-    .delete()
-    .eq("booking_date", bookingDate)
-    .eq("period", period);
+    .from("space_bookings")
+    .update({ status: "cancelled" })
+    .eq("id", bookingId)
+    .in("status", ["pending", "confirmed"]);
 
   if (error) return { ok: false, error: error.message };
 
   revalidatePath("/schedule");
+  revalidatePath("/admin");
   return { ok: true };
 }

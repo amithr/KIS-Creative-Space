@@ -543,3 +543,188 @@ export async function updateMaxReservationDays(days: number) {
   revalidatePath("/checkout");
   revalidatePath("/admin");
 }
+
+export type SpaceBookingActionResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
+function revalidateSpace() {
+  revalidatePath("/schedule");
+  revalidatePath("/admin");
+}
+
+/** Idempotent: already-decided requests are a no-op success. */
+export async function confirmSpaceBooking(
+  bookingId: string,
+): Promise<SpaceBookingActionResult> {
+  const { supabase, user } = await requireTeacher();
+
+  const { data: existing, error: loadError } = await supabase
+    .from("space_bookings")
+    .select("id, status")
+    .eq("id", bookingId)
+    .maybeSingle();
+
+  if (loadError) return { ok: false, error: loadError.message };
+  if (!existing) return { ok: false, error: "Booking not found." };
+  if (existing.status !== "pending") {
+    revalidateSpace();
+    return { ok: true };
+  }
+
+  const { error } = await supabase
+    .from("space_bookings")
+    .update({
+      status: "confirmed",
+      decided_at: new Date().toISOString(),
+      decided_by: user.email ?? user.id,
+      decline_reason: null,
+    })
+    .eq("id", bookingId)
+    .eq("status", "pending");
+
+  if (error) return { ok: false, error: error.message };
+  revalidateSpace();
+  return { ok: true };
+}
+
+export async function declineSpaceBooking(
+  bookingId: string,
+  reason?: string,
+): Promise<SpaceBookingActionResult> {
+  const { supabase, user } = await requireTeacher();
+
+  const { data: existing, error: loadError } = await supabase
+    .from("space_bookings")
+    .select("id, status")
+    .eq("id", bookingId)
+    .maybeSingle();
+
+  if (loadError) return { ok: false, error: loadError.message };
+  if (!existing) return { ok: false, error: "Booking not found." };
+  if (existing.status !== "pending") {
+    revalidateSpace();
+    return { ok: true };
+  }
+
+  const trimmed = reason?.trim() || null;
+  const { error } = await supabase
+    .from("space_bookings")
+    .update({
+      status: "declined",
+      decided_at: new Date().toISOString(),
+      decided_by: user.email ?? user.id,
+      decline_reason: trimmed,
+    })
+    .eq("id", bookingId)
+    .eq("status", "pending");
+
+  if (error) return { ok: false, error: error.message };
+  revalidateSpace();
+  return { ok: true };
+}
+
+export async function cancelSpaceBooking(
+  bookingId: string,
+): Promise<SpaceBookingActionResult> {
+  const { supabase, user } = await requireTeacher();
+
+  const { data: existing, error: loadError } = await supabase
+    .from("space_bookings")
+    .select("id, status")
+    .eq("id", bookingId)
+    .maybeSingle();
+
+  if (loadError) return { ok: false, error: loadError.message };
+  if (!existing) return { ok: false, error: "Booking not found." };
+  if (existing.status !== "confirmed" && existing.status !== "pending") {
+    revalidateSpace();
+    return { ok: true };
+  }
+
+  const { error } = await supabase
+    .from("space_bookings")
+    .update({
+      status: "cancelled",
+      decided_at: new Date().toISOString(),
+      decided_by: user.email ?? user.id,
+    })
+    .eq("id", bookingId)
+    .in("status", ["pending", "confirmed"]);
+
+  if (error) return { ok: false, error: error.message };
+  revalidateSpace();
+  return { ok: true };
+}
+
+export type CreateSpaceBlockInput = {
+  repeat: "once" | "weekly";
+  blockDate?: string;
+  dow?: "MON" | "TUE" | "WED" | "THU" | "FRI";
+  untilDate?: string;
+  periodFrom: number;
+  periodTo: number;
+  reason?: string;
+};
+
+export async function createSpaceBlock(
+  input: CreateSpaceBlockInput,
+): Promise<SpaceBookingActionResult> {
+  const { supabase } = await requireTeacher();
+
+  const from = Math.min(input.periodFrom, input.periodTo);
+  const to = Math.max(input.periodFrom, input.periodTo);
+  if (from < 1 || to > 8) {
+    return { ok: false, error: "Periods must be between P1 and P8." };
+  }
+
+  const reason = input.reason?.trim() || "Blocked";
+
+  if (input.repeat === "once") {
+    const date = input.blockDate?.trim();
+    if (!date) return { ok: false, error: "Pick a date." };
+    const { error } = await supabase.from("space_blocks").insert({
+      repeat: "once",
+      block_date: date,
+      dow: null,
+      until_date: null,
+      period_from: from,
+      period_to: to,
+      reason,
+    });
+    if (error) return { ok: false, error: error.message };
+  } else {
+    const dow = input.dow;
+    if (!dow) return { ok: false, error: "Pick a weekday." };
+    const until = input.untilDate?.trim() || null;
+    const { error } = await supabase.from("space_blocks").insert({
+      repeat: "weekly",
+      block_date: null,
+      dow,
+      until_date: until,
+      period_from: from,
+      period_to: to,
+      reason,
+    });
+    if (error) return { ok: false, error: error.message };
+  }
+
+  revalidateSpace();
+  return { ok: true };
+}
+
+export async function deleteSpaceBlock(
+  blockId: string,
+): Promise<SpaceBookingActionResult> {
+  const { supabase } = await requireTeacher();
+  if (!blockId) return { ok: false, error: "Missing block." };
+
+  const { error } = await supabase
+    .from("space_blocks")
+    .delete()
+    .eq("id", blockId);
+
+  if (error) return { ok: false, error: error.message };
+  revalidateSpace();
+  return { ok: true };
+}

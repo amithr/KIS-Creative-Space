@@ -1,0 +1,13 @@
+---
+description: Design handoff rules for the Block Periods feature (KIS Creativity Space)
+alwaysApply: false
+---
+
+When implementing the Block Periods feature:
+
+- The spec is handoff_cursor_block_periods/README.md — treat it as the source of truth for data model, applicability rule, precedence, colors, type, and spacing. Values are exact, not suggestions.
+- designs/*.dc.html are HTML prototypes for behavior reference only. Never copy their markup, the DCLogic classes, or support.js into the codebase.
+- Reuse the app's existing design tokens/components where they already match (black #141414, red #c8102e, hairline #e3e0d8, Manrope + IBM Plex Mono).
+- Blocks never mutate or delete bookings — overlaps only produce the warning band at creation time.
+- Enforce block applicability server-side when accepting schedule booking requests, not just in the UI.
+- Period range is inclusive and normalized (from ≤ to). Weekly blocks match by weekday MON–FRI with optional inclusive "until" date.

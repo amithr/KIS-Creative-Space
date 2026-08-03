@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { ScheduleClient } from "@/components/ScheduleClient";
-import { getPeriodBookings } from "@/lib/data";
+import { getPeriodBookings, getSpaceBlocks } from "@/lib/data";
 import {
   mondayOfWeek,
   startOfDay,
@@ -15,7 +15,12 @@ export default async function SchedulePage() {
   toDate.setDate(toDate.getDate() + 4);
   const to = toISODate(toDate);
 
-  const bookings = await getPeriodBookings(from, to);
+  const [bookings, blocks] = await Promise.all([
+    getPeriodBookings(from, to),
+    getSpaceBlocks(),
+  ]);
 
-  return <ScheduleClient initialBookings={bookings} />;
+  return (
+    <ScheduleClient initialBookings={bookings} initialBlocks={blocks} />
+  );
 }

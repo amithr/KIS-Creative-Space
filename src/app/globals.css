@@ -25,26 +25,29 @@
   --font-mono: var(--font-ibm-plex-mono);
 }
 
-html {
-  background: #ffffff;
-}
+@layer base {
+  html {
+    background: #ffffff;
+  }
 
-body {
-  margin: 0;
-  background: #ffffff;
-  color: var(--kis-fg);
-  font-family: var(--font-manrope), system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
-}
+  body {
+    margin: 0;
+    background: #ffffff;
+    color: var(--kis-fg);
+    font-family: var(--font-manrope), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
 
-a {
-  color: inherit;
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
+  /* Keep in @layer base so utilities like text-white can override on pill buttons */
+  a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
 
-a:hover {
-  color: var(--kis-red);
+  a:hover {
+    color: var(--kis-red);
+  }
 }
 
 @keyframes fade-up {

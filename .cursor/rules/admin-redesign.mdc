@@ -1,0 +1,14 @@
+---
+description: KIS admin page — flat design system rules (tabs, underline inputs, section headers)
+globs:
+alwaysApply: false
+---
+
+When working on the KIS Creativity Space admin page:
+
+- Two pill tabs split the page: "Space bookings" (booking requests, block periods) and "Items & inventory" (checked-out, check-out/in, QR labels, add item, inventory table). Pills: radius 999px; selected bg #141414/text #fff; unselected border #e3e0d8/text #6d6759. Space pill carries a red #c8102e pending-count badge.
+- Flat aesthetic: no panel borders or card boxes; sections separate by whitespace (44px) + a 19px/600 section title. No row separator lines. Exceptions: "Currently checked out" keeps a #fdf8ec background band; printed QR labels keep a 1px #141414 border.
+- Inputs/selects: underline style only — border: none; border-bottom: 1px solid #e3e0d8; transparent bg; radius 0; focus underline #141414.
+- Mono sub-labels: IBM Plex Mono, 10–10.5px, 0.14–0.16em tracking, #6d6759, uppercase.
+- Type: Manrope body 14–15.5px; H1 38px/400; section titles 19px/600. Muted text #6d6759 (secondary) / #857e6e (tertiary); olive metas #8f731c.
+- Buttons: primary solid #141414 (Confirm hovers #2f9e44, destructive/primary-accent hovers #c8102e); secondary 1px #e3e0d8 outline; Add item solid #c8102e. Square corners on web (no radius except pills/badges).

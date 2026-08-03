@@ -19,10 +19,42 @@ Item {
 }
 ```
 
-### Booking (room schedule) — prototype key `kis-schedule-v1`
+### SpaceBooking (room schedule) — prototype key `kis-schedule-v1`
+One row per period. Multi-period requests may share `requestGroup`. Status carries the approval lifecycle (item reservations are separate and do **not** use this).
 ```
-Booking { date: ISO date, period: 1–8, teacherName: string, createdAt: timestamp }
+SpaceBooking {
+  id: string
+  date: ISO date                 // booking_date in DB
+  period: 1–8
+  teacherName: string            // "Ms. Bondar — 7B Science"
+  purpose?: string
+  area?: string                  // e.g. "whole space"
+  requestGroup?: string          // shared uuid across multi-period rows
+  status: "pending" | "confirmed" | "declined" | "cancelled"
+  requestedAt: timestamp
+  decidedAt?: timestamp
+  decidedBy?: string             // admin identity
+  declineReason?: string         // optional one-liner to the teacher
+}
 ```
+Rules: public Schedule creates `pending`. Only `pending` and `confirmed` occupy a grid slot. Overlap is allowed with an advisory warning (never hard-block). Confirm/Decline is teacher/admin-only and idempotent.
+
+### SpaceBlock (closed periods) — prototype key `kis-blocks-v1`
+Admin-only. Closes schedule cells for a day or weekly recurrence; never deletes bookings.
+```
+SpaceBlock {
+  id: string
+  repeat: "once" | "weekly"
+  date?: ISO date              // required when once (block_date in DB)
+  dow?: "MON"|"TUE"|"WED"|"THU"|"FRI"  // required when weekly
+  until?: ISO date             // optional inclusive end for weekly
+  from: 1–8                    // period_from
+  to: 1–8                      // period_to (from ≤ to)
+  reason: string               // shown on the public grid; default "Blocked"
+  at: timestamp
+}
+```
+Applicability: `from ≤ period ≤ to`, and once matches `date`, or weekly matches weekday and (`until` null or date ≤ until). Grid precedence: booking → past/out-of-range → blocked → open. Booking requests for blocked slots are rejected server-side.
 
 ### Reservation — prototype key `kis-reservations-v1`
 One record covers reservations AND walk-up loans; status carries the lifecycle.
@@ -56,9 +88,9 @@ ActivityEvent {
 ```
 
 ## Who writes what
-- **Web** creates/cancels `Reservation` (status `reserved`), manages `Item` stock and `Booking`. **Web admin can also check out / check in by typing an item code** (the same alphanumeric `Item.id` from the QR label) — the app resolves it by camera scan, the web by text entry; both produce identical status transitions.
-- **App** transitions reservation status: check-out (`reserved → out`, sets `outQty`), check-in (`out → returned` when `outQty` hits 0; partial returns decrement `outQty` and keep status `out`). Walk-up check-outs create a Reservation directly with `status: "out"`, `days: [today]`, `periods: "all"`, `source: "app"`. App also does full Item CRUD.
-- Both append `ActivityEvent` for every mutation.
+- **Web** creates/cancels `Reservation` (status `reserved`), manages `Item` stock, and creates `SpaceBooking` requests (`pending`) from the Schedule page. **Web admin** confirms / declines / cancels space bookings, creates/removes `SpaceBlock`s, and can check out / check in by typing an item code (the same alphanumeric `Item.id` from the QR label) — the app resolves it by camera scan, the web by text entry; both produce identical item-reservation transitions.
+- **App** transitions item reservation status: check-out (`reserved → out`, sets `outQty`), check-in (`out → returned` when `outQty` hits 0; partial returns decrement `outQty` and keep status `out`). Walk-up check-outs create a Reservation directly with `status: "out"`, `days: [today]`, `periods: "all"`, `source: "app"`. App also confirms/declines space bookings and does full Item CRUD.
+- Both append `ActivityEvent` for item mutations. Both subscribe to realtime on `space_bookings` so confirm/decline syncs instantly.
 
 ## Availability math (both clients must agree)
 - `Item.avail` is physical stock; reservations do NOT decrement it.
@@ -69,4 +101,4 @@ ActivityEvent {
 
 ## Sync rules
 - Optimistic writes with a local offline queue on the app; last-write-wins per field via server timestamps.
-- Both clients subscribe to realtime changes on `items`, `reservations`, `activity`; a status change on either side must appear on the other within ~1s when online.
+- Both clients subscribe to realtime changes on `items`, `reservations`, `space_bookings`, `activity`; a status change on either side must appear on the other within ~1s when online.

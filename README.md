@@ -7,9 +7,9 @@ Next.js site for the KIS school makerspace, matching design handoff v5 (Resource
 | Route | Description |
 |-------|-------------|
 | `/` | Resources — live inventory, date/period reservations, OUT bands |
-| `/schedule` | Room booking by class period (P1–P8), one week ahead |
+| `/schedule` | Request room periods (P1–P8); pending until admin confirms |
 | `/about` | About the space |
-| `/admin` | Teacher inventory + loans band + check out/in by code + print QR labels |
+| `/admin` | Tabs: Space bookings (requests + blocks) · Items & inventory (loans, check-out/in, QR, stock) |
 | `/equipment/[qrCode]` | QR landing page |
 
 ## Setup
@@ -21,7 +21,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Run all migrations in `supabase/migrations/` (**001–007**) in the Supabase SQL editor.
+Run all migrations in `supabase/migrations/` (**001–009**) in the Supabase SQL editor.
 
 ### Admin access
 
@@ -46,4 +46,6 @@ See `.env.example` for Supabase and Telegram channel variables.
 - Body `#3f3b33` · secondary `#6d6759` · faint `#98917f`
 - Type: Manrope + IBM Plex Mono
 - Inventory uses `quantity_available` + `quantity_total`; serials in `equipment_units`
-- Period bookings live in `period_bookings`
+- Space bookings live in `space_bookings` (`pending → confirmed | declined | cancelled`); item reservations stay auto-approved
+- Admin block periods live in `space_blocks` (one-day or weekly); striped on `/schedule`, requests rejected server-side
+- Push notifications (FCM) for space requests are not wired yet — confirm/decline syncs over Supabase realtime in the app
