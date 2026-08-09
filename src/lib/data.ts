@@ -18,7 +18,6 @@ function hasSupabaseEnv() {
 const DEFAULT_SETTINGS: SiteSettings = {
   weekly_note:
     "Drop-in hours daily 14–17. New filament colors in the print corner.",
-  show_telegram: true,
   max_reservation_days: 7,
 };
 
@@ -317,10 +316,6 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       typeof map.weekly_note === "string"
         ? map.weekly_note
         : DEFAULT_SETTINGS.weekly_note,
-    show_telegram:
-      typeof map.show_telegram === "boolean"
-        ? map.show_telegram
-        : DEFAULT_SETTINGS.show_telegram,
     max_reservation_days:
       typeof map.max_reservation_days === "number" &&
       map.max_reservation_days >= 1

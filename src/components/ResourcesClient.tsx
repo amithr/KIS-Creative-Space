@@ -13,7 +13,7 @@ import {
   itemHasNearTermAvailability,
   outLoansForItem,
 } from "@/lib/reservation-availability";
-import type { Equipment, Reservation, TelegramPost } from "@/lib/types";
+import type { Equipment, Reservation } from "@/lib/types";
 import { SiteFooter } from "@/components/SiteFooter";
 import {
   OutStatusBand,
@@ -25,19 +25,11 @@ import {
 type ResourcesClientProps = {
   equipment: Equipment[];
   reservations: Reservation[];
-  showTelegram: boolean;
-  telegramPosts: TelegramPost[];
-  telegramUrl: string | null;
-  telegramHandle: string;
 };
 
 export function ResourcesClient({
   equipment: initial,
   reservations: initialReservations,
-  showTelegram,
-  telegramPosts,
-  telegramUrl,
-  telegramHandle,
 }: ResourcesClientProps) {
   const [items] = useState(initial);
   const [reservations, setReservations] = useState(initialReservations);
@@ -45,7 +37,6 @@ export function ResourcesClient({
   const [query, setQuery] = useState("");
   const [reservingId, setReservingId] = useState<string | null>(null);
   const [receipts, setReceipts] = useState<Record<string, ReceiptState>>({});
-  const [tgIndex, setTgIndex] = useState(0);
   const [isMobileReserve, setIsMobileReserve] = useState(false);
 
   const q = query.trim().toLowerCase();
@@ -80,67 +71,6 @@ export function ResourcesClient({
 
   return (
     <div className="flex min-h-[calc(100vh-73px)] flex-col">
-      {showTelegram && (
-        <section className="page-gutter border-b border-[#e3e0d8] pb-[30px] pt-[26px]">
-          <div className="mb-4 flex items-baseline justify-between">
-            <div className="flex items-center gap-2">
-              <span className="block h-[7px] w-[7px] rounded-full bg-[#c8102e]" />
-              <span className="font-mono text-[11px] tracking-[0.2em] text-[#6d6759]">
-                TELEGRAM FEED
-              </span>
-            </div>
-            {telegramUrl ? (
-              <a
-                href={telegramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[12px] text-[#6d6759] hover:text-[#c8102e]"
-              >
-                {telegramHandle} →
-              </a>
-            ) : (
-              <span className="text-[12px] text-[#6d6759]">{telegramHandle} →</span>
-            )}
-          </div>
-
-          <div className="hidden gap-4 md:flex">
-            {telegramPosts.map((post) => (
-              <div
-                key={`${post.time}-${post.text.slice(0, 20)}`}
-                className="flex-1 border border-[#e3e0d8] px-[18px] py-4 transition-colors hover:border-[#141414]"
-              >
-                <p className="text-[14px] leading-[1.6]">{post.text}</p>
-                <p className="mt-2.5 font-mono text-[10px] text-[#6d6759]">
-                  {post.time}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <div className="md:hidden">
-            <div className="border border-[#e3e0d8] px-[18px] py-4">
-              <p className="text-[14px] leading-[1.6]">
-                {telegramPosts[tgIndex]?.text}
-              </p>
-              <p className="mt-2.5 font-mono text-[10px] text-[#6d6759]">
-                {telegramPosts[tgIndex]?.time}
-              </p>
-            </div>
-            <div className="mt-3 flex justify-center gap-2">
-              {telegramPosts.map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  aria-label={`Post ${i + 1}`}
-                  onClick={() => setTgIndex(i)}
-                  className={`h-1.5 w-1.5 rounded-full ${i === tgIndex ? "bg-[#141414]" : "bg-[#d8d4c9]"}`}
-                />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       <section className="page-gutter flex flex-wrap items-end justify-between gap-4 pb-8 pt-[48px] md:pb-8">
         <div>
           <p className="mb-3 font-mono text-[11px] tracking-[0.2em] text-[#6d6759]">

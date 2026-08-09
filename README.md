@@ -37,7 +37,7 @@ values ('<auth-user-uuid>', 'teacher@school.edu');
 
 ## Env
 
-See `.env.example` for Supabase and Telegram channel variables.
+See `.env.example` for Supabase variables.
 
 ## Design notes
 

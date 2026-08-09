@@ -512,20 +512,6 @@ export async function updateWeeklyNote(note: string) {
   revalidatePath("/admin");
 }
 
-export async function updateShowTelegram(show: boolean) {
-  const { supabase } = await requireTeacher();
-
-  const { error } = await supabase.from("site_settings").upsert({
-    key: "show_telegram",
-    value: show,
-  });
-
-  if (error) throw new Error(error.message);
-
-  revalidatePath("/");
-  revalidatePath("/admin");
-}
-
 export async function updateMaxReservationDays(days: number) {
   const { supabase } = await requireTeacher();
 

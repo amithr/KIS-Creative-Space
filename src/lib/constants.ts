@@ -49,21 +49,6 @@ export const AREAS = [
   },
 ] as const;
 
-export const PLACEHOLDER_TELEGRAM_POSTS = [
-  {
-    text: "New LEGO Technic sets arrived — robotics club starts Thursday at 15:00.",
-    time: "TODAY · 09:12",
-  },
-  {
-    text: "VR Lab closed Friday morning for 8th grade project presentations.",
-    time: "YESTERDAY · 14:30",
-  },
-  {
-    text: "Reminder: return checked-out equipment before the autumn break.",
-    time: "MON · 11:05",
-  },
-] as const;
-
 export const FALLBACK_EQUIPMENT = [
   {
     id: "1",

@@ -25,7 +25,6 @@ export type EquipmentWithUnits = Equipment & {
 
 export type SiteSettings = {
   weekly_note: string;
-  show_telegram: boolean;
   max_reservation_days: number;
 };
 
@@ -98,11 +97,6 @@ export type SpaceBlock = {
   period_to: number;
   reason: string;
   created_at: string;
-};
-
-export type TelegramPost = {
-  text: string;
-  time: string;
 };
 
 export type StockStatus = "Available" | "Low stock" | "Unavailable";
