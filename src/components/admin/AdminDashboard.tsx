@@ -20,17 +20,20 @@ import type {
   Reservation,
   SpaceBlock,
   SpaceBooking,
+  TrainingSession,
 } from "@/lib/types";
 import { SiteFooter } from "@/components/SiteFooter";
 import { BlockPeriodsPanel } from "@/components/admin/BlockPeriodsPanel";
 import { PrintQrLabelsPanel } from "@/components/admin/PrintQrLabelsPanel";
 import { SpaceBookingsPanel } from "@/components/admin/SpaceBookingsPanel";
+import { TrainingSessionsPanel } from "@/components/admin/TrainingSessionsPanel";
 
 type AdminDashboardProps = {
   equipment: EquipmentWithUnits[];
   reservations: Reservation[];
   spaceBookings: SpaceBooking[];
   spaceBlocks: SpaceBlock[];
+  trainingSessions: TrainingSession[];
 };
 
 type Tab = "space" | "items";
@@ -45,6 +48,7 @@ export function AdminDashboard({
   reservations,
   spaceBookings,
   spaceBlocks,
+  trainingSessions,
 }: AdminDashboardProps) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("space");
@@ -83,8 +87,10 @@ export function AdminDashboard({
   }, [reservations]);
 
   const pendingSpaceCount = useMemo(
-    () => spaceBookings.filter((b) => b.status === "pending").length,
-    [spaceBookings],
+    () =>
+      spaceBookings.filter((b) => b.status === "pending").length +
+      trainingSessions.filter((s) => s.status === "pending").length,
+    [spaceBookings, trainingSessions],
   );
 
   const refresh = (msg: string) => {
@@ -173,6 +179,10 @@ export function AdminDashboard({
         <>
           <SpaceBookingsPanel
             bookings={spaceBookings}
+            onDone={(msg) => refresh(msg)}
+          />
+          <TrainingSessionsPanel
+            sessions={trainingSessions}
             onDone={(msg) => refresh(msg)}
           />
           <BlockPeriodsPanel

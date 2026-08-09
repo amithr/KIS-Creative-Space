@@ -536,6 +536,12 @@ export type SpaceBookingActionResult =
 
 function revalidateSpace() {
   revalidatePath("/schedule");
+  revalidatePath("/training");
+  revalidatePath("/admin");
+}
+
+function revalidateTraining() {
+  revalidatePath("/training");
   revalidatePath("/admin");
 }
 
@@ -640,6 +646,110 @@ export async function cancelSpaceBooking(
 
   if (error) return { ok: false, error: error.message };
   revalidateSpace();
+  return { ok: true };
+}
+
+/** Idempotent: already-decided training requests are a no-op success. */
+export async function confirmTrainingSession(
+  sessionId: string,
+): Promise<SpaceBookingActionResult> {
+  const { supabase, user } = await requireTeacher();
+
+  const { data: existing, error: loadError } = await supabase
+    .from("training_sessions")
+    .select("id, status")
+    .eq("id", sessionId)
+    .maybeSingle();
+
+  if (loadError) return { ok: false, error: loadError.message };
+  if (!existing) return { ok: false, error: "Session not found." };
+  if (existing.status !== "pending") {
+    revalidateTraining();
+    return { ok: true };
+  }
+
+  const { error } = await supabase
+    .from("training_sessions")
+    .update({
+      status: "confirmed",
+      decided_at: new Date().toISOString(),
+      decided_by: user.email ?? user.id,
+      decline_reason: null,
+    })
+    .eq("id", sessionId)
+    .eq("status", "pending");
+
+  if (error) return { ok: false, error: error.message };
+  revalidateTraining();
+  return { ok: true };
+}
+
+export async function declineTrainingSession(
+  sessionId: string,
+  reason?: string,
+): Promise<SpaceBookingActionResult> {
+  const { supabase, user } = await requireTeacher();
+
+  const { data: existing, error: loadError } = await supabase
+    .from("training_sessions")
+    .select("id, status")
+    .eq("id", sessionId)
+    .maybeSingle();
+
+  if (loadError) return { ok: false, error: loadError.message };
+  if (!existing) return { ok: false, error: "Session not found." };
+  if (existing.status !== "pending") {
+    revalidateTraining();
+    return { ok: true };
+  }
+
+  const trimmed = reason?.trim() || null;
+  const { error } = await supabase
+    .from("training_sessions")
+    .update({
+      status: "declined",
+      decided_at: new Date().toISOString(),
+      decided_by: user.email ?? user.id,
+      decline_reason: trimmed,
+    })
+    .eq("id", sessionId)
+    .eq("status", "pending");
+
+  if (error) return { ok: false, error: error.message };
+  revalidateTraining();
+  return { ok: true };
+}
+
+export async function cancelTrainingSessionAdmin(
+  sessionId: string,
+): Promise<SpaceBookingActionResult> {
+  const { supabase, user } = await requireTeacher();
+
+  const { data: existing, error: loadError } = await supabase
+    .from("training_sessions")
+    .select("id, status")
+    .eq("id", sessionId)
+    .maybeSingle();
+
+  if (loadError) return { ok: false, error: loadError.message };
+  if (!existing) return { ok: false, error: "Session not found." };
+  if (existing.status !== "confirmed" && existing.status !== "pending") {
+    revalidateTraining();
+    return { ok: true };
+  }
+
+  const { error } = await supabase
+    .from("training_sessions")
+    .update({
+      status: "cancelled",
+      decided_at: new Date().toISOString(),
+      decided_by: user.email ?? user.id,
+    })
+    .eq("id", sessionId)
+    .in("status", ["pending", "confirmed"]);
+
+  if (error) return { ok: false, error: error.message };
+  revalidateTraining();
   return { ok: true };
 }
 

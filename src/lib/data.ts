@@ -9,6 +9,7 @@ import type {
   SiteSettings,
   SpaceBlock,
   SpaceBooking,
+  TrainingSession,
 } from "@/lib/types";
 
 function hasSupabaseEnv() {
@@ -296,6 +297,81 @@ export async function getSpaceBlocks(): Promise<SpaceBlock[]> {
 
   return (data ?? []).map((row) =>
     normalizeSpaceBlock(row as Record<string, unknown>),
+  );
+}
+
+function normalizeTrainingSession(row: Record<string, unknown>): TrainingSession {
+  return {
+    id: String(row.id),
+    session_date: String(row.session_date),
+    period: Number(row.period),
+    teacher_name: String(row.teacher_name ?? ""),
+    topic: String(row.topic ?? ""),
+    status: (row.status as TrainingSession["status"]) ?? "pending",
+    created_at: String(row.created_at ?? ""),
+    decided_at: (row.decided_at as string | null) ?? null,
+    decided_by: (row.decided_by as string | null) ?? null,
+    decline_reason: (row.decline_reason as string | null) ?? null,
+  };
+}
+
+/** Active training sessions for the public grid (pending + confirmed). */
+export async function getTrainingSessions(
+  from: string,
+  to: string,
+  statuses: TrainingSession["status"][] = ["pending", "confirmed"],
+): Promise<TrainingSession[]> {
+  if (!hasSupabaseEnv()) return [];
+
+  const supabase = await createClient();
+  let query = supabase
+    .from("training_sessions")
+    .select("*")
+    .gte("session_date", from)
+    .lte("session_date", to)
+    .order("session_date")
+    .order("period");
+
+  if (statuses.length) {
+    query = query.in("status", statuses);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Failed to load training sessions:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row) =>
+    normalizeTrainingSession(row as Record<string, unknown>),
+  );
+}
+
+/** Admin queue: pending any date + confirmed from today forward. */
+export async function getAdminTrainingSessions(): Promise<TrainingSession[]> {
+  if (!hasSupabaseEnv()) return [];
+
+  const today = new Date();
+  const from = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("training_sessions")
+    .select("*")
+    .or(
+      `status.eq.pending,and(status.eq.confirmed,session_date.gte.${from})`,
+    )
+    .order("session_date")
+    .order("period");
+
+  if (error) {
+    console.error("Failed to load admin training sessions:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row) =>
+    normalizeTrainingSession(row as Record<string, unknown>),
   );
 }
 

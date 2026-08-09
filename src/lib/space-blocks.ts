@@ -1,6 +1,8 @@
 import { toISODate } from "@/lib/inventory";
+import { weekdayOfIso } from "@/lib/schedule-ui";
 import type { SpaceBlock, SpaceBooking } from "@/lib/types";
 
+/** Weekdays available when creating weekly blocks in admin (school days). */
 export const DOW_NAMES = ["MON", "TUE", "WED", "THU", "FRI"] as const;
 export type DowName = (typeof DOW_NAMES)[number];
 
@@ -19,12 +21,14 @@ const MONS = [
   "DEC",
 ] as const;
 
+/** @deprecated Prefer weekdayOfIso — kept for call sites that only need Mon–Fri. */
 export function dowOfIso(isoDate: string): DowName | null {
-  const d = new Date(`${isoDate}T00:00:00`);
-  if (Number.isNaN(d.getTime())) return null;
-  const idx = (d.getDay() + 6) % 7;
-  if (idx > 4) return null;
-  return DOW_NAMES[idx];
+  const dow = weekdayOfIso(isoDate);
+  if (!dow) return null;
+  if ((DOW_NAMES as readonly string[]).includes(dow)) {
+    return dow as DowName;
+  }
+  return null;
 }
 
 /** Applicability: from ≤ period ≤ to AND date/dow/until match. */
@@ -37,7 +41,8 @@ export function blockApplies(
   if (block.repeat === "once") {
     return block.block_date === isoDate;
   }
-  const dow = dowOfIso(isoDate);
+  // Resolve by actual weekday name (incl. weekends), never by grid column.
+  const dow = weekdayOfIso(isoDate);
   if (!dow || dow !== block.dow) return false;
   if (block.until_date && isoDate > block.until_date) return false;
   return true;

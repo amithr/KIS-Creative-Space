@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import { ScheduleClient } from "@/components/ScheduleClient";
+import { TrainingClient } from "@/components/TrainingClient";
 import {
   getPeriodBookings,
   getSpaceBlocks,
@@ -9,20 +9,20 @@ import {
 import { startOfDay } from "@/lib/inventory";
 import { rollingSevenRange } from "@/lib/schedule-ui";
 
-export default async function SchedulePage() {
+export default async function TrainingPage() {
   const { from, to } = rollingSevenRange(startOfDay(new Date()));
 
-  const [bookings, blocks, trainingSessions] = await Promise.all([
+  const [sessions, spaceBookings, blocks] = await Promise.all([
+    getTrainingSessions(from, to),
     getPeriodBookings(from, to),
     getSpaceBlocks(),
-    getTrainingSessions(from, to),
   ]);
 
   return (
-    <ScheduleClient
-      initialBookings={bookings}
+    <TrainingClient
+      initialSessions={sessions}
+      initialSpaceBookings={spaceBookings}
       initialBlocks={blocks}
-      initialTrainingSessions={trainingSessions}
     />
   );
 }

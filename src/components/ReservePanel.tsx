@@ -114,14 +114,14 @@ export function ReservePanel({
     <>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="font-mono text-[10px] tracking-[0.16em] text-[#6d6759]">
+          <p className="font-mono text-[11px] tracking-[0.16em] text-[#6d6759]">
             HOW MANY
           </p>
           <div className="mt-2 flex items-center gap-2">
             <button
               type="button"
               onClick={() => adjustQty(-1)}
-              className="flex h-[38px] w-[38px] items-center justify-center border border-[#141414] text-[16px]"
+              className="kis-press flex h-[38px] w-[38px] items-center justify-center border border-[#141414] text-[16px]"
             >
               −
             </button>
@@ -132,18 +132,18 @@ export function ReservePanel({
               type="button"
               onClick={() => adjustQty(1)}
               disabled={effectiveQty >= cap}
-              className="flex h-[38px] w-[38px] items-center justify-center bg-[#141414] text-[16px] text-white disabled:opacity-40"
+              className="kis-press flex h-[38px] w-[38px] items-center justify-center bg-[#141414] text-[16px] text-white disabled:opacity-40"
             >
               +
             </button>
           </div>
-          <p className="mt-2 text-[12px] text-[#6d6759]">
+          <p className="mt-2 text-[14px] text-[#6d6759]">
             {cap} free for this selection
           </p>
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="font-mono text-[10px] tracking-[0.16em] text-[#6d6759]">
+          <p className="font-mono text-[11px] tracking-[0.16em] text-[#6d6759]">
             WHICH DAYS
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
@@ -155,7 +155,7 @@ export function ReservePanel({
                   key={iso}
                   type="button"
                   onClick={() => toggleDay(iso)}
-                  className={`flex w-[52px] flex-col items-center rounded-none px-1 py-2 font-mono text-[10px] ${
+                  className={`kis-press flex w-[52px] flex-col items-center rounded-none px-1 py-2 font-mono text-[11px] ${
                     active
                       ? "bg-[#141414] text-white"
                       : "border border-[#e3e0d8] text-[#3f3b33]"
@@ -166,7 +166,7 @@ export function ReservePanel({
                       .toLocaleDateString("en-GB", { weekday: "short" })
                       .toUpperCase()}
                   </span>
-                  <span className="mt-0.5 text-[12px] font-semibold">
+                  <span className="mt-0.5 text-[13px] font-semibold">
                     {d.getDate()}
                   </span>
                 </button>
@@ -177,14 +177,14 @@ export function ReservePanel({
       </div>
 
       <div className="mt-5">
-        <p className="font-mono text-[10px] tracking-[0.16em] text-[#6d6759]">
+        <p className="font-mono text-[11px] tracking-[0.16em] text-[#6d6759]">
           WHICH PERIODS
         </p>
         <div className="mt-2 flex flex-wrap gap-2">
           <button
             type="button"
             onClick={selectAllDay}
-            className={`h-[38px] px-3 font-mono text-[11px] ${
+            className={`kis-press h-[38px] px-3 font-mono text-[12px] ${
               periods === "all"
                 ? "bg-[#c8102e] text-white"
                 : "border border-[#e3e0d8] text-[#3f3b33]"
@@ -208,7 +208,7 @@ export function ReservePanel({
                 type="button"
                 disabled={disabled}
                 onClick={() => selectPeriod(p)}
-                className={`h-[38px] w-10 font-mono text-[11px] ${
+                className={`kis-press h-[38px] w-10 font-mono text-[12px] ${
                   disabled
                     ? "cursor-not-allowed bg-[#f4f2ec] text-[#c9c3b5]"
                     : selected
@@ -228,11 +228,11 @@ export function ReservePanel({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Your name and class (e.g. Ms. Bondar, 7B)"
-          className="w-full border border-[#e3e0d8] bg-white px-3 py-2.5 text-[13px] outline-none focus:border-[#141414]"
+          className="w-full border border-[#e3e0d8] bg-white px-3 py-2.5 text-[14.5px] outline-none focus:border-[#141414]"
         />
       </div>
 
-      {error && <p className="mt-3 text-[13px] text-[#c8102e]">{error}</p>}
+      {error && <p className="mt-3 text-[14px] text-[#c8102e]">{error}</p>}
 
       <div
         className={`mt-5 flex flex-col gap-3 ${
@@ -240,7 +240,7 @@ export function ReservePanel({
         }`}
       >
         {variant === "inline" && (
-          <p className="text-[13px] text-[#3f3b33]">
+          <p className="text-[14.5px] text-[#3f3b33]">
             <span className="font-semibold">
               {effectiveQty} × {item.name}
             </span>
@@ -275,7 +275,7 @@ export function ReservePanel({
               });
             })
           }
-          className={`bg-[#c8102e] px-5 py-3 text-[13px] font-semibold text-white transition-colors hover:bg-[#a50d26] disabled:bg-[#d5d1c8] disabled:text-white ${
+          className={`kis-press bg-[#c8102e] px-5 py-3 text-[14.5px] font-semibold text-white transition-colors hover:bg-[#a50d26] disabled:bg-[#d5d1c8] disabled:text-white ${
             variant === "sheet" ? "w-full rounded-full" : ""
           }`}
         >
@@ -336,8 +336,8 @@ export function ReservationReceipt({
   const [error, setError] = useState("");
 
   return (
-    <div className="flex flex-wrap items-center gap-3 border border-[#2f9e44] bg-[#f4faf5] px-4 py-3 text-[13px]">
-      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2f9e44] text-[12px] text-white">
+    <div className="kis-receipt-flash flex flex-wrap items-center gap-3 border border-[#2f9e44] bg-[#f4faf5] px-4 py-3 text-[14.5px]">
+      <span className="kis-pop flex h-6 w-6 items-center justify-center rounded-full bg-[#2f9e44] text-[12px] text-white [animation-delay:150ms]">
         ✓
       </span>
       <p className="min-w-0 flex-1 text-[#3f3b33]">

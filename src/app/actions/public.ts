@@ -2,17 +2,32 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getSpaceBlocks, hasSupabaseEnv } from "@/lib/data";
+import {
+  getPeriodBookings,
+  getSpaceBlocks,
+  getTrainingSessions,
+  hasSupabaseEnv,
+} from "@/lib/data";
 import { isBookableDate, startOfDay, toISODate } from "@/lib/inventory";
 import {
   qtyCapForSelection,
   type PeriodSelection,
 } from "@/lib/reservation-availability";
-import { findBlock } from "@/lib/space-blocks";
+import {
+  activeSpaceAt,
+  activeTrainingAt,
+  blockAt,
+  slotIsRequestable,
+} from "@/lib/period-slot";
 import type { Reservation } from "@/lib/types";
 
 export type ActionResult =
-  | { ok: true; reservationId?: string; bookingId?: string }
+  | {
+      ok: true;
+      reservationId?: string;
+      bookingId?: string;
+      sessionId?: string;
+    }
   | { ok: false; error: string };
 
 export type CreateReservationInput = {
@@ -235,14 +250,20 @@ export async function createPeriodBooking(
     return { ok: true };
   }
 
-  const blocks = await getSpaceBlocks();
-  const blocked = findBlock(blocks, bookingDate, period);
-  if (blocked) {
-    return {
-      ok: false,
-      error: `That period is blocked (${blocked.reason}).`,
-    };
-  }
+  const [blocks, spaceBookings, trainingSessions] = await Promise.all([
+    getSpaceBlocks(),
+    getPeriodBookings(bookingDate, bookingDate),
+    getTrainingSessions(bookingDate, bookingDate),
+  ]);
+
+  const gate = slotIsRequestable({
+    mode: "space",
+    inWindow: true,
+    block: blockAt(blocks, bookingDate, period),
+    spaceBooking: activeSpaceAt(spaceBookings, bookingDate, period),
+    trainingSession: activeTrainingAt(trainingSessions, bookingDate, period),
+  });
+  if (!gate.ok) return { ok: false, error: gate.error };
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -263,6 +284,7 @@ export async function createPeriodBooking(
   }
 
   revalidatePath("/schedule");
+  revalidatePath("/training");
   revalidatePath("/admin");
   return { ok: true, bookingId: data?.id as string | undefined };
 }
@@ -296,6 +318,105 @@ export async function cancelPeriodBooking(
   if (error) return { ok: false, error: error.message };
 
   revalidatePath("/schedule");
+  revalidatePath("/training");
   revalidatePath("/admin");
+  return { ok: true };
+}
+
+function revalidateTraining() {
+  revalidatePath("/training");
+  revalidatePath("/admin");
+}
+
+/**
+ * Request a coordinator training session.
+ * Slot must be in the bookable window, free of space bookings/blocks, and unused for training.
+ */
+export async function createTrainingSession(
+  sessionDate: string,
+  period: number,
+  teacherName: string,
+  topic: string,
+): Promise<ActionResult> {
+  const name = teacherName.trim();
+  const topicTrim = topic.trim();
+  if (!name) return { ok: false, error: "Enter your name." };
+  if (!topicTrim) return { ok: false, error: "Say what you want help with." };
+  if (period < 1 || period > 8) return { ok: false, error: "Invalid period." };
+
+  const date = new Date(`${sessionDate}T00:00:00`);
+  if (Number.isNaN(date.getTime()) || !isBookableDate(date)) {
+    return { ok: false, error: "That date is not bookable." };
+  }
+
+  if (!hasSupabaseEnv()) {
+    return { ok: true, sessionId: `local-${Date.now()}` };
+  }
+
+  const [blocks, spaceBookings, existing] = await Promise.all([
+    getSpaceBlocks(),
+    getPeriodBookings(sessionDate, sessionDate),
+    getTrainingSessions(sessionDate, sessionDate),
+  ]);
+
+  const gate = slotIsRequestable({
+    mode: "training",
+    inWindow: true,
+    block: blockAt(blocks, sessionDate, period),
+    spaceBooking: activeSpaceAt(spaceBookings, sessionDate, period),
+    trainingSession: activeTrainingAt(existing, sessionDate, period),
+  });
+  if (!gate.ok) return { ok: false, error: gate.error };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("training_sessions")
+    .insert({
+      session_date: sessionDate,
+      period,
+      teacher_name: name,
+      topic: topicTrim,
+      status: "pending",
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    return { ok: false, error: error.message };
+  }
+
+  revalidateTraining();
+  return { ok: true, sessionId: data?.id as string | undefined };
+}
+
+/** Soft-cancel a pending or confirmed training session (public page). */
+export async function cancelTrainingSession(
+  sessionId: string,
+): Promise<ActionResult> {
+  if (!sessionId) return { ok: false, error: "Missing session." };
+  if (!hasSupabaseEnv()) return { ok: true };
+
+  const supabase = await createClient();
+  const { data: existing, error: loadError } = await supabase
+    .from("training_sessions")
+    .select("id, status")
+    .eq("id", sessionId)
+    .maybeSingle();
+
+  if (loadError) return { ok: false, error: loadError.message };
+  if (!existing) return { ok: false, error: "Session not found." };
+  if (existing.status !== "pending" && existing.status !== "confirmed") {
+    return { ok: false, error: "That session is no longer active." };
+  }
+
+  const { error } = await supabase
+    .from("training_sessions")
+    .update({ status: "cancelled" })
+    .eq("id", sessionId)
+    .in("status", ["pending", "confirmed"]);
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidateTraining();
   return { ok: true };
 }

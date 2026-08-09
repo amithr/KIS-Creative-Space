@@ -43,8 +43,9 @@ See `.env.example` for Supabase variables.
 - Background: white (`#ffffff`)
 - Accent: `#c8102e` / black `#141414`
 - Body `#3f3b33` · secondary `#6d6759` · faint `#98917f`
-- Type: Manrope + IBM Plex Mono
+- Type: Space Grotesk + Space Mono
 - Inventory uses `quantity_available` + `quantity_total`; serials in `equipment_units`
 - Space bookings live in `space_bookings` (`pending → confirmed | declined | cancelled`); item reservations stay auto-approved
+- Training sessions live in `training_sessions` (same lifecycle); Schedule and Training share one availability rule (blocks, space bookings, and training sessions all occupy periods on both grids)
 - Admin block periods live in `space_blocks` (one-day or weekly); striped on `/schedule`, requests rejected server-side
-- Push notifications (FCM) for space requests are not wired yet — confirm/decline syncs over Supabase realtime in the app
+- Push notifications (FCM) for space/training requests are not wired yet — confirm/decline syncs over Supabase realtime in the app

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { AREA_FILTERS } from "@/lib/constants";
+import { areaPillColors, stockBarColor } from "@/lib/area-styles";
 import {
   formatUpdatedLabel,
   isNewItem,
@@ -73,14 +74,15 @@ export function ResourcesClient({
     <div className="flex min-h-[calc(100vh-73px)] flex-col">
       <section className="page-gutter flex flex-wrap items-end justify-between gap-4 pb-8 pt-[48px] md:pb-8">
         <div>
-          <p className="mb-3 font-mono text-[11px] tracking-[0.2em] text-[#6d6759]">
+          <p className="mb-3 font-mono text-[12px] tracking-[0.2em] text-[#6d6759]">
             РЕСУРСИ · RESOURCES
           </p>
-          <h1 className="font-display text-[34px] font-normal tracking-[-0.02em] md:text-[42px]">
+          <h1 className="font-display text-[46px] font-normal leading-[1.05] tracking-[-0.02em]">
             What&apos;s available right now
           </h1>
+          <span className="kis-title-underline" />
         </div>
-        <p className="pb-1 font-mono text-[11px] tracking-[0.14em] text-[#6d6759]">
+        <p className="pb-1 font-mono text-[12px] tracking-[0.14em] text-[#6d6759]">
           UPDATED {formatUpdatedLabel()}
         </p>
       </section>
@@ -95,7 +97,7 @@ export function ResourcesClient({
                 key={c}
                 type="button"
                 onClick={() => setCat(c)}
-                className="shrink-0 rounded-full px-[15px] py-2 text-[13px] transition-colors"
+                className="kis-press shrink-0 rounded-full px-[15px] py-2 text-[14.5px] font-semibold"
                 style={{
                   background: active
                     ? isNew
@@ -128,14 +130,14 @@ export function ResourcesClient({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search..."
-            className="w-full rounded-full border border-[#e3e0d8] bg-[#faf9f6] py-2 pl-9 pr-3.5 text-[13px] outline-none focus:border-[#141414] md:w-[180px] md:bg-transparent md:pl-3.5"
+            className="w-full rounded-full border border-[#e3e0d8] bg-[#faf9f6] py-2 pl-9 pr-3.5 text-[14.5px] outline-none focus:border-[#141414] md:w-[180px] md:bg-transparent md:pl-3.5"
           />
         </div>
       </section>
 
       <section className="page-gutter mb-10">
         <div className="border-t border-[#141414]">
-          <div className="hidden grid-cols-[44px_2.2fr_1.1fr_100px_120px_120px] gap-4 border-b border-[#eeece5] py-3 font-mono text-[10px] tracking-[0.16em] text-[#6d6759] md:grid">
+          <div className="hidden grid-cols-[44px_2.2fr_1.1fr_100px_120px_120px] gap-4 border-b border-[#eeece5] py-3 font-mono text-[11px] tracking-[0.16em] text-[#6d6759] md:grid">
             <span />
             <span>ITEM</span>
             <span>AREA</span>
@@ -157,38 +159,75 @@ export function ResourcesClient({
               const canReserve = itemHasNearTermAvailability(item, reservations);
               const loans = outLoansForItem(reservations, item.id);
               const receipt = receipts[item.id];
+              const pill = areaPillColors(item.area);
+              const fillPct =
+                item.quantity_total > 0
+                  ? Math.min(
+                      100,
+                      (item.quantity_available / item.quantity_total) * 100,
+                    )
+                  : 0;
+              const rowFlash = receipt ? "kis-row-flash" : "";
 
               return (
-                <div key={item.id}>
-                  <div className="hidden grid-cols-[44px_2.2fr_1.1fr_100px_120px_120px] items-center gap-4 border-b border-[#eeece5] py-4 transition-colors hover:bg-[#f7f7f5] md:grid">
-                    <span className="font-mono text-[11px] text-[#c8b9a0]">
+                <div
+                  key={item.id}
+                  className="kis-fadeup"
+                  style={{ animationDelay: `${Math.min(i, 10) * 45}ms` }}
+                >
+                  <div
+                    className={`kis-row hidden grid-cols-[44px_2.2fr_1.1fr_100px_120px_120px] items-center gap-4 border-b border-[#eeece5] py-[17px] md:grid ${rowFlash}`}
+                  >
+                    <span className="font-mono text-[12px] text-[#c8b9a0]">
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-[16px] font-semibold">{item.name}</span>
+                        <span className="text-[18px] font-semibold">
+                          {item.name}
+                        </span>
                         {isNew && (
                           <span className="rounded-full bg-[#c8102e] px-[7px] py-0.5 font-mono text-[9px] tracking-wide text-white">
                             NEW
                           </span>
                         )}
                       </div>
-                      <p className="mt-1 text-[13px] leading-[1.5] text-[#6d6759]">
+                      <p className="mt-1 text-[15.5px] leading-[1.65] text-[#6d6759]">
                         {item.detail}
                       </p>
                     </div>
-                    <span className="text-[13.5px] text-[#3f3b33]">
-                      {item.area}
-                    </span>
-                    <span className="font-mono text-[13px]">
-                      {item.quantity_available}
-                      <span className="text-[#98917f]">
-                        /{item.quantity_total}
+                    <span>
+                      <span
+                        className="inline-block rounded-full px-3 py-1 text-[13px] font-semibold"
+                        style={{ background: pill.bg, color: pill.fg }}
+                      >
+                        {item.area}
                       </span>
                     </span>
-                    <span className="flex items-center gap-2 text-[12px]">
+                    <div>
+                      <span className="font-mono text-[14.5px]">
+                        {item.quantity_available}
+                        <span className="text-[#98917f]">
+                          /{item.quantity_total}
+                        </span>
+                      </span>
+                      <div className="mt-1.5 h-1 w-16 overflow-hidden rounded-full bg-[#eeece5]">
+                        <div
+                          className="h-full rounded-full transition-[width] duration-500"
+                          style={{
+                            width: `${fillPct}%`,
+                            background: stockBarColor(status),
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <span className="flex items-center gap-2 text-[14.5px]">
                       <span
-                        className="h-[7px] w-[7px] rounded-full"
+                        className={`h-[7px] w-[7px] rounded-full ${
+                          status === "Low stock" || status === "Unavailable"
+                            ? "kis-pulse"
+                            : ""
+                        }`}
                         style={{ background: statusDotColor(status) }}
                       />
                       {status}
@@ -198,7 +237,7 @@ export function ResourcesClient({
                         <button
                           type="button"
                           onClick={closeReserve}
-                          className="w-full border border-[#141414] py-[7px] text-[12.5px] font-semibold"
+                          className="kis-press w-full border border-[#141414] py-[7px] text-[14px] font-semibold"
                         >
                           Cancel ×
                         </button>
@@ -206,23 +245,25 @@ export function ResourcesClient({
                         <button
                           type="button"
                           onClick={() => openReserve(item.id, false)}
-                          className="w-full border border-[#141414] py-[7px] text-[12.5px] font-semibold transition-colors hover:bg-[#141414] hover:text-white"
+                          className="kis-press w-full border border-[#141414] py-[7px] text-[14px] font-semibold transition-colors hover:bg-[#141414] hover:text-white"
                         >
                           Reserve
                         </button>
                       ) : (
-                        <span className="block text-center text-[12.5px] text-[#98917f]">
+                        <span className="block text-center text-[14px] text-[#98917f]">
                           —
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <div className="border-b border-[#eeece5] py-4 md:hidden">
+                  <div
+                    className={`kis-row border-b border-[#eeece5] py-[17px] md:hidden ${rowFlash}`}
+                  >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-[16px] font-semibold">
+                          <span className="text-[18px] font-semibold">
                             {item.name}
                           </span>
                           {isNew && (
@@ -231,23 +272,43 @@ export function ResourcesClient({
                             </span>
                           )}
                         </div>
-                        <div className="mt-2 flex items-center gap-2 text-[12px] text-[#6d6759]">
+                        <div className="mt-2 flex flex-wrap items-center gap-2 text-[14.5px] text-[#6d6759]">
                           <span
-                            className="h-[7px] w-[7px] rounded-full"
+                            className={`h-[7px] w-[7px] rounded-full ${
+                              status === "Low stock" || status === "Unavailable"
+                                ? "kis-pulse"
+                                : ""
+                            }`}
                             style={{ background: statusDotColor(status) }}
                           />
-                          {item.area}
+                          <span
+                            className="inline-block rounded-full px-3 py-1 text-[13px] font-semibold"
+                            style={{ background: pill.bg, color: pill.fg }}
+                          >
+                            {item.area}
+                          </span>
                         </div>
                       </div>
                       <div className="flex shrink-0 flex-col items-end gap-2">
-                        <span className="font-mono text-[13px] text-[#6d6759]">
-                          {item.quantity_available} / {item.quantity_total}
-                        </span>
+                        <div className="text-right">
+                          <span className="font-mono text-[14.5px] text-[#6d6759]">
+                            {item.quantity_available} / {item.quantity_total}
+                          </span>
+                          <div className="mt-1.5 ml-auto h-1 w-16 overflow-hidden rounded-full bg-[#eeece5]">
+                            <div
+                              className="h-full rounded-full transition-[width] duration-500"
+                              style={{
+                                width: `${fillPct}%`,
+                                background: stockBarColor(status),
+                              }}
+                            />
+                          </div>
+                        </div>
                         {canReserve && (
                           <button
                             type="button"
                             onClick={() => openReserve(item.id, true)}
-                            className="border border-[#141414] bg-white px-4 py-[7px] text-[12.5px] font-semibold"
+                            className="kis-press border border-[#141414] bg-white px-4 py-[7px] text-[14px] font-semibold"
                           >
                             Reserve
                           </button>
@@ -358,7 +419,7 @@ export function ResourcesClient({
       <div className="page-gutter sticky bottom-4 z-20 pb-6 md:hidden">
         <Link
           href="/schedule"
-          className="block w-full rounded-full bg-[#141414] py-3.5 text-center text-[14px] font-medium text-white shadow-none hover:text-white"
+          className="kis-press block w-full rounded-full bg-[#141414] py-3.5 text-center text-[14.5px] font-semibold text-white shadow-none hover:text-white"
         >
           Schedule the space
         </Link>

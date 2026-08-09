@@ -6,6 +6,7 @@ import { LoginForm } from "@/components/admin/LoginForm";
 import {
   getActiveReservations,
   getAdminSpaceBookings,
+  getAdminTrainingSessions,
   getEquipmentWithUnits,
   getSpaceBlocks,
   isTeacher,
@@ -39,12 +40,13 @@ export default async function AdminPage({ searchParams }: PageProps) {
     );
   }
 
-  const [equipment, reservations, spaceBookings, spaceBlocks] =
+  const [equipment, reservations, spaceBookings, spaceBlocks, trainingSessions] =
     await Promise.all([
       getEquipmentWithUnits(),
       getActiveReservations(),
       getAdminSpaceBookings(),
       getSpaceBlocks(),
+      getAdminTrainingSessions(),
     ]);
 
   return (
@@ -54,6 +56,7 @@ export default async function AdminPage({ searchParams }: PageProps) {
         reservations={reservations}
         spaceBookings={spaceBookings}
         spaceBlocks={spaceBlocks}
+        trainingSessions={trainingSessions}
       />
     </AdminShell>
   );

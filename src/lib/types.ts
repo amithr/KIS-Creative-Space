@@ -99,4 +99,24 @@ export type SpaceBlock = {
   created_at: string;
 };
 
+export type TrainingSessionStatus =
+  | "pending"
+  | "confirmed"
+  | "declined"
+  | "cancelled";
+
+/** Coordinator training session (does not reserve the room for classes). */
+export type TrainingSession = {
+  id: string;
+  session_date: string;
+  period: number;
+  teacher_name: string;
+  topic: string;
+  status: TrainingSessionStatus;
+  created_at: string;
+  decided_at: string | null;
+  decided_by: string | null;
+  decline_reason: string | null;
+};
+
 export type StockStatus = "Available" | "Low stock" | "Unavailable";

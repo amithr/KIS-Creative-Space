@@ -1,0 +1,12 @@
+---
+description: KIS Creativity Space — Training sessions feature (web page, admin panel, mobile app)
+alwaysApply: true
+---
+
+- This folder is a design handoff; README.md is the source of truth (exact hexes, sizes, availability rule).
+- Availability is ONE shared rule (`src/lib/period-slot.ts`): bookable iff in the 7-day window AND no space booking AND no applicable block AND no training session. Both Schedule and Training pages use it for display and create actions.
+- Bidirectional: space bookings show as "Space in use" on Training; training sessions show as "Training" on Schedule; admin blocks appear on both.
+- Topic is required and travels everywhere (admin row, app card, notification body) — always render it quoted.
+- Lifecycle pending → confirmed; decline/cancel deletes the record and frees the slot. Enforce the availability rule server-side on create.
+- Reuse the existing visual grammar: Schedule-page grid cells, admin Booking-requests row anatomy, app Reservations cards. Space Grotesk + Space Mono; tokens in README.
+- designs/*.html are browser-openable prototypes for reference only — never import or port their runtime (support.js, android-frame.jsx, image-slot.js).

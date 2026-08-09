@@ -1,0 +1,12 @@
+---
+description: KIS Creativity Space — scheduling UX round (pinned form, unified header, 7-day grid, cell palette)
+alwaysApply: true
+---
+
+- This folder is a design handoff; README.md is the source of truth (exact hexes, sizes, sticky offsets, the §4 state table).
+- Rendering-only round: booking keys, stores, and availability rules do not change.
+- The booking form lives ABOVE the title and is sticky (top 12px, z-index above the grid) on both scheduling pages — one shared component if possible.
+- The header is ONE shared component across all routes: three fixed panels in fixed order, active route highlighted #c8102e; Admin adds the ADMIN pill.
+- Grids show today+6 rolling days (7 columns, weekends included). Resolve weekly blocks by actual weekday name, never by column position.
+- Cell states are exactly the §4 table: sky-blue dashed pending, soft-green confirmed, rose-striped blocked, blush selected; 10px cell radius; keep the existing cascade/hover/press motion.
+- designs/*.html are browser-openable prototypes for reference only — never import or port their runtime (support.js, image-slot.js).

@@ -1,0 +1,13 @@
+---
+description: KIS Creativity Space visual rebrand — type, header, pixel robot, motion & color feedback
+alwaysApply: true
+---
+
+- This folder is a design handoff for a styling-only rebrand; README.md is the source of truth (exact hexes, px sizes, animation timings).
+- Fonts: Space Grotesk (body/headings) + Space Mono (labels/numbers) everywhere; no Manrope or IBM Plex Mono left behind.
+- The pixel robot logo is pure CSS on a 3px grid (spec in README §2) — build it once as a reusable component with a scale prop; same mark for web header, splash, launcher/notification icons.
+- Header: black #141414 band, full-height right action panel that floods #c8102e on hover, 3px red/black rule below.
+- No Telegram feed, no About page/nav link.
+- Palette is fixed: #141414 / #f4f1ea / #c8102e plus the README token list; area-pill colors are exact pairs per area.
+- Motion: use the README keyframes and delays; every interactive control gets an :active press-scale; wrap all transforms/infinite animations in a prefers-reduced-motion guard.
+- designs/*.html are browser-openable prototypes for reference only — never import or port their runtime (support.js, android-frame.jsx).
