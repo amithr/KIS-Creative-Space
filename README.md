@@ -1,6 +1,6 @@
 # KIS Creativity Space
 
-Next.js site for the KIS school makerspace, matching design handoff v5 (Resources, Schedule, About, Admin) and the shared [docs/DATA-CONTRACT.md](docs/DATA-CONTRACT.md) with the Flutter companion app.
+Next.js site for the KIS school makerspace, matching design handoff v5 (Resources, Schedule, Admin) and the shared [docs/DATA-CONTRACT.md](docs/DATA-CONTRACT.md) with the Flutter companion app.
 
 ## Pages
 
@@ -8,7 +8,6 @@ Next.js site for the KIS school makerspace, matching design handoff v5 (Resource
 |-------|-------------|
 | `/` | Resources — live inventory, date/period reservations, OUT bands |
 | `/schedule` | Request room periods (P1–P8); pending until admin confirms |
-| `/about` | About the space |
 | `/admin` | Tabs: Space bookings (requests + blocks) · Items & inventory (loans, check-out/in, QR, stock) |
 | `/equipment/[qrCode]` | QR landing page |
 

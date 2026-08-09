@@ -12,7 +12,6 @@ export function Header() {
   if (isAdmin) return null;
 
   const isSchedule = pathname.startsWith("/schedule");
-  const isAbout = pathname.startsWith("/about");
 
   return (
     <header className="sticky top-0 z-30 border-b border-[#e3e0d8] bg-white">
@@ -30,15 +29,10 @@ export function Header() {
           </Link>
         ) : (
           <>
-            <nav className="hidden items-center gap-7 text-[13px] md:flex">
-              {isAbout ? (
-                <Link href="/">Resources</Link>
-              ) : (
-                <Link href="/about">About the space</Link>
-              )}
+            <nav className="hidden items-center md:flex">
               <Link
                 href="/schedule"
-                className="rounded-full bg-[#141414] px-4 py-2 text-white transition-colors hover:bg-[#c8102e] hover:text-white"
+                className="rounded-full bg-[#141414] px-4 py-2 text-[13px] text-white transition-colors hover:bg-[#c8102e] hover:text-white"
               >
                 Schedule the space
               </Link>
@@ -59,24 +53,13 @@ export function Header() {
 
       {menuOpen && !isSchedule && (
         <div className="border-t border-[#e3e0d8] px-5 py-4 md:hidden">
-          <div className="flex flex-col gap-4 text-[14px]">
-            {isAbout ? (
-              <Link href="/" onClick={() => setMenuOpen(false)}>
-                Resources
-              </Link>
-            ) : (
-              <Link href="/about" onClick={() => setMenuOpen(false)}>
-                About the space
-              </Link>
-            )}
-            <Link
-              href="/schedule"
-              onClick={() => setMenuOpen(false)}
-              className="rounded-full bg-[#141414] px-4 py-2.5 text-center text-white hover:text-white"
-            >
-              Schedule the space
-            </Link>
-          </div>
+          <Link
+            href="/schedule"
+            onClick={() => setMenuOpen(false)}
+            className="block rounded-full bg-[#141414] px-4 py-2.5 text-center text-[14px] text-white hover:text-white"
+          >
+            Schedule the space
+          </Link>
         </div>
       )}
     </header>

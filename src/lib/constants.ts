@@ -16,39 +16,6 @@ export const AREA_OPTIONS = [
   "3D Printing",
 ] as const;
 
-export const AREAS = [
-  {
-    num: "01",
-    name: "LEGO Play",
-    body: "Open building tables stocked with Technic and Spike Prime. Free play for younger students, engineering challenges for older ones — bridges, gear trains, machines that actually work.",
-    meta: "ALL AGES · DROP-IN FRIENDLY",
-  },
-  {
-    num: "02",
-    name: "Robotics",
-    body: "Code meets hardware. Program mBots and Arduinos, wire up sensors and motors, and build machines that move, react and (sometimes) escape the table.",
-    meta: "GRADES 4+ · SOLDERING SUPERVISED",
-  },
-  {
-    num: "03",
-    name: "Art & Design",
-    body: "The analog heart of the space: sketching, painting, paper craft, cutting mats and a wall to pin work in progress. Design your project here before you build it anywhere else.",
-    meta: "ALL AGES · MATERIALS PROVIDED",
-  },
-  {
-    num: "04",
-    name: "VR Lab",
-    body: "Step inside your subject. Walk through ancient Rome, dissect a virtual frog, or sculpt in 3D space with our Quest headsets.",
-    meta: "GRADES 5+ · 20-MIN SESSIONS",
-  },
-  {
-    num: "05",
-    name: "3D Printing",
-    body: "From an idea on screen to an object in your hand. Model in Tinkercad, print on our Prusa machines, and iterate until it's right.",
-    meta: "GRADES 3+ · PLA ONLY",
-  },
-] as const;
-
 export const FALLBACK_EQUIPMENT = [
   {
     id: "1",
