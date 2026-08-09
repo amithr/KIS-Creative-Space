@@ -95,13 +95,13 @@ export function TrainingClient({
     return { session, state, style: cellVisual(state, isSel) };
   }
 
-  function selectCell(
+  function selectOpen(
     key: string,
     period: number,
     day: string,
     dateLabel: string,
     iso: string,
-    session: TrainingSession | undefined,
+    session?: TrainingSession,
   ) {
     setSel({ key, period, day, dateLabel, iso, session });
     setBookName("");
@@ -109,17 +109,57 @@ export function TrainingClient({
     setError("");
   }
 
+  function submitRequest() {
+    if (!sel || sel.session) return;
+    startTransition(async () => {
+      setError("");
+      const savedKey = sel.key;
+      const result = await createTrainingSession(
+        sel.iso,
+        sel.period,
+        bookName,
+        topic,
+      );
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      const temp: TrainingSession = {
+        id: result.sessionId ?? `local-${Date.now()}`,
+        session_date: sel.iso,
+        period: sel.period,
+        teacher_name: bookName.trim(),
+        topic: topic.trim(),
+        status: "pending",
+        created_at: new Date().toISOString(),
+        decided_at: null,
+        decided_by: null,
+        decline_reason: null,
+      };
+      setSessions((prev) => [...prev, temp]);
+      setPopKey(savedKey);
+      window.setTimeout(() => setPopKey(null), 400);
+      setSel(null);
+      setBookName("");
+      setTopic("");
+    });
+  }
+
+  const requestCta = sel
+    ? `Request P${sel.period} · ${sel.day.charAt(0)}${sel.day.slice(1).toLowerCase()} ${sel.dateLabel.split(" ")[0]} →`
+    : "";
+
   const bookingBar = sel ? (
-    <div className="page-gutter sticky top-[88px] z-40 mb-6 pt-4">
-      <div className="kis-pop border-2 border-[#141414] bg-white px-5 py-4 shadow-[0_10px_30px_rgba(20,20,20,0.15)]">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+    <div className="page-gutter sticky top-3 z-40 mb-4 pt-3 md:top-[88px] md:mb-6 md:pt-4">
+      <div className="kis-pop border-2 border-[#141414] bg-white px-4 py-4 shadow-[0_10px_30px_rgba(20,20,20,0.15)] md:px-5">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
           <p className="shrink-0 font-mono text-[12px] tracking-[0.14em] text-[#c8102e]">
             {sel.day} {sel.dateLabel} · PERIOD {sel.period}
           </p>
           {sel.session ? (
             <>
               <span
-                className="shrink-0 rounded-full border px-2 py-0.5 font-mono text-[9px] tracking-wide"
+                className="shrink-0 self-start rounded-full border px-2 py-0.5 font-mono text-[9px] tracking-wide"
                 style={statusPillColors(
                   sel.session.status === "confirmed" ? "confirmed" : "pending",
                 )}
@@ -153,7 +193,7 @@ export function TrainingClient({
                     setSel(null);
                   })
                 }
-                className="kis-press border border-[#c8102e] px-4 py-2 text-[14px] font-semibold text-[#c8102e] hover:bg-[#c8102e] hover:text-white"
+                className="kis-press min-h-11 border border-[#c8102e] px-4 py-3 text-[14px] font-semibold text-[#c8102e] hover:bg-[#c8102e] hover:text-white md:py-2"
               >
                 Cancel this session
               </button>
@@ -164,52 +204,19 @@ export function TrainingClient({
                 value={bookName}
                 onChange={(e) => setBookName(e.target.value)}
                 placeholder="Teacher name (e.g. Ms. Bondar)"
-                className="min-w-0 flex-1 border border-[#e3e0d8] bg-white px-3 py-2.5 text-[14.5px] outline-none focus:border-[#141414]"
+                className="min-h-11 min-w-0 flex-1 border border-[#e3e0d8] bg-white px-3 py-2.5 text-[14.5px] outline-none focus:border-[#141414]"
               />
               <input
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 placeholder="What do you want help with?"
-                className="min-w-0 flex-[2] border border-[#e3e0d8] bg-white px-3 py-2.5 text-[14.5px] outline-none focus:border-[#141414]"
+                className="min-h-11 min-w-0 flex-[2] border border-[#e3e0d8] bg-white px-3 py-2.5 text-[14.5px] outline-none focus:border-[#141414]"
               />
               <button
                 type="button"
                 disabled={pending || !canSubmit}
-                onClick={() =>
-                  startTransition(async () => {
-                    setError("");
-                    const savedKey = sel.key;
-                    const result = await createTrainingSession(
-                      sel.iso,
-                      sel.period,
-                      bookName,
-                      topic,
-                    );
-                    if (!result.ok) {
-                      setError(result.error);
-                      return;
-                    }
-                    const temp: TrainingSession = {
-                      id: result.sessionId ?? `local-${Date.now()}`,
-                      session_date: sel.iso,
-                      period: sel.period,
-                      teacher_name: bookName.trim(),
-                      topic: topic.trim(),
-                      status: "pending",
-                      created_at: new Date().toISOString(),
-                      decided_at: null,
-                      decided_by: null,
-                      decline_reason: null,
-                    };
-                    setSessions((prev) => [...prev, temp]);
-                    setPopKey(savedKey);
-                    window.setTimeout(() => setPopKey(null), 400);
-                    setSel(null);
-                    setBookName("");
-                    setTopic("");
-                  })
-                }
-                className="kis-press bg-[#c8102e] px-4 py-2.5 text-[14px] font-semibold text-white hover:bg-[#a50d26] disabled:bg-[#d5d1c8] disabled:text-white"
+                onClick={submitRequest}
+                className="kis-press hidden min-h-11 bg-[#c8102e] px-4 py-2.5 text-[14px] font-semibold text-white hover:bg-[#a50d26] disabled:bg-[#d5d1c8] md:inline-flex md:items-center"
               >
                 Request session
               </button>
@@ -218,37 +225,54 @@ export function TrainingClient({
           <button
             type="button"
             onClick={() => setSel(null)}
-            className="kis-press text-[14px] text-[#6d6759]"
+            className="kis-press hidden text-[14px] text-[#6d6759] md:inline"
           >
             Close
           </button>
         </div>
 
         {!sel.session && (
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="font-mono text-[11px] tracking-[0.14em] text-[#6d6759]">
-              QUICK TOPICS
-            </span>
-            {QUICK_TOPICS.map((t) => {
-              const active = topic === t;
-              return (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setTopic(t)}
-                  className="kis-press rounded-full px-3 py-1 text-[13px] font-semibold"
-                  style={{
-                    background: active ? "#141414" : "#fff",
-                    color: active ? "#fff" : "#3f3b33",
-                    border: `1px solid ${active ? "#141414" : "#e3e0d8"}`,
-                  }}
-                >
-                  {t}
-                </button>
-              );
-            })}
-          </div>
+          <>
+            <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1">
+              <span className="shrink-0 font-mono text-[11px] tracking-[0.14em] text-[#6d6759]">
+                QUICK TOPICS
+              </span>
+              {QUICK_TOPICS.map((t) => {
+                const active = topic === t;
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setTopic(t)}
+                    className="kis-press shrink-0 rounded-full px-3 py-1 text-[13px] font-semibold"
+                    style={{
+                      background: active ? "#141414" : "#fff",
+                      color: active ? "#fff" : "#3f3b33",
+                      border: `1px solid ${active ? "#141414" : "#e3e0d8"}`,
+                    }}
+                  >
+                    {t}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              disabled={pending || !canSubmit}
+              onClick={submitRequest}
+              className="kis-press mt-3 flex min-h-11 w-full items-center justify-center rounded-full bg-[#c8102e] px-4 text-[13.5px] font-semibold text-white hover:bg-[#a50d26] disabled:bg-[#d5d1c8] md:hidden"
+            >
+              {requestCta}
+            </button>
+          </>
         )}
+        <button
+          type="button"
+          onClick={() => setSel(null)}
+          className="kis-press mt-2 w-full text-center text-[14px] text-[#6d6759] md:hidden"
+        >
+          Close
+        </button>
         {error && (
           <p className="mt-3 text-[14px] text-[#c8102e]">{error}</p>
         )}
@@ -260,31 +284,36 @@ export function TrainingClient({
     <div className="flex min-h-[calc(100vh-73px)] flex-col">
       {bookingBar}
 
-      <section className="page-gutter flex flex-wrap items-end justify-between gap-6 pb-[26px] pt-8">
+      <section className="page-gutter flex flex-wrap items-end justify-between gap-6 pb-5 pt-6 md:pb-[26px] md:pt-8">
         <div>
-          <p className="mb-3 font-mono text-[12px] tracking-[0.2em] text-[#6d6759]">
+          <p className="mb-2 font-mono text-[10px] tracking-[0.18em] text-[#8a857a] md:mb-3 md:text-[12px] md:tracking-[0.2em] md:text-[#6d6759]">
             НАВЧАННЯ · TRAINING
           </p>
-          <h1 className="font-display text-[46px] font-normal leading-[1.05] tracking-[-0.02em]">
+          <h1 className="font-display text-[25px] font-light leading-[1.05] tracking-[-0.01em] md:text-[46px] md:tracking-[-0.02em]">
             Book a training session
           </h1>
-          <span className="kis-title-underline" />
-          <p className="mt-3 text-[15.5px] text-[#6d6759]">
-            Pick a free class period and tell the Creativity Space coordinator
-            what you want help with. Availability follows the space schedule —
-            booked or blocked periods aren&apos;t open for training.
+          <span className="kis-title-underline !mt-2.5 !w-12 md:!mt-3.5 md:!w-16" />
+          <p className="mt-2.5 text-[12.5px] text-[#8a857a] md:mt-3 md:text-[14.5px] md:text-[#6d6759]">
+            <span className="md:hidden">
+              Request help for a free class period
+            </span>
+            <span className="hidden md:inline">
+              Pick a free class period and tell the Creativity Space coordinator
+              what you want help with. Availability follows the space schedule —
+              booked or blocked periods aren&apos;t open for training.
+            </span>
           </p>
         </div>
-        <p className="pb-1 font-mono text-[12px] tracking-[0.16em] text-[#6d6759]">
+        <p className="hidden pb-1 font-mono text-[12px] tracking-[0.16em] text-[#6d6759] md:block">
           NEXT 7 DAYS
         </p>
       </section>
 
-      <div className="page-gutter mb-4 flex gap-2 overflow-x-auto md:hidden">
+      <div className="page-gutter mb-4 flex gap-1.5 overflow-x-auto pb-1 md:hidden">
         {dates.map((d, i) => {
           const iso = toISODate(d);
           const active = mobileDay === i;
-          const today = iso === todayIso;
+          const dayNum = d.getDate();
           return (
             <button
               key={iso}
@@ -293,14 +322,20 @@ export function TrainingClient({
                 setMobileDay(i);
                 setSel(null);
               }}
-              className="kis-press shrink-0 rounded-full px-3.5 py-2 text-[14.5px] font-semibold"
+              className="kis-press min-h-11 min-w-[48px] flex-1 rounded-[10px] px-1 py-2 text-center"
               style={{
                 background: active ? "#c8102e" : "#fff",
-                color: active ? "#fff" : today ? "#c8102e" : "#3f3b33",
+                color: active ? "#fff" : "#3f3b33",
                 border: `1px solid ${active ? "#c8102e" : "#e3e0d8"}`,
+                boxShadow: active
+                  ? "0 0 0 3px rgba(200,16,46,.15)"
+                  : undefined,
               }}
             >
-              {weekdayOfDate(d)} {formatDayShort(d)}
+              <div className="font-mono text-[9px] tracking-[0.1em]">
+                {weekdayOfDate(d)}
+              </div>
+              <div className="mt-0.5 text-[13.5px] font-semibold">{dayNum}</div>
             </button>
           );
         })}
@@ -354,7 +389,7 @@ export function TrainingClient({
                   disabled={!style.clickable}
                   onClick={() => {
                     if (!style.clickable) return;
-                    selectCell(
+                    selectOpen(
                       key,
                       period,
                       weekdayOfDate(d),
@@ -382,7 +417,7 @@ export function TrainingClient({
         ))}
       </div>
 
-      <div className="page-gutter mb-8 space-y-2 md:hidden">
+      <div className="page-gutter mb-8 border-t border-[#141414] md:hidden">
         {PERIODS.map((period) => {
           const d = dates[mobileDay];
           const iso = toISODate(d);
@@ -391,42 +426,48 @@ export function TrainingClient({
           const { session, style } = slotFor(iso, period, isSel);
 
           return (
-            <button
+            <div
               key={key}
-              type="button"
-              disabled={!style.clickable}
-              onClick={() => {
-                if (!style.clickable) return;
-                selectCell(
-                  key,
-                  period,
-                  weekdayOfDate(d),
-                  formatDayShort(d),
-                  iso,
-                  session,
-                );
-              }}
-              className={`kis-press kis-sched-cell flex w-full items-center justify-between rounded-[10px] px-4 py-3.5 text-left text-[14.5px] ${
-                isSel ? "kis-sched-cell-selected" : ""
-              } ${popKey === key ? "kis-pop" : ""}`}
-              style={{
-                background: style.background,
-                color: style.color,
-                border: style.border,
-                cursor: style.cursor,
-              }}
+              className="flex items-center gap-3 border-b border-[#eeece5] py-2.5"
             >
-              <span className="font-mono text-[12px]">P{period}</span>
-              <span>
-                {style.text ||
-                  (isSel ? "Selected" : "Open — tap to request")}
+              <span className="w-[26px] shrink-0 font-mono text-[11px] text-[#8a857a]">
+                P{period}
               </span>
-            </button>
+              <button
+                type="button"
+                disabled={!style.clickable}
+                onClick={() => {
+                  if (!style.clickable) return;
+                  selectOpen(
+                    key,
+                    period,
+                    weekdayOfDate(d),
+                    formatDayShort(d),
+                    iso,
+                    session,
+                  );
+                }}
+                className={`kis-press kis-sched-cell min-h-11 flex-1 rounded-[10px] px-3.5 py-2.5 text-left text-[12px] ${
+                  isSel ? "kis-sched-cell-selected" : ""
+                } ${popKey === key ? "kis-pop" : ""}`}
+                style={{
+                  background: style.background,
+                  color: style.color,
+                  border: style.border,
+                  cursor: style.cursor,
+                }}
+              >
+                {style.text ||
+                  (isSel
+                    ? "Selected — confirm below"
+                    : "Open — tap to book")}
+              </button>
+            </div>
           );
         })}
       </div>
 
-      <div className="page-gutter mb-6 flex flex-wrap gap-6 text-[14.5px] text-[#6d6759]">
+      <div className="page-gutter mb-6 hidden flex-wrap gap-6 text-[14.5px] text-[#6d6759] md:flex">
         <span className="flex items-center gap-2">
           <span className="inline-block h-3 w-3 rounded-[4px] border border-[#e3e0d8] bg-white" />{" "}
           Open — click to book
@@ -462,7 +503,7 @@ export function TrainingClient({
         </span>
       </div>
 
-      <p className="page-gutter mb-10 text-[14.5px] text-[#6d6759]">
+      <p className="page-gutter mb-10 hidden text-[14.5px] text-[#6d6759] md:block">
         Sessions are one class period · next 7 days · availability matches
         Schedule the space · the coordinator confirms each request
       </p>

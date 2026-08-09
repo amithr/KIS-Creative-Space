@@ -100,6 +100,13 @@
   animation: kis-underline 0.7s ease 0.25s forwards;
 }
 
+@media (max-width: 767px) {
+  .kis-title-underline {
+    width: 48px;
+    margin-top: 10px;
+  }
+}
+
 @keyframes kis-underline {
   to {
     transform: scaleX(1);

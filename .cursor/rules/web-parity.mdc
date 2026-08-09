@@ -1,0 +1,11 @@
+---
+description: KIS Creativity Space — web + mobile web design-parity audit
+alwaysApply: true
+---
+
+- This folder is a parity-audit handoff; README.md's checklists are the acceptance criteria for desktop (≥1024px) and mobile web (≤767px).
+- designs/*.dc.html are the source of truth for current look and behavior — open them in a browser to compare; never import or port their runtime (support.js, android-frame.jsx, image-slot.js).
+- Audit first, then fix: enumerate mismatches per page before editing; fix one page at a time and re-verify against the prototype.
+- Non-negotiables: Space Grotesk/Space Mono only; unified black header with active-route highlight; rolling today+6 scheduling grids; sticky top booking form; the exact cell-state palette; training availability = no booking + no block + no session.
+- Mobile mockups (turns 6–7) defer to newer desktop specs where they conflict (grid window, cell colors).
+- No data-model or API changes — visual/behavioral parity only.

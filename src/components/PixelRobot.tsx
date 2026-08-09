@@ -12,10 +12,9 @@ export function PixelRobot({ size = 38, className }: PixelRobotProps) {
 
   return (
     <span
-      className={className}
+      className={className ? `inline-block ${className}` : "inline-block"}
       aria-hidden
       style={{
-        display: "inline-block",
         width: size,
         height: size,
         flex: "none",

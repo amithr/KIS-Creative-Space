@@ -12,25 +12,20 @@ import {
   startOfDay,
   toISODate,
 } from "@/lib/inventory";
-import {
-  activeTrainingAt,
-  blockAt,
-  evaluatePeriodSlot,
-} from "@/lib/period-slot";
+import { blockAt, evaluatePeriodSlot } from "@/lib/period-slot";
 import {
   cellVisual,
   rollingSevenDays,
   statusPillColors,
   weekdayOfDate,
 } from "@/lib/schedule-ui";
-import type { SpaceBlock, SpaceBooking, TrainingSession } from "@/lib/types";
+import type { SpaceBlock, SpaceBooking } from "@/lib/types";
 
 const PERIODS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 
 type ScheduleClientProps = {
   initialBookings: SpaceBooking[];
   initialBlocks: SpaceBlock[];
-  initialTrainingSessions: TrainingSession[];
 };
 
 type Selection = {
@@ -51,11 +46,9 @@ function pickDisplayBooking(list: SpaceBooking[]): SpaceBooking | undefined {
 export function ScheduleClient({
   initialBookings,
   initialBlocks,
-  initialTrainingSessions,
 }: ScheduleClientProps) {
   const [bookings, setBookings] = useState(initialBookings);
   const blocks = initialBlocks;
-  const trainingSessions = initialTrainingSessions;
   const [sel, setSel] = useState<Selection | null>(null);
   const [bookName, setBookName] = useState("");
   const [error, setError] = useState("");
@@ -81,7 +74,6 @@ export function ScheduleClient({
 
   function slotFor(iso: string, period: number, isSel: boolean) {
     const booking = pickDisplayBooking(bySlot.get(bookingKey(iso, period)) ?? []);
-    const training = activeTrainingAt(trainingSessions, iso, period);
     const block = blockAt(blocks, iso, period);
     const state = evaluatePeriodSlot({
       mode: "space",
@@ -89,26 +81,38 @@ export function ScheduleClient({
       isSelected: isSel,
       block,
       spaceBooking: booking,
-      trainingSession: training,
     });
-    return {
-      booking,
-      state,
-      style: cellVisual(state, isSel),
-    };
+    return { booking, state, style: cellVisual(state, isSel) };
   }
 
+  function selectOpen(
+    key: string,
+    period: number,
+    day: string,
+    dateLabel: string,
+    iso: string,
+    booking?: SpaceBooking,
+  ) {
+    setSel({ key, period, day, dateLabel, iso, booking });
+    setBookName("");
+    setError("");
+  }
+
+  const requestCta = sel
+    ? `Request P${sel.period} · ${sel.day.charAt(0)}${sel.day.slice(1).toLowerCase()} ${sel.dateLabel.split(" ")[0]} →`
+    : "";
+
   const bookingBar = sel ? (
-    <div className="page-gutter sticky top-[88px] z-40 mb-6 pt-4">
-      <div className="kis-pop border-2 border-[#141414] bg-white px-5 py-4 shadow-[0_10px_30px_rgba(20,20,20,0.15)]">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+    <div className="page-gutter sticky top-3 z-40 mb-4 pt-3 md:top-[88px] md:mb-6 md:pt-4">
+      <div className="kis-pop border-2 border-[#141414] bg-white px-4 py-4 shadow-[0_10px_30px_rgba(20,20,20,0.15)] md:px-5">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
           <p className="shrink-0 font-mono text-[12px] tracking-[0.14em] text-[#c8102e]">
             {sel.day} {sel.dateLabel} · PERIOD {sel.period}
           </p>
           {sel.booking ? (
             <>
               <span
-                className="shrink-0 rounded-full border px-2 py-0.5 font-mono text-[9px] tracking-wide"
+                className="shrink-0 self-start rounded-full border px-2 py-0.5 font-mono text-[9px] tracking-wide"
                 style={statusPillColors(
                   sel.booking.status === "confirmed" ? "confirmed" : "pending",
                 )}
@@ -141,7 +145,7 @@ export function ScheduleClient({
                     setSel(null);
                   })
                 }
-                className="kis-press border border-[#c8102e] px-4 py-2 text-[14px] font-semibold text-[#c8102e] hover:bg-[#c8102e] hover:text-white"
+                className="kis-press min-h-11 border border-[#c8102e] px-4 py-3 text-[14px] font-semibold text-[#c8102e] hover:bg-[#c8102e] hover:text-white md:py-2"
               >
                 Cancel this request
               </button>
@@ -152,11 +156,11 @@ export function ScheduleClient({
                 value={bookName}
                 onChange={(e) => setBookName(e.target.value)}
                 placeholder="Teacher name and class (e.g. Ms. Bondar — 7B Science)"
-                className="min-w-0 flex-1 border border-[#e3e0d8] bg-white px-3 py-2.5 text-[14.5px] outline-none focus:border-[#141414]"
+                className="min-h-11 min-w-0 flex-1 border border-[#e3e0d8] bg-white px-3 py-2.5 text-[14.5px] outline-none focus:border-[#141414]"
               />
               <button
                 type="button"
-                disabled={pending}
+                disabled={pending || !bookName.trim()}
                 onClick={() =>
                   startTransition(async () => {
                     setError("");
@@ -191,7 +195,7 @@ export function ScheduleClient({
                     setBookName("");
                   })
                 }
-                className="kis-press bg-[#c8102e] px-4 py-2.5 text-[14px] font-semibold text-white hover:bg-[#a50d26]"
+                className="kis-press hidden min-h-11 bg-[#c8102e] px-4 py-2.5 text-[14px] font-semibold text-white hover:bg-[#a50d26] disabled:bg-[#d5d1c8] md:inline-flex md:items-center"
               >
                 Request this period
               </button>
@@ -200,11 +204,61 @@ export function ScheduleClient({
           <button
             type="button"
             onClick={() => setSel(null)}
-            className="kis-press text-[14px] text-[#6d6759]"
+            className="kis-press hidden text-[14px] text-[#6d6759] md:inline"
           >
             Close
           </button>
         </div>
+        {!sel.booking && (
+          <button
+            type="button"
+            disabled={pending || !bookName.trim()}
+            onClick={() =>
+              startTransition(async () => {
+                setError("");
+                const savedKey = sel.key;
+                const result = await createPeriodBooking(
+                  sel.iso,
+                  sel.period,
+                  bookName,
+                );
+                if (!result.ok) {
+                  setError(result.error);
+                  return;
+                }
+                const temp: SpaceBooking = {
+                  id: result.bookingId ?? `local-${Date.now()}`,
+                  booking_date: sel.iso,
+                  period: sel.period,
+                  teacher_name: bookName.trim(),
+                  purpose: null,
+                  area: null,
+                  request_group: null,
+                  status: "pending",
+                  created_at: new Date().toISOString(),
+                  decided_at: null,
+                  decided_by: null,
+                  decline_reason: null,
+                };
+                setBookings((prev) => [...prev, temp]);
+                setPopKey(savedKey);
+                window.setTimeout(() => setPopKey(null), 400);
+                setSel(null);
+                setBookName("");
+              })
+            }
+            className="kis-press mt-3 flex min-h-11 w-full items-center justify-center rounded-full bg-[#c8102e] px-4 text-[13.5px] font-semibold text-white hover:bg-[#a50d26] disabled:bg-[#d5d1c8] md:hidden"
+          >
+            {requestCta}
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => setSel(null)}
+          className="kis-press mt-2 w-full text-center text-[14px] text-[#6d6759] md:hidden"
+        >
+          Close
+        </button>
         {error && (
           <p className="mt-3 text-[14px] text-[#c8102e]">{error}</p>
         )}
@@ -216,31 +270,36 @@ export function ScheduleClient({
     <div className="flex min-h-[calc(100vh-73px)] flex-col">
       {bookingBar}
 
-      <section className="page-gutter flex flex-wrap items-end justify-between gap-6 pb-[26px] pt-8">
+      <section className="page-gutter flex flex-wrap items-end justify-between gap-6 pb-5 pt-6 md:pb-[26px] md:pt-8">
         <div>
-          <p className="mb-3 font-mono text-[12px] tracking-[0.2em] text-[#6d6759]">
+          <p className="mb-2 font-mono text-[10px] tracking-[0.18em] text-[#8a857a] md:mb-3 md:text-[12px] md:tracking-[0.2em] md:text-[#6d6759]">
             РОЗКЛАД · SCHEDULE
           </p>
-          <h1 className="font-display text-[46px] font-normal leading-[1.05] tracking-[-0.02em]">
+          <h1 className="font-display text-[25px] font-light leading-[1.05] tracking-[-0.01em] md:text-[46px] md:tracking-[-0.02em]">
             Schedule the space
           </h1>
-          <span className="kis-title-underline" />
-          <p className="mt-3 text-[14.5px] text-[#6d6759]">
-            Teachers can request class periods up to one week in advance. The
-            Creativity Space team confirms each request — you&apos;ll get a
-            notification.
+          <span className="kis-title-underline !mt-2.5 !w-12 md:!mt-3.5 md:!w-16" />
+          <p className="mt-2.5 text-[12.5px] text-[#8a857a] md:mt-3 md:text-[14.5px] md:text-[#6d6759]">
+            <span className="md:hidden">
+              Book class periods up to one week ahead
+            </span>
+            <span className="hidden md:inline">
+              Teachers can request class periods up to one week in advance. The
+              Creativity Space team confirms each request — you&apos;ll get a
+              notification.
+            </span>
           </p>
         </div>
-        <p className="pb-1 font-mono text-[12px] tracking-[0.16em] text-[#6d6759]">
+        <p className="hidden pb-1 font-mono text-[12px] tracking-[0.16em] text-[#6d6759] md:block">
           NEXT 7 DAYS
         </p>
       </section>
 
-      <div className="page-gutter mb-4 flex gap-2 overflow-x-auto md:hidden">
+      <div className="page-gutter mb-4 flex gap-1.5 overflow-x-auto pb-1 md:hidden">
         {dates.map((d, i) => {
           const iso = toISODate(d);
           const active = mobileDay === i;
-          const today = iso === todayIso;
+          const dayNum = d.getDate();
           return (
             <button
               key={iso}
@@ -249,14 +308,20 @@ export function ScheduleClient({
                 setMobileDay(i);
                 setSel(null);
               }}
-              className="kis-press shrink-0 rounded-full px-3.5 py-2 text-[14.5px] font-semibold"
+              className="kis-press min-h-11 min-w-[48px] flex-1 rounded-[10px] px-1 py-2 text-center"
               style={{
                 background: active ? "#c8102e" : "#fff",
-                color: active ? "#fff" : today ? "#c8102e" : "#3f3b33",
+                color: active ? "#fff" : "#3f3b33",
                 border: `1px solid ${active ? "#c8102e" : "#e3e0d8"}`,
+                boxShadow: active
+                  ? "0 0 0 3px rgba(200,16,46,.15)"
+                  : undefined,
               }}
             >
-              {weekdayOfDate(d)} {formatDayShort(d)}
+              <div className="font-mono text-[9px] tracking-[0.1em]">
+                {weekdayOfDate(d)}
+              </div>
+              <div className="mt-0.5 text-[13.5px] font-semibold">{dayNum}</div>
             </button>
           );
         })}
@@ -310,16 +375,14 @@ export function ScheduleClient({
                   disabled={!style.clickable}
                   onClick={() => {
                     if (!style.clickable) return;
-                    setSel({
+                    selectOpen(
                       key,
                       period,
-                      day: weekdayOfDate(d),
-                      dateLabel: formatDayShort(d),
+                      weekdayOfDate(d),
+                      formatDayShort(d),
                       iso,
                       booking,
-                    });
-                    setBookName("");
-                    setError("");
+                    );
                   }}
                   className={`kis-fadeup kis-press kis-sched-cell m-1 min-h-[56px] rounded-[10px] px-1 text-center text-[14.5px] ${
                     isSel ? "kis-sched-cell-selected" : ""
@@ -340,7 +403,7 @@ export function ScheduleClient({
         ))}
       </div>
 
-      <div className="page-gutter mb-8 space-y-2 md:hidden">
+      <div className="page-gutter mb-8 border-t border-[#141414] md:hidden">
         {PERIODS.map((period) => {
           const d = dates[mobileDay];
           const iso = toISODate(d);
@@ -349,44 +412,48 @@ export function ScheduleClient({
           const { booking, style } = slotFor(iso, period, isSel);
 
           return (
-            <button
+            <div
               key={key}
-              type="button"
-              disabled={!style.clickable}
-              onClick={() => {
-                if (!style.clickable) return;
-                setSel({
-                  key,
-                  period,
-                  day: weekdayOfDate(d),
-                  dateLabel: formatDayShort(d),
-                  iso,
-                  booking,
-                });
-                setBookName("");
-                setError("");
-              }}
-              className={`kis-press kis-sched-cell flex w-full items-center justify-between rounded-[10px] px-4 py-3.5 text-left text-[14.5px] ${
-                isSel ? "kis-sched-cell-selected" : ""
-              } ${popKey === key ? "kis-pop" : ""}`}
-              style={{
-                background: style.background,
-                color: style.color,
-                border: style.border,
-                cursor: style.cursor,
-              }}
+              className="flex items-center gap-3 border-b border-[#eeece5] py-2.5"
             >
-              <span className="font-mono text-[12px]">P{period}</span>
-              <span>
-                {style.text ||
-                  (isSel ? "Selected" : "Open — tap to request")}
+              <span className="w-[26px] shrink-0 font-mono text-[11px] text-[#8a857a]">
+                P{period}
               </span>
-            </button>
+              <button
+                type="button"
+                disabled={!style.clickable}
+                onClick={() => {
+                  if (!style.clickable) return;
+                  selectOpen(
+                    key,
+                    period,
+                    weekdayOfDate(d),
+                    formatDayShort(d),
+                    iso,
+                    booking,
+                  );
+                }}
+                className={`kis-press kis-sched-cell min-h-11 flex-1 rounded-[10px] px-3.5 py-2.5 text-left text-[12px] ${
+                  isSel ? "kis-sched-cell-selected" : ""
+                } ${popKey === key ? "kis-pop" : ""}`}
+                style={{
+                  background: style.background,
+                  color: style.color,
+                  border: style.border,
+                  cursor: style.cursor,
+                }}
+              >
+                {style.text ||
+                  (isSel
+                    ? "Selected — confirm below"
+                    : "Open — tap to book")}
+              </button>
+            </div>
           );
         })}
       </div>
 
-      <div className="page-gutter mb-6 flex flex-wrap gap-6 text-[14.5px] text-[#6d6759]">
+      <div className="page-gutter mb-6 hidden flex-wrap gap-6 text-[14.5px] text-[#6d6759] md:flex">
         <span className="flex items-center gap-2">
           <span className="inline-block h-3 w-3 rounded-[4px] border border-[#e3e0d8] bg-white" />{" "}
           Open — click to book
@@ -406,10 +473,6 @@ export function ScheduleClient({
           Confirmed
         </span>
         <span className="flex items-center gap-2">
-          <span className="inline-block h-3 w-3 rounded-[4px] border border-[#eeece5] bg-[#eeece5]" />{" "}
-          Training session
-        </span>
-        <span className="flex items-center gap-2">
           <span
             className="inline-block h-3 w-3 rounded-[4px]"
             style={{
@@ -422,10 +485,9 @@ export function ScheduleClient({
         </span>
       </div>
 
-      <p className="page-gutter mb-10 text-[14.5px] text-[#6d6759]">
-        Requests are per class period (P1–P8) · next 7 days · availability
-        matches the Training page (blocks, space bookings, and training sessions
-        share the same periods)
+      <p className="page-gutter mb-10 hidden text-[14.5px] text-[#6d6759] md:block">
+        Requests are per class period (P1–P8) · next 7 days · the Creativity
+        Space team confirms each request
       </p>
 
       <SiteFooter />

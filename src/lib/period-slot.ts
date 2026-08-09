@@ -65,10 +65,7 @@ export function evaluatePeriodSlot(input: {
     }
   }
 
-  // The other schedule occupies this period — not bookable here.
-  if (mode === "space" && trainingSession) {
-    return { kind: "cross-occupied", label: "Training" };
-  }
+  // One-way: space bookings block training; training never blocks the space schedule.
   if (mode === "training" && spaceBooking) {
     return { kind: "cross-occupied", label: "Space in use" };
   }

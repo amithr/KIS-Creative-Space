@@ -250,10 +250,9 @@ export async function createPeriodBooking(
     return { ok: true };
   }
 
-  const [blocks, spaceBookings, trainingSessions] = await Promise.all([
+  const [blocks, spaceBookings] = await Promise.all([
     getSpaceBlocks(),
     getPeriodBookings(bookingDate, bookingDate),
-    getTrainingSessions(bookingDate, bookingDate),
   ]);
 
   const gate = slotIsRequestable({
@@ -261,7 +260,6 @@ export async function createPeriodBooking(
     inWindow: true,
     block: blockAt(blocks, bookingDate, period),
     spaceBooking: activeSpaceAt(spaceBookings, bookingDate, period),
-    trainingSession: activeTrainingAt(trainingSessions, bookingDate, period),
   });
   if (!gate.ok) return { ok: false, error: gate.error };
 
