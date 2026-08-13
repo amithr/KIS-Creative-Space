@@ -1,10 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { FALLBACK_EQUIPMENT } from "@/lib/constants";
 import { hasSupabasePublicEnv } from "@/lib/supabase/env";
+import { normalizeItemRequest } from "@/lib/item-requests";
 import type {
   Equipment,
   EquipmentUnit,
   EquipmentWithUnits,
+  ItemRequest,
   Reservation,
   SiteSettings,
   SpaceBlock,
@@ -22,7 +24,12 @@ const DEFAULT_SETTINGS: SiteSettings = {
   max_reservation_days: 7,
 };
 
-function normalizeEquipment(row: Equipment): Equipment {
+function normalizeEquipment(
+  row: Omit<Equipment, "in_space_only" | "quantity_total"> & {
+    quantity_total?: number;
+    in_space_only?: boolean;
+  },
+): Equipment {
   const total =
     typeof row.quantity_total === "number" && row.quantity_total >= 0
       ? row.quantity_total
@@ -30,6 +37,7 @@ function normalizeEquipment(row: Equipment): Equipment {
   return {
     ...row,
     quantity_total: Math.max(total, row.quantity_available),
+    in_space_only: Boolean(row.in_space_only),
   };
 }
 
@@ -417,6 +425,67 @@ export async function isTeacher(): Promise<boolean> {
     .maybeSingle();
 
   return Boolean(data);
+}
+
+const FALLBACK_ITEM_REQUESTS: ItemRequest[] = [
+  {
+    id: "rq-demo-1",
+    name: "Makey Makey classroom kits",
+    why: "Intro circuits unit for grade 5",
+    by: "Ms. Chen",
+    votes: 4,
+    status: "ordered",
+    created_at: new Date(Date.now() - 12 * 864e5).toISOString(),
+  },
+  {
+    id: "rq-demo-2",
+    name: "Cricut vinyl rolls (assorted)",
+    why: "cricut.com/vinyl — the sticker unit ran out",
+    by: "Mr. Kovalenko",
+    votes: 2,
+    status: "requested",
+    created_at: new Date(Date.now() - 3 * 864e5).toISOString(),
+  },
+];
+
+/** Public + admin wishlist. Pass voterKey to mark which rows the viewer voted on. */
+export async function getItemRequests(
+  voterKey?: string,
+): Promise<ItemRequest[]> {
+  if (!hasSupabaseEnv()) {
+    return FALLBACK_ITEM_REQUESTS.map((r) => ({ ...r, voted: false }));
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("item_requests")
+    .select("*")
+    .order("votes", { ascending: false })
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Failed to load item requests:", error.message);
+    return FALLBACK_ITEM_REQUESTS.map((r) => ({ ...r, voted: false }));
+  }
+
+  const votedIds = new Set<string>();
+  const key = voterKey?.trim();
+  if (key) {
+    const { data: votes } = await supabase
+      .from("item_request_votes")
+      .select("request_id")
+      .eq("voter_key", key);
+    for (const v of votes ?? []) {
+      votedIds.add(String(v.request_id));
+    }
+  }
+
+  return (data ?? []).map((row) =>
+    normalizeItemRequest(
+      row as Record<string, unknown>,
+      votedIds.has(String(row.id)),
+    ),
+  );
 }
 
 export { hasSupabaseEnv };

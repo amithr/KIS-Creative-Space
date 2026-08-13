@@ -6,6 +6,7 @@ export type Equipment = {
   detail: string;
   quantity_available: number;
   quantity_total: number;
+  in_space_only: boolean;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -120,3 +121,22 @@ export type TrainingSession = {
 };
 
 export type StockStatus = "Available" | "Low stock" | "Unavailable";
+
+export type ItemRequestStatus =
+  | "requested"
+  | "approved"
+  | "ordered"
+  | "arrived";
+
+/** Wishlist suggestion from Resources — not an inventory item yet. */
+export type ItemRequest = {
+  id: string;
+  name: string;
+  why: string | null;
+  by: string;
+  votes: number;
+  status: ItemRequestStatus;
+  created_at: string;
+  /** Whether the current viewer has voted (client/session-specific). */
+  voted?: boolean;
+};

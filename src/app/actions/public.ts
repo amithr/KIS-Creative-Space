@@ -107,11 +107,18 @@ export async function createReservation(
   const supabase = await createClient();
   const { data: item, error } = await supabase
     .from("equipment")
-    .select("id, name, quantity_available")
+    .select("id, name, quantity_available, in_space_only")
     .eq("id", input.equipmentId)
     .maybeSingle();
 
   if (error || !item) return { ok: false, error: "Equipment not found." };
+
+  if (item.in_space_only) {
+    return {
+      ok: false,
+      error: `${item.name} stays in the Makerspace — it can't be checked out or taken to another space.`,
+    };
+  }
 
   const existing = await loadActiveReservations(supabase, input.equipmentId);
   const cap = qtyCapForSelection(
@@ -417,4 +424,126 @@ export async function cancelTrainingSession(
 
   revalidateTraining();
   return { ok: true };
+}
+
+function revalidateItemRequests() {
+  revalidatePath("/");
+  revalidatePath("/admin");
+}
+
+export type ItemRequestActionResult =
+  | {
+      ok: true;
+      id?: string;
+      votes?: number;
+      voted?: boolean;
+      name?: string;
+      why?: string | null;
+      by?: string;
+      status?: string;
+      created_at?: string;
+    }
+  | { ok: false; error: string };
+
+export async function createItemRequest(input: {
+  name: string;
+  why?: string;
+  by: string;
+  voterKey: string;
+}): Promise<ItemRequestActionResult> {
+  const name = input.name.trim();
+  const by = input.by.trim();
+  const why = input.why?.trim() ?? "";
+  const voterKey = input.voterKey.trim();
+
+  if (!name) return { ok: false, error: "Item name is required." };
+  if (!by) return { ok: false, error: "Your name is required." };
+  if (!voterKey) return { ok: false, error: "Missing voter key." };
+
+  if (!hasSupabaseEnv()) {
+    return {
+      ok: true,
+      id: `demo-${Date.now()}`,
+      name,
+      why: why || null,
+      by,
+      votes: 1,
+      status: "requested",
+      created_at: new Date().toISOString(),
+      voted: true,
+    };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("create_item_request", {
+    p_name: name,
+    p_why: why,
+    p_by: by,
+    p_voter_key: voterKey,
+  });
+
+  if (error) return { ok: false, error: error.message };
+
+  const row = data as Record<string, unknown>;
+  revalidateItemRequests();
+  return {
+    ok: true,
+    id: String(row.id),
+    name: String(row.name ?? name),
+    why: row.why == null ? null : String(row.why),
+    by: String(row.by ?? by),
+    votes: Number(row.votes ?? 1),
+    status: String(row.status ?? "requested"),
+    created_at: String(row.created_at ?? new Date().toISOString()),
+    voted: true,
+  };
+}
+
+export async function listMyVotedRequestIds(
+  voterKey: string,
+): Promise<string[]> {
+  const key = voterKey.trim();
+  if (!key || !hasSupabaseEnv()) return [];
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("item_request_votes")
+    .select("request_id")
+    .eq("voter_key", key);
+
+  if (error) {
+    console.error("Failed to load request votes:", error.message);
+    return [];
+  }
+  return (data ?? []).map((r) => String(r.request_id));
+}
+
+export async function toggleItemRequestVote(input: {
+  requestId: string;
+  voterKey: string;
+}): Promise<ItemRequestActionResult> {
+  const requestId = input.requestId.trim();
+  const voterKey = input.voterKey.trim();
+  if (!requestId) return { ok: false, error: "Missing request." };
+  if (!voterKey) return { ok: false, error: "Missing voter key." };
+
+  if (!hasSupabaseEnv()) {
+    return { ok: true, votes: 1, voted: true };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("toggle_item_request_vote", {
+    p_request_id: requestId,
+    p_voter_key: voterKey,
+  });
+
+  if (error) return { ok: false, error: error.message };
+
+  const row = data as Record<string, unknown>;
+  revalidateItemRequests();
+  return {
+    ok: true,
+    votes: Number(row.votes ?? 0),
+    voted: Boolean(row.voted),
+  };
 }

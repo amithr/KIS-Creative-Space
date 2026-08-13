@@ -1,12 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import {
   adminCheckInByCode,
   adminCheckOutByCode,
   createEquipment,
   deleteEquipment,
+  deleteItemRequest,
   resetToSampleData,
   resolveAdminItemCode,
   updateEquipment,
@@ -17,6 +18,7 @@ import { isNewItem } from "@/lib/inventory";
 import { dueBackLabel } from "@/lib/reservation-availability";
 import type {
   EquipmentWithUnits,
+  ItemRequest,
   Reservation,
   SpaceBlock,
   SpaceBooking,
@@ -24,6 +26,7 @@ import type {
 } from "@/lib/types";
 import { SiteFooter } from "@/components/SiteFooter";
 import { BlockPeriodsPanel } from "@/components/admin/BlockPeriodsPanel";
+import { ItemRequestsPanel } from "@/components/admin/ItemRequestsPanel";
 import { PrintQrLabelsPanel } from "@/components/admin/PrintQrLabelsPanel";
 import { SpaceBookingsPanel } from "@/components/admin/SpaceBookingsPanel";
 import { TrainingSessionsPanel } from "@/components/admin/TrainingSessionsPanel";
@@ -34,6 +37,7 @@ type AdminDashboardProps = {
   spaceBookings: SpaceBooking[];
   spaceBlocks: SpaceBlock[];
   trainingSessions: TrainingSession[];
+  itemRequests: ItemRequest[];
 };
 
 type Tab = "space" | "items";
@@ -49,6 +53,7 @@ export function AdminDashboard({
   spaceBookings,
   spaceBlocks,
   trainingSessions,
+  itemRequests,
 }: AdminDashboardProps) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("space");
@@ -59,12 +64,14 @@ export function AdminDashboard({
     area: "LEGO Play",
     avail: 1,
     total: 1,
+    inSpaceOnly: false,
   });
   const [message, setMessage] = useState("");
   const [code, setCode] = useState("");
   const [lookup, setLookup] = useState<AdminCodeLookup | null>(null);
   const [checkoutQty, setCheckoutQty] = useState(1);
   const [checkoutBy, setCheckoutBy] = useState("");
+  const addFormRef = useRef<HTMLFormElement>(null);
 
   const openLoans = useMemo(() => {
     const byId = new Map(equipment.map((e) => [e.id, e]));
@@ -108,6 +115,9 @@ export function AdminDashboard({
     }
     if (lookup?.ok && lookup.mode === "checkout") {
       return `${lookup.name} · ${lookup.available} in the space · no open loan`;
+    }
+    if (lookup?.ok && lookup.mode === "in_space_only") {
+      return `${lookup.name} · ${lookup.available} in the space · teachers can still book it for use inside the Makerspace`;
     }
     return null;
   })();
@@ -267,6 +277,18 @@ export function AdminDashboard({
                 />
               </label>
 
+              {lookup?.ok && lookup.mode === "in_space_only" && (
+                <div className="flex max-w-xl items-start gap-2.5 border border-[#141414] bg-[#f4f1ea] px-3.5 py-3">
+                  <span className="shrink-0 rounded-full bg-[#141414] px-2.5 py-0.5 font-mono text-[10px] tracking-[0.14em] text-[#f4f1ea]">
+                    IN-SPACE ONLY
+                  </span>
+                  <p className="text-[14px] text-[#3f3b33]">
+                    <strong>{lookup.name}</strong> stays in the Makerspace — it
+                    can&apos;t be checked out or taken to another space.
+                  </p>
+                </div>
+              )}
+
               {lookup?.ok && lookup.mode === "checkout" && (
                 <>
                   <label className="flex flex-col gap-1.5">
@@ -345,11 +367,47 @@ export function AdminDashboard({
 
           <PrintQrLabelsPanel equipment={equipment} />
 
+          <ItemRequestsPanel
+            requests={itemRequests}
+            onDone={(msg) => refresh(msg)}
+            onAddToInventory={(request) => {
+              setForm({
+                name: request.name,
+                note: request.why ?? "",
+                area: form.area,
+                avail: 1,
+                total: 1,
+                inSpaceOnly: false,
+              });
+              startTransition(async () => {
+                const result = await deleteItemRequest(request.id);
+                if (!result.ok) {
+                  setMessage(result.error);
+                  return;
+                }
+                refresh(
+                  `Cleared request — finish adding "${request.name}" below.`,
+                );
+                window.setTimeout(() => {
+                  const top =
+                    (addFormRef.current?.getBoundingClientRect().top ?? 0) +
+                    window.scrollY -
+                    80;
+                  window.scrollTo({ top, behavior: "smooth" });
+                  addFormRef.current
+                    ?.querySelector<HTMLInputElement>("input")
+                    ?.focus();
+                }, 100);
+              });
+            }}
+          />
+
           <h2 className="no-print page-gutter mb-3.5 text-[19px] font-semibold tracking-[-0.01em]">
             Add an item
           </h2>
           <form
-            className="no-print page-gutter mb-11 grid grid-cols-1 items-end gap-3 md:grid-cols-[1.5fr_2fr_150px_80px_80px_auto]"
+            ref={addFormRef}
+            className="no-print page-gutter mb-11 grid grid-cols-1 items-end gap-3 md:grid-cols-[minmax(140px,1.5fr)_minmax(160px,2fr)_130px_64px_64px_auto_auto]"
             onSubmit={(e) => {
               e.preventDefault();
               if (!form.name.trim()) return;
@@ -360,6 +418,7 @@ export function AdminDashboard({
                   area: form.area,
                   quantity_available: form.avail,
                   quantity_total: form.total,
+                  in_space_only: form.inSpaceOnly,
                 });
                 setForm({
                   name: "",
@@ -367,6 +426,7 @@ export function AdminDashboard({
                   area: form.area,
                   avail: 1,
                   total: 1,
+                  inSpaceOnly: false,
                 });
                 refresh("Item added.");
               });
@@ -420,9 +480,24 @@ export function AdminDashboard({
                 onChange={(e) =>
                   setForm({ ...form, total: Number(e.target.value) })
                 }
-                className={`${underline} w-full`}
+                className={`${underline} w-full min-w-0`}
               />
             </Field>
+            <button
+              type="button"
+              title="Item stays in the Makerspace — no check-outs"
+              onClick={() =>
+                setForm({ ...form, inSpaceOnly: !form.inSpaceOnly })
+              }
+              className="rounded-full border px-2.5 py-[11px] font-mono text-[10px] tracking-[0.06em] whitespace-nowrap transition-colors hover:border-[#141414]"
+              style={{
+                borderColor: form.inSpaceOnly ? "#141414" : "#e3e0d8",
+                background: form.inSpaceOnly ? "#141414" : "transparent",
+                color: form.inSpaceOnly ? "#f4f1ea" : "#b6b0a3",
+              }}
+            >
+              {form.inSpaceOnly ? "✓ " : ""}IN-SPACE ONLY
+            </button>
             <button
               type="submit"
               disabled={pending}
@@ -537,6 +612,7 @@ function AdminRow({
     area?: string;
     quantity_available?: number;
     quantity_total?: number;
+    in_space_only?: boolean;
   }) => void;
   onDelete: () => void;
 }) {
@@ -545,6 +621,7 @@ function AdminRow({
   const [area, setArea] = useState(item.area);
   const avail = item.quantity_available;
   const total = item.quantity_total;
+  const inSpace = item.in_space_only;
 
   return (
     <div className="grid grid-cols-[40px_1.5fr_2fr_150px_132px_80px_40px] items-center gap-3 py-2.5 transition-colors hover:bg-[#f7f7f5]">
@@ -573,9 +650,23 @@ function AdminRow({
           }}
           className="w-full border border-transparent bg-transparent px-2.5 pt-1.5 pb-0.5 text-[15.5px] font-semibold outline-none hover:border-[#e3e0d8] focus:border-[#141414]"
         />
-        <p className="px-2.5 font-mono text-[11px] text-[#857e6e]">
-          {item.qr_code}
-        </p>
+        <div className="flex flex-wrap items-center gap-2 px-2.5">
+          <p className="font-mono text-[11px] text-[#857e6e]">{item.qr_code}</p>
+          <button
+            type="button"
+            disabled={disabled}
+            title="Toggle: item stays in the Makerspace — no check-outs"
+            onClick={() => onChange({ in_space_only: !inSpace })}
+            className="rounded-full border px-2 py-0.5 font-mono text-[8.5px] tracking-[0.08em] transition-colors hover:border-[#141414] disabled:opacity-50"
+            style={{
+              borderColor: inSpace ? "#141414" : "#e3e0d8",
+              background: inSpace ? "#141414" : "transparent",
+              color: inSpace ? "#f4f1ea" : "#b6b0a3",
+            }}
+          >
+            IN-SPACE ONLY
+          </button>
+        </div>
       </div>
       <input
         value={detail}

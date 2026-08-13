@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { AREA_FILTERS } from "@/lib/constants";
 import { areaPillColors, stockBarColor } from "@/lib/area-styles";
 import {
@@ -14,7 +14,7 @@ import {
   itemHasNearTermAvailability,
   outLoansForItem,
 } from "@/lib/reservation-availability";
-import type { Equipment, Reservation } from "@/lib/types";
+import type { Equipment, ItemRequest, Reservation } from "@/lib/types";
 import { SiteFooter } from "@/components/SiteFooter";
 import {
   OutStatusBand,
@@ -22,15 +22,22 @@ import {
   ReservePanel,
   type ReceiptState,
 } from "@/components/ReservePanel";
+import {
+  scrollToWishlist,
+  WishlistCta,
+  WishlistSection,
+} from "@/components/WishlistSection";
 
 type ResourcesClientProps = {
   equipment: Equipment[];
   reservations: Reservation[];
+  itemRequests: ItemRequest[];
 };
 
 export function ResourcesClient({
   equipment: initial,
   reservations: initialReservations,
+  itemRequests,
 }: ResourcesClientProps) {
   const [items] = useState(initial);
   const [reservations, setReservations] = useState(initialReservations);
@@ -39,6 +46,7 @@ export function ResourcesClient({
   const [reservingId, setReservingId] = useState<string | null>(null);
   const [receipts, setReceipts] = useState<Record<string, ReceiptState>>({});
   const [isMobileReserve, setIsMobileReserve] = useState(false);
+  const wishlistNameRef = useRef<HTMLInputElement>(null);
 
   const q = query.trim().toLowerCase();
   const rows = items.filter((d) => {
@@ -56,6 +64,8 @@ export function ResourcesClient({
   );
 
   function openReserve(id: string, mobile: boolean) {
+    const target = items.find((e) => e.id === id);
+    if (target?.in_space_only) return;
     setReservingId(id);
     setIsMobileReserve(mobile);
     setReceipts((prev) => {
@@ -81,6 +91,9 @@ export function ResourcesClient({
             What&apos;s available right now
           </h1>
           <span className="kis-title-underline !mt-2.5 !w-12 md:!mt-3.5 md:!w-16" />
+          <WishlistCta
+            onJump={() => scrollToWishlist(wishlistNameRef.current)}
+          />
         </div>
         <p className="hidden pb-1 font-mono text-[12px] tracking-[0.14em] text-[#6d6759] md:block">
           UPDATED {formatUpdatedLabel()}
@@ -195,6 +208,14 @@ export function ResourcesClient({
                             NEW
                           </span>
                         )}
+                        {item.in_space_only && (
+                          <span
+                            title="This item stays in the Makerspace — use it there during your booked periods"
+                            className="rounded-full bg-[#141414] px-[7px] py-0.5 font-mono text-[10px] tracking-[0.1em] whitespace-nowrap text-[#f4f1ea]"
+                          >
+                            IN-SPACE ONLY
+                          </span>
+                        )}
                       </div>
                       <p className="mt-1 text-[15.5px] leading-[1.65] text-[#6d6759]">
                         {item.detail}
@@ -237,7 +258,14 @@ export function ResourcesClient({
                       {status}
                     </span>
                     <div>
-                      {isReserving ? (
+                      {item.in_space_only ? (
+                        <div
+                          title="Stays in the Makerspace — book the space to use it"
+                          className="select-none border border-dashed border-[#d5d1c8] px-1 py-1.5 text-center text-[13px] leading-[1.35] text-[#6d6759]"
+                        >
+                          Use in the space
+                        </div>
+                      ) : isReserving ? (
                         <button
                           type="button"
                           onClick={closeReserve}
@@ -265,7 +293,7 @@ export function ResourcesClient({
                     className={`kis-row border-b border-[#eeece5] py-3.5 md:hidden ${rowFlash}`}
                   >
                     <div className="flex items-center justify-between gap-2.5">
-                      <div className="flex min-w-0 items-center gap-1.5">
+                      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                         {(status === "Low stock" ||
                           status === "Unavailable") && (
                           <span
@@ -279,6 +307,11 @@ export function ResourcesClient({
                         {isNew && (
                           <span className="shrink-0 rounded-full bg-[#c8102e] px-1.5 py-0.5 font-mono text-[8px] tracking-wide text-white">
                             NEW
+                          </span>
+                        )}
+                        {item.in_space_only && (
+                          <span className="shrink-0 rounded-full bg-[#141414] px-1.5 py-0.5 font-mono text-[8px] tracking-[0.08em] text-[#f4f1ea]">
+                            IN-SPACE ONLY
                           </span>
                         )}
                       </div>
@@ -307,7 +340,11 @@ export function ResourcesClient({
                       >
                         {item.area}
                       </span>
-                      {canReserve ? (
+                      {item.in_space_only ? (
+                        <div className="select-none border border-dashed border-[#d5d1c8] px-3 py-1.5 text-center text-[11.5px] text-[#6d6759]">
+                          Use in the space
+                        </div>
+                      ) : canReserve ? (
                         <button
                           type="button"
                           onClick={() => openReserve(item.id, true)}
@@ -319,6 +356,15 @@ export function ResourcesClient({
                         <span className="text-[12px] text-[#98917f]">—</span>
                       )}
                     </div>
+                    {item.in_space_only && (
+                      <p className="mt-2 text-[11.5px] leading-[1.45] text-[#8a857a] md:hidden">
+                        Stays in the Makerspace —{" "}
+                        <Link href="/schedule" className="underline">
+                          book the space
+                        </Link>{" "}
+                        to use it during your period.
+                      </p>
+                    )}
                   </div>
 
                   {loans.map((loan) => (
@@ -428,6 +474,8 @@ export function ResourcesClient({
           Schedule the space →
         </Link>
       </div>
+
+      <WishlistSection initial={itemRequests} nameInputRef={wishlistNameRef} />
 
       <SiteFooter />
     </div>

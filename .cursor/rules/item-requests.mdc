@@ -1,0 +1,12 @@
+---
+description: KIS Creativity Space — item requests / wishlist (Resources CTA + form, admin queue, mobile)
+alwaysApply: true
+---
+
+- This folder is a design handoff; README.md is the source of truth (lifecycle, status palette, per-stage actions).
+- ONE store shared by Resources, admin, and the app; status pills use the exact shared palette on every surface.
+- Lifecycle is fixed: requested → approved → ordered → arrived; each stage exposes exactly ONE primary admin action; arrived hands off to the EXISTING add-item flow (prefill, never silent creation) and clears the request.
+- Votes: one per user, toggleable, requester's own counts from creation; dedupe server-side.
+- Requests are suggestions — never behind the staff password gate; only admin roles change status or delete.
+- The title CTA scrolls to the wishlist form and focuses its first input — never use scrollIntoView.
+- designs/*.html are browser-openable prototypes for reference only — never import or port their runtime (support.js, android-frame.jsx, image-slot.js).

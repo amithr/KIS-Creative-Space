@@ -8,6 +8,7 @@ import {
   getAdminSpaceBookings,
   getAdminTrainingSessions,
   getEquipmentWithUnits,
+  getItemRequests,
   getSpaceBlocks,
   isTeacher,
 } from "@/lib/data";
@@ -40,14 +41,21 @@ export default async function AdminPage({ searchParams }: PageProps) {
     );
   }
 
-  const [equipment, reservations, spaceBookings, spaceBlocks, trainingSessions] =
-    await Promise.all([
-      getEquipmentWithUnits(),
-      getActiveReservations(),
-      getAdminSpaceBookings(),
-      getSpaceBlocks(),
-      getAdminTrainingSessions(),
-    ]);
+  const [
+    equipment,
+    reservations,
+    spaceBookings,
+    spaceBlocks,
+    trainingSessions,
+    itemRequests,
+  ] = await Promise.all([
+    getEquipmentWithUnits(),
+    getActiveReservations(),
+    getAdminSpaceBookings(),
+    getSpaceBlocks(),
+    getAdminTrainingSessions(),
+    getItemRequests(),
+  ]);
 
   return (
     <AdminShell authenticated>
@@ -57,6 +65,7 @@ export default async function AdminPage({ searchParams }: PageProps) {
         spaceBookings={spaceBookings}
         spaceBlocks={spaceBlocks}
         trainingSessions={trainingSessions}
+        itemRequests={itemRequests}
       />
     </AdminShell>
   );

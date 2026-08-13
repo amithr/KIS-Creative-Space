@@ -74,6 +74,7 @@ export type EquipmentInput = {
   detail: string;
   quantity_available: number;
   quantity_total: number;
+  in_space_only?: boolean;
   qr_code?: string;
   sort_order?: number;
 };
@@ -177,6 +178,7 @@ export async function createEquipment(input: EquipmentInput) {
       detail: input.detail.trim(),
       quantity_available: avail,
       quantity_total: total,
+      in_space_only: Boolean(input.in_space_only),
       qr_code: qrCode,
       sort_order: input.sort_order ?? 0,
     })
@@ -234,6 +236,8 @@ export async function updateEquipment(
     payload.quantity_available = input.quantity_available;
   if (input.quantity_total !== undefined)
     payload.quantity_total = input.quantity_total;
+  if (input.in_space_only !== undefined)
+    payload.in_space_only = Boolean(input.in_space_only);
   // qr_code is immutable — never updated from admin edits
   if (input.sort_order !== undefined) payload.sort_order = input.sort_order;
 
@@ -290,16 +294,16 @@ export async function resetToSampleData() {
   if (clearError) throw new Error(clearError.message);
 
   const samples = [
-    { name: "LEGO Spike Prime kit", detail: "Includes hub, motors, sensors", area: "LEGO Play", quantity_available: 6, quantity_total: 8, qr_code: "KIS-SPIKE1", sort_order: 1 },
-    { name: "LEGO Technic bins", detail: "Sorted by element type", area: "LEGO Play", quantity_available: 12, quantity_total: 12, qr_code: "KIS-TECHN2", sort_order: 2 },
-    { name: "mBot2 robot", detail: "Charged and ready", area: "Robotics", quantity_available: 4, quantity_total: 10, qr_code: "KIS-MBOT2A", sort_order: 3 },
-    { name: "Arduino starter kit", detail: "Breadboard, jumper set, sensor pack", area: "Robotics", quantity_available: 9, quantity_total: 15, qr_code: "KIS-ARDUIN", sort_order: 4 },
-    { name: "Soldering station", detail: "Teacher supervision required", area: "Robotics", quantity_available: 2, quantity_total: 3, qr_code: "KIS-SOLDER", sort_order: 5 },
-    { name: "Cutting mats & knives", detail: "Blades replaced weekly", area: "Art & Design", quantity_available: 14, quantity_total: 16, qr_code: "KIS-MATS01", sort_order: 6 },
-    { name: "Acrylic paint set", detail: "Restock requested", area: "Art & Design", quantity_available: 3, quantity_total: 20, qr_code: "KIS-PAINT1", sort_order: 7 },
-    { name: "Meta Quest 3 headset", detail: "Wipe before return", area: "VR Lab", quantity_available: 5, quantity_total: 6, qr_code: "KIS-QUEST3", sort_order: 8 },
-    { name: "Prusa MK4 printer", detail: "PLA only", area: "3D Printing", quantity_available: 2, quantity_total: 4, qr_code: "KIS-PRUSA4", sort_order: 9 },
-    { name: "PLA filament (1 kg)", detail: "White, black, red in stock", area: "3D Printing", quantity_available: 7, quantity_total: 10, qr_code: "KIS-FILAMT", sort_order: 10 },
+    { name: "LEGO Spike Prime kit", detail: "Includes hub, motors, sensors", area: "LEGO Play", quantity_available: 6, quantity_total: 8, in_space_only: false, qr_code: "KIS-SPIKE1", sort_order: 1 },
+    { name: "LEGO Technic bins", detail: "Sorted by element type", area: "LEGO Play", quantity_available: 12, quantity_total: 12, in_space_only: false, qr_code: "KIS-TECHN2", sort_order: 2 },
+    { name: "mBot2 robot", detail: "Charged and ready", area: "Robotics", quantity_available: 4, quantity_total: 10, in_space_only: false, qr_code: "KIS-MBOT2A", sort_order: 3 },
+    { name: "Arduino starter kit", detail: "Breadboard, jumper set, sensor pack", area: "Robotics", quantity_available: 9, quantity_total: 15, in_space_only: false, qr_code: "KIS-ARDUIN", sort_order: 4 },
+    { name: "Soldering station", detail: "Teacher supervision required", area: "Robotics", quantity_available: 2, quantity_total: 3, in_space_only: true, qr_code: "KIS-SOLDER", sort_order: 5 },
+    { name: "Cutting mats & knives", detail: "Blades replaced weekly", area: "Art & Design", quantity_available: 14, quantity_total: 16, in_space_only: false, qr_code: "KIS-MATS01", sort_order: 6 },
+    { name: "Acrylic paint set", detail: "Restock requested", area: "Art & Design", quantity_available: 3, quantity_total: 20, in_space_only: false, qr_code: "KIS-PAINT1", sort_order: 7 },
+    { name: "Meta Quest 3 headset", detail: "Wipe before return", area: "VR Lab", quantity_available: 5, quantity_total: 6, in_space_only: false, qr_code: "KIS-QUEST3", sort_order: 8 },
+    { name: "Prusa MK4 printer", detail: "PLA only", area: "3D Printing", quantity_available: 2, quantity_total: 4, in_space_only: true, qr_code: "KIS-PRUSA4", sort_order: 9 },
+    { name: "PLA filament (1 kg)", detail: "White, black, red in stock", area: "3D Printing", quantity_available: 7, quantity_total: 10, in_space_only: false, qr_code: "KIS-FILAMT", sort_order: 10 },
   ];
 
   for (const sample of samples) {
@@ -320,6 +324,14 @@ export type AdminCodeLookup =
   | {
       ok: true;
       mode: "checkout";
+      equipmentId: string;
+      name: string;
+      code: string;
+      available: number;
+    }
+  | {
+      ok: true;
+      mode: "in_space_only";
       equipmentId: string;
       name: string;
       code: string;
@@ -362,7 +374,7 @@ export async function resolveAdminItemCode(
   const { supabase } = await requireTeacher();
   const { data: item, error } = await supabase
     .from("equipment")
-    .select("id, name, qr_code, quantity_available")
+    .select("id, name, qr_code, quantity_available, in_space_only")
     .ilike("qr_code", code)
     .maybeSingle();
 
@@ -391,6 +403,17 @@ export async function resolveAdminItemCode(
     };
   }
 
+  if (item.in_space_only) {
+    return {
+      ok: true,
+      mode: "in_space_only",
+      equipmentId: item.id,
+      name: item.name,
+      code: item.qr_code,
+      available: item.quantity_available,
+    };
+  }
+
   return {
     ok: true,
     mode: "checkout",
@@ -414,6 +437,12 @@ export async function adminCheckOutByCode(input: {
 
   const lookup = await resolveAdminItemCode(input.code);
   if (!lookup.ok) return lookup;
+  if (lookup.mode === "in_space_only") {
+    return {
+      ok: false,
+      error: `${lookup.name} stays in the Makerspace — it can't be checked out or taken to another space.`,
+    };
+  }
   if (lookup.mode !== "checkout") {
     return { ok: false, error: "This item already has an open loan." };
   }
@@ -822,5 +851,63 @@ export async function deleteSpaceBlock(
 
   if (error) return { ok: false, error: error.message };
   revalidateSpace();
+  return { ok: true };
+}
+
+export type ItemRequestAdminResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
+const ITEM_REQUEST_NEXT: Record<string, string> = {
+  requested: "approved",
+  approved: "ordered",
+  ordered: "arrived",
+};
+
+function revalidateItemRequestsAdmin() {
+  revalidatePath("/");
+  revalidatePath("/admin");
+}
+
+export async function advanceItemRequestStatus(
+  id: string,
+): Promise<ItemRequestAdminResult> {
+  const { supabase } = await requireTeacher();
+  if (!id) return { ok: false, error: "Missing request." };
+
+  const { data: row, error: loadError } = await supabase
+    .from("item_requests")
+    .select("id, status")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (loadError) return { ok: false, error: loadError.message };
+  if (!row) return { ok: false, error: "Request not found." };
+
+  const next = ITEM_REQUEST_NEXT[row.status];
+  if (!next) {
+    return { ok: false, error: "This request can't be advanced further." };
+  }
+
+  const { error } = await supabase
+    .from("item_requests")
+    .update({ status: next })
+    .eq("id", id)
+    .eq("status", row.status);
+
+  if (error) return { ok: false, error: error.message };
+  revalidateItemRequestsAdmin();
+  return { ok: true };
+}
+
+export async function deleteItemRequest(
+  id: string,
+): Promise<ItemRequestAdminResult> {
+  const { supabase } = await requireTeacher();
+  if (!id) return { ok: false, error: "Missing request." };
+
+  const { error } = await supabase.from("item_requests").delete().eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidateItemRequestsAdmin();
   return { ok: true };
 }

@@ -1,0 +1,12 @@
+---
+description: KIS Creativity Space — in-space-only items (flag, badges, checkout refusal on every surface)
+alwaysApply: true
+---
+
+- This folder is a design handoff; README.md is the source of truth (badge/pill styles, refusal copy, hook points).
+- ONE flag (`inSpaceOnly`) on the item record, edited from web admin and the app item editor — never a separate list or duplicated state; include a migration for pre-flag records.
+- Enforcement is server-side on EVERY checkout path (scan, walk-up, admin code entry); UI refusal states are convenience on top.
+- Flagged items stay visible, reservable-for-in-space-use via space bookings, and countable — only take-away checkout is blocked.
+- Same refusal sentence on every surface: "stays in the Makerspace — it can't be checked out or taken to another space", always paired with a "Book the space" path.
+- Badge is the black/cream mono IN-SPACE ONLY pill next to the item name; the dead action slot is a dashed "Use in the space" box, never a disabled button.
+- designs/*.html are browser-openable prototypes for reference only — never import or port their runtime (support.js, android-frame.jsx, image-slot.js).
