@@ -7,6 +7,8 @@ import {
   confirmSpaceBooking,
   declineSpaceBooking,
 } from "@/app/admin/actions";
+import { useConfirm } from "@/components/ConfirmDialog";
+import { useAdminWrite } from "@/components/admin/AdminWriteFeedback";
 import { bookingKey } from "@/lib/inventory";
 import type { SpaceBooking } from "@/lib/types";
 
@@ -50,6 +52,8 @@ export function SpaceBookingsPanel({
 }: SpaceBookingsPanelProps) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
+  const askConfirm = useConfirm();
+  const { flashSaved, dbWrite } = useAdminWrite();
 
   const pendingReqs = useMemo(
     () =>
@@ -172,6 +176,7 @@ export function SpaceBookingsPanel({
                       setError(result.error);
                       return;
                     }
+                    flashSaved("BOOKINGS");
                     onDone(`Confirmed ${b.teacher_name}`);
                   })
                 }
@@ -183,21 +188,20 @@ export function SpaceBookingsPanel({
                 type="button"
                 disabled={pending}
                 onClick={() =>
-                  startTransition(async () => {
-                    setError("");
-                    const reason =
-                      typeof window !== "undefined"
-                        ? window.prompt(
-                            "Optional decline reason (shown to the teacher):",
-                          )
-                        : null;
-                    if (reason === null) return;
-                    const result = await declineSpaceBooking(b.id, reason);
-                    if (!result.ok) {
-                      setError(result.error);
-                      return;
-                    }
-                    onDone(`Declined ${b.teacher_name}`);
+                  askConfirm({
+                    title: "Decline this booking request?",
+                    body: `${b.teacher_name} · Period ${b.period} — the period opens up again on the public schedule.`,
+                    action: "Decline",
+                    fn: () =>
+                      dbWrite("BOOKINGS", async () => {
+                        setError("");
+                        const result = await declineSpaceBooking(b.id, "");
+                        if (!result.ok) {
+                          setError(result.error);
+                          throw new Error(result.error);
+                        }
+                        onDone(`Declined ${b.teacher_name}`);
+                      }),
                   })
                 }
                 className="border border-[#e3e0d8] px-3.5 py-2 text-[13.5px] font-semibold text-[#3f3b33] transition-colors hover:border-[#c8102e] hover:text-[#c8102e]"
@@ -234,17 +238,24 @@ export function SpaceBookingsPanel({
                 <button
                   type="button"
                   disabled={pending}
-                  onClick={() =>
-                    startTransition(async () => {
-                      setError("");
-                      const result = await cancelSpaceBooking(b.id);
-                      if (!result.ok) {
-                        setError(result.error);
-                        return;
-                      }
-                      onDone(`Cancelled ${b.teacher_name}`);
-                    })
-                  }
+                  onClick={() => {
+                    const d = parseIso(b.booking_date);
+                    askConfirm({
+                      title: "Cancel this booking?",
+                      body: `${b.teacher_name} · ${DOW[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]} · Period ${b.period} — the period opens up again.`,
+                      action: "Cancel booking",
+                      fn: () =>
+                        dbWrite("BOOKINGS", async () => {
+                          setError("");
+                          const result = await cancelSpaceBooking(b.id);
+                          if (!result.ok) {
+                            setError(result.error);
+                            throw new Error(result.error);
+                          }
+                          onDone(`Cancelled ${b.teacher_name}`);
+                        }),
+                    });
+                  }}
                   className="text-[13px] text-[#857e6e] underline hover:text-[#c8102e]"
                 >
                   Cancel

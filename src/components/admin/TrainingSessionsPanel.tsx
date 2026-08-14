@@ -7,6 +7,8 @@ import {
   confirmTrainingSession,
   declineTrainingSession,
 } from "@/app/admin/actions";
+import { useConfirm } from "@/components/ConfirmDialog";
+import { useAdminWrite } from "@/components/admin/AdminWriteFeedback";
 import type { TrainingSession } from "@/lib/types";
 
 type TrainingSessionsPanelProps = {
@@ -49,6 +51,8 @@ export function TrainingSessionsPanel({
 }: TrainingSessionsPanelProps) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
+  const askConfirm = useConfirm();
+  const { flashSaved, dbWrite } = useAdminWrite();
 
   const pendingReqs = useMemo(
     () =>
@@ -141,6 +145,7 @@ export function TrainingSessionsPanel({
                       setError(result.error);
                       return;
                     }
+                    flashSaved("TRAINING");
                     onDone(`Confirmed training for ${s.teacher_name}`);
                   })
                 }
@@ -152,21 +157,20 @@ export function TrainingSessionsPanel({
                 type="button"
                 disabled={pending}
                 onClick={() =>
-                  startTransition(async () => {
-                    setError("");
-                    const reason =
-                      typeof window !== "undefined"
-                        ? window.prompt(
-                            "Optional decline reason (shown to the teacher):",
-                          )
-                        : null;
-                    if (reason === null) return;
-                    const result = await declineTrainingSession(s.id, reason);
-                    if (!result.ok) {
-                      setError(result.error);
-                      return;
-                    }
-                    onDone(`Declined training for ${s.teacher_name}`);
+                  askConfirm({
+                    title: "Decline this training request?",
+                    body: `${s.teacher_name} · Period ${s.period} — “${s.topic}”. The teacher sees the slot free up.`,
+                    action: "Decline",
+                    fn: () =>
+                      dbWrite("TRAINING", async () => {
+                        setError("");
+                        const result = await declineTrainingSession(s.id, "");
+                        if (!result.ok) {
+                          setError(result.error);
+                          throw new Error(result.error);
+                        }
+                        onDone(`Declined training for ${s.teacher_name}`);
+                      }),
                   })
                 }
                 className="border border-[#e3e0d8] px-3.5 py-2 text-[13.5px] font-semibold text-[#3f3b33] transition-colors hover:border-[#c8102e] hover:text-[#c8102e]"
@@ -205,17 +209,24 @@ export function TrainingSessionsPanel({
                 <button
                   type="button"
                   disabled={pending}
-                  onClick={() =>
-                    startTransition(async () => {
-                      setError("");
-                      const result = await cancelTrainingSessionAdmin(s.id);
-                      if (!result.ok) {
-                        setError(result.error);
-                        return;
-                      }
-                      onDone(`Cancelled training for ${s.teacher_name}`);
-                    })
-                  }
+                  onClick={() => {
+                    const d = parseIso(s.session_date);
+                    askConfirm({
+                      title: "Cancel this session?",
+                      body: `${s.teacher_name} · ${DOW[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]} · Period ${s.period} — the confirmed session is removed.`,
+                      action: "Cancel session",
+                      fn: () =>
+                        dbWrite("TRAINING", async () => {
+                          setError("");
+                          const result = await cancelTrainingSessionAdmin(s.id);
+                          if (!result.ok) {
+                            setError(result.error);
+                            throw new Error(result.error);
+                          }
+                          onDone(`Cancelled training for ${s.teacher_name}`);
+                        }),
+                    });
+                  }}
                   className="text-[13px] text-[#857e6e] underline hover:text-[#c8102e]"
                 >
                   Cancel

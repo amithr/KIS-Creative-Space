@@ -1,6 +1,4 @@
-export const AREA_FILTERS = [
-  "All",
-  "New this week",
+export const DEFAULT_AREAS = [
   "LEGO Play",
   "Robotics",
   "Art & Design",
@@ -8,12 +6,14 @@ export const AREA_FILTERS = [
   "3D Printing",
 ] as const;
 
-export const AREA_OPTIONS = [
-  "LEGO Play",
-  "Robotics",
-  "Art & Design",
-  "VR Lab",
-  "3D Printing",
+/** @deprecated Prefer getAreas() / effectiveAreas — kept as seed fallback. */
+export const AREA_OPTIONS = DEFAULT_AREAS;
+
+/** @deprecated Prefer building filters from managed areas. */
+export const AREA_FILTERS = [
+  "All",
+  "New this week",
+  ...DEFAULT_AREAS,
 ] as const;
 
 export const FALLBACK_EQUIPMENT = [

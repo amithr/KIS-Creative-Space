@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import {
   adminCheckInByCode,
   adminCheckOutByCode,
@@ -13,7 +13,20 @@ import {
   updateEquipment,
   type AdminCodeLookup,
 } from "@/app/admin/actions";
-import { AREA_OPTIONS } from "@/lib/constants";
+import { useConfirm } from "@/components/ConfirmDialog";
+import { SiteFooter } from "@/components/SiteFooter";
+import { BlockPeriodsPanel } from "@/components/admin/BlockPeriodsPanel";
+import {
+  AdminWriteProvider,
+  useAdminWrite,
+} from "@/components/admin/AdminWriteFeedback";
+import { AreasPanel } from "@/components/admin/AreasPanel";
+import { ItemRequestsPanel } from "@/components/admin/ItemRequestsPanel";
+import { PrintQrLabelsPanel } from "@/components/admin/PrintQrLabelsPanel";
+import { SpaceBookingsPanel } from "@/components/admin/SpaceBookingsPanel";
+import { TrainingSessionsPanel } from "@/components/admin/TrainingSessionsPanel";
+import { effectiveAreaNames, type Area } from "@/lib/areas";
+import { DEFAULT_AREAS } from "@/lib/constants";
 import { isNewItem } from "@/lib/inventory";
 import { dueBackLabel } from "@/lib/reservation-availability";
 import type {
@@ -24,12 +37,6 @@ import type {
   SpaceBooking,
   TrainingSession,
 } from "@/lib/types";
-import { SiteFooter } from "@/components/SiteFooter";
-import { BlockPeriodsPanel } from "@/components/admin/BlockPeriodsPanel";
-import { ItemRequestsPanel } from "@/components/admin/ItemRequestsPanel";
-import { PrintQrLabelsPanel } from "@/components/admin/PrintQrLabelsPanel";
-import { SpaceBookingsPanel } from "@/components/admin/SpaceBookingsPanel";
-import { TrainingSessionsPanel } from "@/components/admin/TrainingSessionsPanel";
 
 type AdminDashboardProps = {
   equipment: EquipmentWithUnits[];
@@ -38,6 +45,7 @@ type AdminDashboardProps = {
   spaceBlocks: SpaceBlock[];
   trainingSessions: TrainingSession[];
   itemRequests: ItemRequest[];
+  areas: Area[];
 };
 
 type Tab = "space" | "items";
@@ -47,21 +55,40 @@ const fieldLabel =
 const underline =
   "border-0 border-b border-[#e3e0d8] bg-transparent px-0 py-2 text-[14.5px] outline-none focus:border-[#141414]";
 
-export function AdminDashboard({
+export function AdminDashboard(props: AdminDashboardProps) {
+  return (
+    <AdminWriteProvider>
+      <AdminDashboardInner {...props} />
+    </AdminWriteProvider>
+  );
+}
+
+function AdminDashboardInner({
   equipment,
   reservations,
   spaceBookings,
   spaceBlocks,
   trainingSessions,
   itemRequests,
+  areas,
 }: AdminDashboardProps) {
   const router = useRouter();
+  const askConfirm = useConfirm();
+  const { dbWrite, flashSaved, savingLabel } = useAdminWrite();
   const [tab, setTab] = useState<Tab>("space");
   const [pending, startTransition] = useTransition();
+  const areaNames = useMemo(
+    () =>
+      effectiveAreaNames(
+        areas.map((a) => a.name),
+        equipment.map((e) => e.area),
+      ),
+    [areas, equipment],
+  );
   const [form, setForm] = useState({
     name: "",
     note: "",
-    area: "LEGO Play",
+    area: areaNames[0] ?? DEFAULT_AREAS[0],
     avail: 1,
     total: 1,
     inSpaceOnly: false,
@@ -71,7 +98,22 @@ export function AdminDashboard({
   const [lookup, setLookup] = useState<AdminCodeLookup | null>(null);
   const [checkoutQty, setCheckoutQty] = useState(1);
   const [checkoutBy, setCheckoutBy] = useState("");
+  const [rows, setRows] = useState(equipment);
+  const [newId, setNewId] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const [qrAreaReset, setQrAreaReset] = useState(0);
   const addFormRef = useRef<HTMLFormElement>(null);
+  const adding = savingLabel === "ADD ITEM";
+
+  useEffect(() => {
+    setRows(equipment);
+  }, [equipment]);
+
+  useEffect(() => {
+    if (!areaNames.includes(form.area) && areaNames[0]) {
+      setForm((f) => ({ ...f, area: areaNames[0] }));
+    }
+  }, [areaNames, form.area]);
 
   const openLoans = useMemo(() => {
     const byId = new Map(equipment.map((e) => [e.id, e]));
@@ -130,12 +172,9 @@ export function AdminDashboard({
             АДМІН · ADMIN
           </p>
           <h1 className="font-display text-[38px] font-normal tracking-[-0.02em]">
-            Creativity Space admin
+            Design Studio admin
           </h1>
         </div>
-        <p className="pb-1.5 font-mono text-[12px] text-[#6d6759]">
-          LIVE WITH SUPABASE
-        </p>
       </section>
 
       <div className="no-print page-gutter flex flex-wrap gap-2 pb-[34px] pt-6">
@@ -328,6 +367,7 @@ export function AdminDashboard({
                         setCode("");
                         setLookup(null);
                         setCheckoutBy("");
+                        flashSaved("INVENTORY");
                         refresh(`Checked out ${checkoutQty}× ${lookup.name}.`);
                       })
                     }
@@ -351,6 +391,7 @@ export function AdminDashboard({
                       }
                       setCode("");
                       setLookup(null);
+                      flashSaved("INVENTORY");
                       refresh(`Checked in ${lookup.name}.`);
                     })
                   }
@@ -365,7 +406,11 @@ export function AdminDashboard({
             )}
           </div>
 
-          <PrintQrLabelsPanel equipment={equipment} />
+          <PrintQrLabelsPanel
+            equipment={equipment}
+            areaOptions={areaNames}
+            resetAreaToken={qrAreaReset}
+          />
 
           <ItemRequestsPanel
             requests={itemRequests}
@@ -379,12 +424,9 @@ export function AdminDashboard({
                 total: 1,
                 inSpaceOnly: false,
               });
-              startTransition(async () => {
+              void dbWrite("REQUESTS", async () => {
                 const result = await deleteItemRequest(request.id);
-                if (!result.ok) {
-                  setMessage(result.error);
-                  return;
-                }
+                if (!result.ok) throw new Error(result.error);
                 refresh(
                   `Cleared request — finish adding "${request.name}" below.`,
                 );
@@ -402,6 +444,25 @@ export function AdminDashboard({
             }}
           />
 
+          <AreasPanel
+            areas={areas}
+            equipment={equipment}
+            onAreaAdded={(name) => {
+              setForm((f) => ({ ...f, area: name }));
+              refresh(`Area “${name}” added.`);
+            }}
+            onAreaRemoved={(name, remaining) => {
+              setForm((f) => ({
+                ...f,
+                area: remaining.includes(f.area)
+                  ? f.area
+                  : (remaining[0] ?? DEFAULT_AREAS[0]),
+              }));
+              setQrAreaReset((n) => n + 1);
+              refresh(`Area “${name}” removed.`);
+            }}
+          />
+
           <h2 className="no-print page-gutter mb-3.5 text-[19px] font-semibold tracking-[-0.01em]">
             Add an item
           </h2>
@@ -410,9 +471,9 @@ export function AdminDashboard({
             className="no-print page-gutter mb-11 grid grid-cols-1 items-end gap-3 md:grid-cols-[minmax(140px,1.5fr)_minmax(160px,2fr)_130px_64px_64px_auto_auto]"
             onSubmit={(e) => {
               e.preventDefault();
-              if (!form.name.trim()) return;
-              startTransition(async () => {
-                await createEquipment({
+              if (!form.name.trim() || adding) return;
+              void dbWrite("ADD ITEM", async () => {
+                const created = await createEquipment({
                   name: form.name,
                   detail: form.note,
                   area: form.area,
@@ -428,6 +489,10 @@ export function AdminDashboard({
                   total: 1,
                   inSpaceOnly: false,
                 });
+                if (created?.id) {
+                  setNewId(created.id);
+                  window.setTimeout(() => setNewId(null), 1500);
+                }
                 refresh("Item added.");
               });
             }}
@@ -454,7 +519,7 @@ export function AdminDashboard({
                 onChange={(e) => setForm({ ...form, area: e.target.value })}
                 className={`${underline} w-full`}
               >
-                {AREA_OPTIONS.map((a) => (
+                {areaNames.map((a) => (
                   <option key={a} value={a}>
                     {a}
                   </option>
@@ -500,10 +565,17 @@ export function AdminDashboard({
             </button>
             <button
               type="submit"
-              disabled={pending}
-              className="bg-[#c8102e] px-[22px] py-2.5 text-[14.5px] font-semibold text-white hover:bg-[#a50d26] disabled:opacity-60"
+              disabled={pending || adding}
+              className="inline-flex items-center justify-center gap-2 px-[22px] py-2.5 text-[14.5px] font-semibold text-white disabled:opacity-60"
+              style={{ background: adding ? "#a50d26" : "#c8102e" }}
             >
-              + Add item
+              {adding && (
+                <span
+                  className="kis-sync-spin h-[11px] w-[11px] border-2 border-[rgba(244,241,234,0.35)] border-t-white"
+                  aria-hidden
+                />
+              )}
+              {adding ? "Adding…" : "+ Add item"}
             </button>
           </form>
 
@@ -528,24 +600,49 @@ export function AdminDashboard({
             </div>
 
             <div className="min-w-[900px]">
-              {equipment.map((item, i) => (
+              {rows.map((item, i) => (
                 <AdminRow
                   key={item.id}
                   item={item}
                   index={i}
+                  areaOptions={areaNames}
                   outQty={outByEquipment.get(item.id) ?? 0}
-                  disabled={pending}
+                  disabled={pending || !!removingId}
+                  rowClassName={
+                    item.id === removingId
+                      ? "kis-admin-rowout"
+                      : item.id === newId
+                        ? "kis-admin-rowin"
+                        : undefined
+                  }
                   onChange={(patch) =>
                     startTransition(async () => {
                       await updateEquipment(item.id, patch);
+                      flashSaved("INVENTORY");
                       refresh("Saved.");
                     })
                   }
                   onDelete={() => {
-                    if (!confirm(`Delete "${item.name}"?`)) return;
-                    startTransition(async () => {
-                      await deleteEquipment(item.id);
-                      refresh("Item deleted.");
+                    askConfirm({
+                      title: "Delete this item?",
+                      body: `“${item.name}” and its QR label will be removed from the inventory. This can't be undone.`,
+                      action: "Delete item",
+                      fn: async () => {
+                        if (savingLabel) return;
+                        setRemovingId(item.id);
+                        await new Promise((r) => setTimeout(r, 550));
+                        try {
+                          await dbWrite("DELETE ITEM", async () => {
+                            await deleteEquipment(item.id);
+                            setRows((prev) =>
+                              prev.filter((x) => x.id !== item.id),
+                            );
+                            refresh("Item deleted.");
+                          });
+                        } finally {
+                          setRemovingId(null);
+                        }
+                      },
                     });
                   }}
                 />
@@ -558,10 +655,15 @@ export function AdminDashboard({
               type="button"
               disabled={pending}
               onClick={() => {
-                if (!confirm("Replace all inventory with sample data?")) return;
-                startTransition(async () => {
-                  await resetToSampleData();
-                  refresh("Reset to sample data.");
+                askConfirm({
+                  title: "Reset to sample data?",
+                  body: "The whole inventory will be replaced with the sample set. Your added items and edits will be lost.",
+                  action: "Reset data",
+                  fn: () =>
+                    dbWrite("RESET DATA", async () => {
+                      await resetToSampleData();
+                      refresh("Reset to sample data.");
+                    }),
                 });
               }}
               className="text-[14px] text-[#6d6759] underline transition-colors hover:text-[#c8102e]"
@@ -597,15 +699,19 @@ function Field({
 function AdminRow({
   item,
   index,
+  areaOptions,
   outQty,
   disabled,
+  rowClassName,
   onChange,
   onDelete,
 }: {
   item: EquipmentWithUnits;
   index: number;
+  areaOptions: string[];
   outQty: number;
   disabled: boolean;
+  rowClassName?: string;
   onChange: (patch: {
     name?: string;
     detail?: string;
@@ -624,7 +730,9 @@ function AdminRow({
   const inSpace = item.in_space_only;
 
   return (
-    <div className="grid grid-cols-[40px_1.5fr_2fr_150px_132px_80px_40px] items-center gap-3 py-2.5 transition-colors hover:bg-[#f7f7f5]">
+    <div
+      className={`grid grid-cols-[40px_1.5fr_2fr_150px_132px_80px_40px] items-center gap-3 py-2.5 transition-colors hover:bg-[#f7f7f5] ${rowClassName ?? ""}`}
+    >
       <div>
         <span className="font-mono text-[12px] text-[#a89a7f]">
           {String(index + 1).padStart(2, "0")}
@@ -686,7 +794,7 @@ function AdminRow({
         }}
         className="w-full border border-transparent bg-transparent px-1.5 py-2 text-[13.5px] outline-none hover:border-[#e3e0d8] focus:border-[#141414]"
       >
-        {AREA_OPTIONS.map((a) => (
+        {areaOptions.map((a) => (
           <option key={a} value={a}>
             {a}
           </option>

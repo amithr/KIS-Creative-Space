@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
-import { AREA_FILTERS } from "@/lib/constants";
+import { resourceAreaFilters } from "@/lib/areas";
 import { areaPillColors, stockBarColor } from "@/lib/area-styles";
 import {
   formatUpdatedLabel,
@@ -16,6 +15,7 @@ import {
 } from "@/lib/reservation-availability";
 import type { Equipment, ItemRequest, Reservation } from "@/lib/types";
 import { SiteFooter } from "@/components/SiteFooter";
+import { MobileResourcesList } from "@/components/MobileResourcesList";
 import {
   OutStatusBand,
   ReservationReceipt,
@@ -32,16 +32,22 @@ type ResourcesClientProps = {
   equipment: Equipment[];
   reservations: Reservation[];
   itemRequests: ItemRequest[];
+  areaNames: string[];
 };
 
 export function ResourcesClient({
   equipment: initial,
   reservations: initialReservations,
   itemRequests,
+  areaNames,
 }: ResourcesClientProps) {
   const [items] = useState(initial);
   const [reservations, setReservations] = useState(initialReservations);
-  const [cat, setCat] = useState<(typeof AREA_FILTERS)[number]>("All");
+  const filters = useMemo(() => {
+    const used = new Set(items.map((d) => d.area));
+    return resourceAreaFilters(areaNames.filter((a) => used.has(a)));
+  }, [areaNames, items]);
+  const [cat, setCat] = useState("All");
   const [query, setQuery] = useState("");
   const [reservingId, setReservingId] = useState<string | null>(null);
   const [receipts, setReceipts] = useState<Record<string, ReceiptState>>({});
@@ -80,41 +86,44 @@ export function ResourcesClient({
     setIsMobileReserve(false);
   }
 
+  function dismissReceipt(id: string) {
+    setReceipts((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }
+
+  function undoReceipt(id: string, reservationId: string) {
+    setReservations((prev) => prev.filter((r) => r.id !== reservationId));
+    dismissReceipt(id);
+  }
+
   return (
     <div className="flex min-h-[calc(100vh-73px)] flex-col">
-      <section className="page-gutter flex flex-wrap items-end justify-between gap-4 pb-5 pt-6 md:pb-8 md:pt-[48px]">
+      {/* Desktop hero */}
+      <section className="page-gutter hidden flex-wrap items-end justify-between gap-4 pb-8 pt-[48px] md:flex">
         <div>
-          <p className="mb-2 font-mono text-[10px] tracking-[0.18em] text-[#8a857a] md:mb-3 md:text-[12px] md:tracking-[0.2em] md:text-[#6d6759]">
+          <p className="mb-3 font-mono text-[12px] tracking-[0.2em] text-[#6d6759]">
             РЕСУРСИ · RESOURCES
           </p>
-          <h1 className="font-display text-[27px] font-light leading-[1.05] tracking-[-0.01em] md:text-[46px] md:tracking-[-0.02em]">
+          <h1 className="font-display text-[46px] font-light leading-[1.05] tracking-[-0.02em]">
             What&apos;s available right now
           </h1>
-          <span className="kis-title-underline !mt-2.5 !w-12 md:!mt-3.5 md:!w-16" />
+          <span className="kis-title-underline !mt-3.5 !w-16" />
           <WishlistCta
             onJump={() => scrollToWishlist(wishlistNameRef.current)}
           />
         </div>
-        <p className="hidden pb-1 font-mono text-[12px] tracking-[0.14em] text-[#6d6759] md:block">
+        <p className="pb-1 font-mono text-[12px] tracking-[0.14em] text-[#6d6759]">
           UPDATED {formatUpdatedLabel()}
         </p>
       </section>
 
-      <section className="page-gutter mb-4 flex flex-col gap-2.5 md:mb-6 md:flex-row md:items-center md:justify-between md:gap-4">
-        <div className="order-1 relative md:order-2">
-          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#8a857a]">
-            ⌕
-          </span>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search resources…"
-            className="min-h-11 w-full rounded-full border border-[#e3e0d8] bg-[#faf9f6] py-2.5 pl-10 pr-4 text-[13.5px] outline-none focus:border-[#141414] md:min-h-0 md:w-[180px] md:bg-transparent md:py-2 md:pl-9 md:text-[14.5px]"
-          />
-        </div>
-
-        <div className="order-2 flex gap-1.5 overflow-x-auto pb-1 md:order-1 md:gap-2">
-          {AREA_FILTERS.map((c) => {
+      {/* Desktop filters */}
+      <section className="page-gutter mb-6 hidden items-center justify-between gap-4 md:flex">
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {filters.map((c) => {
             const active = cat === c;
             const isNew = c === "New this week";
             return (
@@ -122,7 +131,7 @@ export function ResourcesClient({
                 key={c}
                 type="button"
                 onClick={() => setCat(c)}
-                className="kis-press min-h-9 shrink-0 rounded-full px-3 py-1.5 text-[11.5px] font-semibold md:min-h-0 md:px-[15px] md:py-2 md:text-[14.5px]"
+                className="kis-press shrink-0 rounded-full px-[15px] py-2 text-[14.5px] font-semibold"
                 style={{
                   background: active
                     ? isNew
@@ -150,11 +159,23 @@ export function ResourcesClient({
             );
           })}
         </div>
+        <div className="relative">
+          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#8a857a]">
+            ⌕
+          </span>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search resources…"
+            className="w-[180px] rounded-full border border-[#e3e0d8] bg-transparent py-2 pl-9 pr-4 text-[14.5px] outline-none focus:border-[#141414]"
+          />
+        </div>
       </section>
 
-      <section className="page-gutter mb-10">
+      {/* Desktop inventory table */}
+      <section className="page-gutter mb-10 hidden md:block">
         <div className="border-t border-[#141414]">
-          <div className="hidden grid-cols-[44px_2.2fr_1.1fr_100px_120px_120px] gap-4 border-b border-[#eeece5] py-3 font-mono text-[11px] tracking-[0.16em] text-[#6d6759] md:grid">
+          <div className="grid grid-cols-[44px_2.2fr_1.1fr_100px_120px_120px] gap-4 border-b border-[#eeece5] py-3 font-mono text-[11px] tracking-[0.16em] text-[#6d6759]">
             <span />
             <span>ITEM</span>
             <span>AREA</span>
@@ -173,7 +194,10 @@ export function ResourcesClient({
               );
               const isNew = isNewItem(item);
               const isReserving = reservingId === item.id && !isMobileReserve;
-              const canReserve = itemHasNearTermAvailability(item, reservations);
+              const canReserve = itemHasNearTermAvailability(
+                item,
+                reservations,
+              );
               const loans = outLoansForItem(reservations, item.id);
               const receipt = receipts[item.id];
               const pill = areaPillColors(item.area);
@@ -193,7 +217,7 @@ export function ResourcesClient({
                   style={{ animationDelay: `${Math.min(i, 10) * 45}ms` }}
                 >
                   <div
-                    className={`kis-row hidden grid-cols-[44px_2.2fr_1.1fr_100px_120px_120px] items-center gap-4 border-b border-[#eeece5] py-[17px] md:grid ${rowFlash}`}
+                    className={`kis-row grid grid-cols-[44px_2.2fr_1.1fr_100px_120px_120px] items-center gap-4 border-b border-[#eeece5] py-[17px] ${rowFlash}`}
                   >
                     <span className="font-mono text-[12px] text-[#c8b9a0]">
                       {String(i + 1).padStart(2, "0")}
@@ -289,84 +313,6 @@ export function ResourcesClient({
                     </div>
                   </div>
 
-                  <div
-                    className={`kis-row border-b border-[#eeece5] py-3.5 md:hidden ${rowFlash}`}
-                  >
-                    <div className="flex items-center justify-between gap-2.5">
-                      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-                        {(status === "Low stock" ||
-                          status === "Unavailable") && (
-                          <span
-                            className="kis-pulse h-1.5 w-1.5 shrink-0 rounded-full"
-                            style={{ background: statusDotColor(status) }}
-                          />
-                        )}
-                        <span className="truncate text-[15px] font-medium">
-                          {item.name}
-                        </span>
-                        {isNew && (
-                          <span className="shrink-0 rounded-full bg-[#c8102e] px-1.5 py-0.5 font-mono text-[8px] tracking-wide text-white">
-                            NEW
-                          </span>
-                        )}
-                        {item.in_space_only && (
-                          <span className="shrink-0 rounded-full bg-[#141414] px-1.5 py-0.5 font-mono text-[8px] tracking-[0.08em] text-[#f4f1ea]">
-                            IN-SPACE ONLY
-                          </span>
-                        )}
-                      </div>
-                      <div className="shrink-0 text-right">
-                        <span className="font-mono text-[12.5px]">
-                          {item.quantity_available}
-                          <span className="text-[#b6b0a3]">
-                            /{item.quantity_total}
-                          </span>
-                        </span>
-                        <div className="ml-auto mt-1 h-[3px] w-11 overflow-hidden rounded-full bg-[#eeece5]">
-                          <div
-                            className="h-full rounded-full transition-[width] duration-500"
-                            style={{
-                              width: `${fillPct}%`,
-                              background: stockBarColor(status),
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-2 flex items-center justify-between gap-2">
-                      <span
-                        className="inline-block rounded-full px-2.5 py-0.5 text-[10.5px] font-semibold"
-                        style={{ background: pill.bg, color: pill.fg }}
-                      >
-                        {item.area}
-                      </span>
-                      {item.in_space_only ? (
-                        <div className="select-none border border-dashed border-[#d5d1c8] px-3 py-1.5 text-center text-[11.5px] text-[#6d6759]">
-                          Use in the space
-                        </div>
-                      ) : canReserve ? (
-                        <button
-                          type="button"
-                          onClick={() => openReserve(item.id, true)}
-                          className="kis-press min-h-9 rounded-full border border-[#141414] bg-white px-4 text-[12px] font-semibold"
-                        >
-                          Reserve
-                        </button>
-                      ) : (
-                        <span className="text-[12px] text-[#98917f]">—</span>
-                      )}
-                    </div>
-                    {item.in_space_only && (
-                      <p className="mt-2 text-[11.5px] leading-[1.45] text-[#8a857a] md:hidden">
-                        Stays in the Makerspace —{" "}
-                        <Link href="/schedule" className="underline">
-                          book the space
-                        </Link>{" "}
-                        to use it during your period.
-                      </p>
-                    )}
-                  </div>
-
                   {loans.map((loan) => (
                     <OutStatusBand key={loan.id} loan={loan} />
                   ))}
@@ -374,59 +320,44 @@ export function ResourcesClient({
                   {receipt && (
                     <ReservationReceipt
                       receipt={receipt}
-                      onDismiss={() =>
-                        setReceipts((prev) => {
-                          const next = { ...prev };
-                          delete next[item.id];
-                          return next;
-                        })
+                      onDismiss={() => dismissReceipt(item.id)}
+                      onUndone={() =>
+                        undoReceipt(item.id, receipt.reservationId)
                       }
-                      onUndone={() => {
-                        setReservations((prev) =>
-                          prev.filter((r) => r.id !== receipt.reservationId),
-                        );
-                        setReceipts((prev) => {
-                          const next = { ...prev };
-                          delete next[item.id];
-                          return next;
-                        });
-                      }}
                     />
                   )}
 
                   {isReserving && reservingItem && (
-                    <div className="hidden md:block">
-                      <ReservePanel
-                        item={reservingItem}
-                        reservations={reservations}
-                        variant="inline"
-                        onClose={closeReserve}
-                        onConfirmed={(r) => {
-                          setReservations((prev) => [
-                            {
-                              id: r.reservationId,
-                              equipment_id: item.id,
-                              name: r.name,
-                              qty: r.qty,
-                              days: r.days,
-                              period_start:
-                                r.periods === "all" ? null : r.periods.start,
-                              period_end:
-                                r.periods === "all" ? null : r.periods.end,
-                              status: "reserved",
-                              out_qty: 0,
-                              source: "web",
-                              created_at: new Date().toISOString(),
-                              out_at: null,
-                              returned_at: null,
-                            },
-                            ...prev,
-                          ]);
-                          setReceipts((prev) => ({ ...prev, [item.id]: r }));
-                          closeReserve();
-                        }}
-                      />
-                    </div>
+                    <ReservePanel
+                      item={reservingItem}
+                      reservations={reservations}
+                      variant="inline"
+                      onClose={closeReserve}
+                      onConfirmed={(r) => {
+                        setReservations((prev) => [
+                          {
+                            id: r.reservationId,
+                            equipment_id: item.id,
+                            name: r.name,
+                            qty: r.qty,
+                            days: r.days,
+                            period_start:
+                              r.periods === "all" ? null : r.periods.start,
+                            period_end:
+                              r.periods === "all" ? null : r.periods.end,
+                            status: "reserved",
+                            out_qty: 0,
+                            source: "web",
+                            created_at: new Date().toISOString(),
+                            out_at: null,
+                            returned_at: null,
+                          },
+                          ...prev,
+                        ]);
+                        setReceipts((prev) => ({ ...prev, [item.id]: r }));
+                        closeReserve();
+                      }}
+                    />
                   )}
                 </div>
               );
@@ -434,6 +365,20 @@ export function ResourcesClient({
           )}
         </div>
       </section>
+
+      {/* Mobile decluttered list (10a) */}
+      <div className="md:hidden">
+        <MobileResourcesList
+          items={items}
+          areaNames={areaNames}
+          reservations={reservations}
+          receipts={receipts}
+          onDismissReceipt={dismissReceipt}
+          onReceiptUndone={undoReceipt}
+          onReserve={(id) => openReserve(id, true)}
+          wishlistNameRef={wishlistNameRef}
+        />
+      </div>
 
       {reservingItem && isMobileReserve && (
         <ReservePanel
@@ -465,15 +410,6 @@ export function ResourcesClient({
           }}
         />
       )}
-
-      <div className="page-gutter sticky bottom-4 z-20 pb-5 md:hidden">
-        <Link
-          href="/schedule"
-          className="kis-press flex min-h-11 w-full items-center justify-center rounded-full bg-[#141414] text-[13.5px] font-semibold text-white shadow-none hover:text-white"
-        >
-          Schedule the space →
-        </Link>
-      </div>
 
       <WishlistSection initial={itemRequests} nameInputRef={wishlistNameRef} />
 

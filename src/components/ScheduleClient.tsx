@@ -5,6 +5,7 @@ import {
   cancelPeriodBooking,
   createPeriodBooking,
 } from "@/app/actions/public";
+import { useConfirm } from "@/components/ConfirmDialog";
 import { SiteFooter } from "@/components/SiteFooter";
 import {
   bookingKey,
@@ -47,6 +48,7 @@ export function ScheduleClient({
   initialBookings,
   initialBlocks,
 }: ScheduleClientProps) {
+  const askConfirm = useConfirm();
   const [bookings, setBookings] = useState(initialBookings);
   const blocks = initialBlocks;
   const [sel, setSel] = useState<Selection | null>(null);
@@ -128,23 +130,29 @@ export function ScheduleClient({
               <button
                 type="button"
                 disabled={pending}
-                onClick={() =>
-                  startTransition(async () => {
-                    const result = await cancelPeriodBooking(sel.booking!.id);
-                    if (!result.ok) {
-                      setError(result.error);
-                      return;
-                    }
-                    setBookings((prev) =>
-                      prev.map((b) =>
-                        b.id === sel.booking!.id
-                          ? { ...b, status: "cancelled" as const }
-                          : b,
-                      ),
-                    );
-                    setSel(null);
-                  })
-                }
+                onClick={() => {
+                  const booking = sel.booking!;
+                  askConfirm({
+                    title: "Cancel this booking?",
+                    body: `${booking.teacher_name} · ${sel.day} ${sel.dateLabel} · Period ${sel.period} — the period opens up for other teachers.`,
+                    action: "Cancel booking",
+                    fn: async () => {
+                      const result = await cancelPeriodBooking(booking.id);
+                      if (!result.ok) {
+                        setError(result.error);
+                        throw new Error(result.error);
+                      }
+                      setBookings((prev) =>
+                        prev.map((b) =>
+                          b.id === booking.id
+                            ? { ...b, status: "cancelled" as const }
+                            : b,
+                        ),
+                      );
+                      setSel(null);
+                    },
+                  });
+                }}
                 className="kis-press min-h-11 border border-[#c8102e] px-4 py-3 text-[14px] font-semibold text-[#c8102e] hover:bg-[#c8102e] hover:text-white md:py-2"
               >
                 Cancel this request
@@ -285,7 +293,7 @@ export function ScheduleClient({
             </span>
             <span className="hidden md:inline">
               Teachers can request class periods up to one week in advance. The
-              Creativity Space team confirms each request — you&apos;ll get a
+              Design Studio team confirms each request — you&apos;ll get a
               notification.
             </span>
           </p>
@@ -481,7 +489,7 @@ export function ScheduleClient({
                 "repeating-linear-gradient(45deg, #fbeeee 0, #fbeeee 3px, #f3dcdc 3px, #f3dcdc 6px)",
             }}
           />{" "}
-          Blocked by the Creativity Space team
+          Blocked by the Design Studio team
         </span>
       </div>
 

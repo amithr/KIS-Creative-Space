@@ -7,6 +7,7 @@ import {
   getActiveReservations,
   getAdminSpaceBookings,
   getAdminTrainingSessions,
+  getAreas,
   getEquipmentWithUnits,
   getItemRequests,
   getSpaceBlocks,
@@ -48,6 +49,7 @@ export default async function AdminPage({ searchParams }: PageProps) {
     spaceBlocks,
     trainingSessions,
     itemRequests,
+    areas,
   ] = await Promise.all([
     getEquipmentWithUnits(),
     getActiveReservations(),
@@ -55,6 +57,7 @@ export default async function AdminPage({ searchParams }: PageProps) {
     getSpaceBlocks(),
     getAdminTrainingSessions(),
     getItemRequests(),
+    getAreas(),
   ]);
 
   return (
@@ -66,6 +69,7 @@ export default async function AdminPage({ searchParams }: PageProps) {
         spaceBlocks={spaceBlocks}
         trainingSessions={trainingSessions}
         itemRequests={itemRequests}
+        areas={areas}
       />
     </AdminShell>
   );

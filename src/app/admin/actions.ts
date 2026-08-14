@@ -192,6 +192,7 @@ export async function createEquipment(input: EquipmentInput) {
   await createEquipmentUnits(supabase, data.id, total);
 
   revalidateInventory();
+  return { id: data.id as string };
 }
 
 export async function addEquipmentUnit(equipmentId: string) {
@@ -910,4 +911,90 @@ export async function deleteItemRequest(
   if (error) return { ok: false, error: error.message };
   revalidateItemRequestsAdmin();
   return { ok: true };
+}
+
+export type AreaActionResult =
+  | { ok: true; name?: string }
+  | { ok: false; error: string };
+
+function revalidateAreas() {
+  revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath("/checkout");
+}
+
+/** Create a managed area. Case-insensitive unique; returns trimmed name. */
+export async function createArea(name: string): Promise<AreaActionResult> {
+  const { supabase } = await requireTeacher();
+  const trimmed = name.trim();
+  if (!trimmed) return { ok: false, error: "Enter an area name." };
+
+  const { data: existing, error: listError } = await supabase
+    .from("areas")
+    .select("id, name, sort_order");
+  if (listError) return { ok: false, error: listError.message };
+
+  const dup = (existing ?? []).some(
+    (a) => a.name.trim().toLowerCase() === trimmed.toLowerCase(),
+  );
+  if (dup) return { ok: false, error: "That area already exists." };
+
+  const nextOrder =
+    (existing ?? []).reduce(
+      (m, a) => Math.max(m, Number(a.sort_order ?? 0)),
+      0,
+    ) + 1;
+
+  const { error } = await supabase.from("areas").insert({
+    name: trimmed,
+    sort_order: nextOrder,
+  });
+  if (error) {
+    if (error.code === "23505") {
+      return { ok: false, error: "That area already exists." };
+    }
+    return { ok: false, error: error.message };
+  }
+
+  revalidateAreas();
+  return { ok: true, name: trimmed };
+}
+
+/** Delete an area only when no equipment references it and it is not the last. */
+export async function deleteArea(id: string): Promise<AreaActionResult> {
+  const { supabase } = await requireTeacher();
+  if (!id) return { ok: false, error: "Missing area." };
+
+  const { data: area, error: loadError } = await supabase
+    .from("areas")
+    .select("id, name")
+    .eq("id", id)
+    .maybeSingle();
+  if (loadError) return { ok: false, error: loadError.message };
+  if (!area) return { ok: false, error: "Area not found." };
+
+  const { count: areaCount, error: countError } = await supabase
+    .from("areas")
+    .select("*", { count: "exact", head: true });
+  if (countError) return { ok: false, error: countError.message };
+  if ((areaCount ?? 0) <= 1) {
+    return { ok: false, error: "Keep at least one area." };
+  }
+
+  const { count: itemCount, error: itemError } = await supabase
+    .from("equipment")
+    .select("*", { count: "exact", head: true })
+    .eq("area", area.name);
+  if (itemError) return { ok: false, error: itemError.message };
+  if ((itemCount ?? 0) > 0) {
+    return {
+      ok: false,
+      error: `Remove or reassign ${itemCount} item${itemCount === 1 ? "" : "s"} first.`,
+    };
+  }
+
+  const { error } = await supabase.from("areas").delete().eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidateAreas();
+  return { ok: true, name: area.name };
 }

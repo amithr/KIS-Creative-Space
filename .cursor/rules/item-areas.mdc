@@ -1,0 +1,13 @@
+---
+description: KIS Creativity Space — item areas (categories) manager on the admin Items tab
+alwaysApply: true
+---
+
+- This folder is a design handoff; README.md is the source of truth (chips UI, add/remove rules, consumers).
+- Areas are ONE managed ordered list; every area dropdown and the public Resources grouping read it — no hardcoded area arrays left anywhere.
+- Effective list = stored areas ∪ areas still referenced by items; an item must never point at a missing area.
+- Remove is only offered for empty areas (confirm dialog) and never for the last remaining area; enforce server-side too (409 when items exist).
+- Duplicates rejected case-insensitively on trimmed names, with the inline "already exists" error in the UI.
+- Adding an area pre-selects it in the add-item form; removing one resets selects that pointed at it (QR filter → "All areas").
+- No rename in this pass — do not add it speculatively.
+- designs/KIS Admin.dc.html is a browser-openable prototype for reference only — never import or port support.js.

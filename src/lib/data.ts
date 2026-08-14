@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { FALLBACK_EQUIPMENT } from "@/lib/constants";
+import { FALLBACK_EQUIPMENT, DEFAULT_AREAS } from "@/lib/constants";
+import { effectiveAreaNames, type Area } from "@/lib/areas";
 import { hasSupabasePublicEnv } from "@/lib/supabase/env";
 import { normalizeItemRequest } from "@/lib/item-requests";
 import type {
@@ -485,6 +486,67 @@ export async function getItemRequests(
       row as Record<string, unknown>,
       votedIds.has(String(row.id)),
     ),
+  );
+}
+
+/** Ordered area names from the areas table (or defaults offline). */
+export async function getAreas(): Promise<Area[]> {
+  if (!hasSupabaseEnv()) {
+    return DEFAULT_AREAS.map((name, i) => ({
+      id: `demo-area-${i}`,
+      name,
+      sort_order: i + 1,
+      created_at: "",
+    }));
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("areas")
+    .select("*")
+    .order("sort_order")
+    .order("name");
+
+  if (error) {
+    console.error("Failed to load areas:", error.message);
+    return DEFAULT_AREAS.map((name, i) => ({
+      id: `fallback-area-${i}`,
+      name,
+      sort_order: i + 1,
+      created_at: "",
+    }));
+  }
+
+  if (!data?.length) {
+    return DEFAULT_AREAS.map((name, i) => ({
+      id: `fallback-area-${i}`,
+      name,
+      sort_order: i + 1,
+      created_at: "",
+    }));
+  }
+
+  return data.map((row) => ({
+    id: String(row.id),
+    name: String(row.name ?? ""),
+    sort_order: Number(row.sort_order ?? 0),
+    created_at: String(row.created_at ?? ""),
+  }));
+}
+
+/** Effective area names for selects/filters (stored ∪ item refs). */
+export async function getEffectiveAreaNames(
+  equipmentAreas?: string[],
+): Promise<string[]> {
+  const [areas, equipment] = await Promise.all([
+    getAreas(),
+    equipmentAreas ? Promise.resolve(null) : getEquipment(),
+  ]);
+  const fromItems =
+    equipmentAreas ?? (equipment ?? []).map((e) => e.area);
+  return effectiveAreaNames(
+    areas.map((a) => a.name),
+    fromItems,
   );
 }
 

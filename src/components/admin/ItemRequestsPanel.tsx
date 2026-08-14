@@ -5,6 +5,8 @@ import {
   advanceItemRequestStatus,
   deleteItemRequest,
 } from "@/app/admin/actions";
+import { useConfirm } from "@/components/ConfirmDialog";
+import { useAdminWrite } from "@/components/admin/AdminWriteFeedback";
 import {
   formatItemRequestWhen,
   ITEM_REQUEST_STATUS_STYLE,
@@ -24,28 +26,35 @@ export function ItemRequestsPanel({
   onAddToInventory,
 }: ItemRequestsPanelProps) {
   const [pending, startTransition] = useTransition();
+  const askConfirm = useConfirm();
+  const { flashSaved, dbWrite } = useAdminWrite();
   const rows = useMemo(() => sortItemRequestsByStage(requests), [requests]);
   const newCount = requests.filter((r) => r.status === "requested").length;
 
-  function advance(id: string, label: string) {
+  function advance(id: string, msg: string) {
     startTransition(async () => {
       const result = await advanceItemRequestStatus(id);
       if (!result.ok) {
         onDone(result.error);
         return;
       }
-      onDone(label);
+      flashSaved("REQUESTS");
+      onDone(msg);
     });
   }
 
-  function remove(id: string, label: string) {
-    startTransition(async () => {
-      const result = await deleteItemRequest(id);
-      if (!result.ok) {
-        onDone(result.error);
-        return;
-      }
-      onDone(label);
+  function remove(request: ItemRequest) {
+    const clearing = request.status === "arrived";
+    askConfirm({
+      title: clearing ? "Clear this request?" : "Decline this request?",
+      body: `“${request.name}” — requested by ${request.by} · ${request.votes} vote${request.votes === 1 ? "" : "s"}. It disappears from the wishlist.`,
+      action: clearing ? "Clear it" : "Decline",
+      fn: () =>
+        dbWrite("REQUESTS", async () => {
+          const result = await deleteItemRequest(request.id);
+          if (!result.ok) throw new Error(result.error);
+          onDone(clearing ? `Cleared ${request.name}.` : `Declined ${request.name}.`);
+        }),
     });
   }
 
@@ -129,7 +138,7 @@ export function ItemRequestsPanel({
                     <button
                       type="button"
                       disabled={pending}
-                      onClick={() => remove(r.id, `Declined ${r.name}.`)}
+                      onClick={() => remove(r)}
                       className="border border-[#e3e0d8] px-3 py-1.5 text-[13px] font-semibold text-[#3f3b33] transition-colors hover:border-[#c8102e] hover:text-[#c8102e] disabled:opacity-60"
                     >
                       Decline
@@ -170,7 +179,7 @@ export function ItemRequestsPanel({
                     <button
                       type="button"
                       disabled={pending}
-                      onClick={() => remove(r.id, `Cleared ${r.name}.`)}
+                      onClick={() => remove(r)}
                       className="border border-[#e3e0d8] px-3 py-1.5 text-[13px] font-semibold text-[#3f3b33] transition-colors hover:border-[#c8102e] hover:text-[#c8102e] disabled:opacity-60"
                     >
                       Clear

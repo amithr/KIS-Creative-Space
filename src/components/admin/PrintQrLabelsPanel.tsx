@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AREA_OPTIONS } from "@/lib/constants";
 import { isNewItem } from "@/lib/inventory";
 import { generateQrDataUrl } from "@/lib/qr";
 import type { Equipment } from "@/lib/types";
 
 type PrintQrLabelsPanelProps = {
   equipment: Equipment[];
+  areaOptions: string[];
+  resetAreaToken?: number;
 };
 
 type WhichItems = "all" | "new";
@@ -17,12 +18,26 @@ const fieldLabel =
 const underline =
   "border-0 border-b border-[#e3e0d8] bg-transparent px-0 py-2 text-[14.5px] outline-none focus:border-[#141414]";
 
-export function PrintQrLabelsPanel({ equipment }: PrintQrLabelsPanelProps) {
+export function PrintQrLabelsPanel({
+  equipment,
+  areaOptions,
+  resetAreaToken = 0,
+}: PrintQrLabelsPanelProps) {
   const [open, setOpen] = useState(false);
   const [area, setArea] = useState<string>("all");
   const [which, setWhich] = useState<WhichItems>("all");
   const [copies, setCopies] = useState(1);
   const [qrMap, setQrMap] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    setArea("all");
+  }, [resetAreaToken]);
+
+  useEffect(() => {
+    if (area !== "all" && !areaOptions.includes(area)) {
+      setArea("all");
+    }
+  }, [area, areaOptions]);
 
   const filtered = useMemo(() => {
     return equipment.filter((item) => {
@@ -98,7 +113,7 @@ export function PrintQrLabelsPanel({ equipment }: PrintQrLabelsPanelProps) {
                 className={underline}
               >
                 <option value="all">All areas</option>
-                {AREA_OPTIONS.map((a) => (
+                {areaOptions.map((a) => (
                   <option key={a} value={a}>
                     {a}
                   </option>
@@ -175,7 +190,7 @@ export function PrintQrLabelsPanel({ equipment }: PrintQrLabelsPanelProps) {
                   {item.qr_code}
                 </p>
                 <p className="font-mono text-[7.5px] tracking-[0.2em] text-[#857e6e]">
-                  KIS CREATIVITY SPACE
+                  KIS DESIGN STUDIO
                 </p>
               </div>
             ))}

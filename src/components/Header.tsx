@@ -59,11 +59,11 @@ export function Header() {
                         : "TRAINING"}
                     </span>
                     <span className="hidden md:inline">
-                      KIS CREATIVITY SPACE
+                      KIS DESIGN STUDIO
                     </span>
                   </>
                 ) : (
-                  "KIS CREATIVITY SPACE"
+                  "KIS DESIGN STUDIO"
                 )}
               </span>
               {isAdmin && (

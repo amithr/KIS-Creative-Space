@@ -194,6 +194,80 @@
   background: #eaf6ec !important;
 }
 
+@keyframes kis-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes kis-syncin {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes kis-rowin {
+  0% {
+    background: #dff2e3;
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+@keyframes kis-rowout {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+}
+
+@keyframes kis-confirm-pop {
+  0% {
+    transform: scale(0.92);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.03);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.kis-sync-chip {
+  animation: kis-syncin 0.25s ease both;
+}
+
+.kis-sync-spin {
+  animation: kis-spin 0.7s linear infinite;
+}
+
+.kis-confirm-pop {
+  animation: kis-confirm-pop 0.22s ease both;
+}
+
+.kis-admin-rowin {
+  animation: kis-rowin 1.4s ease;
+}
+
+.kis-admin-rowout {
+  animation: kis-rowout 0.55s ease forwards;
+}
+
 .kis-sched-cell {
   border-radius: 10px;
   transition:

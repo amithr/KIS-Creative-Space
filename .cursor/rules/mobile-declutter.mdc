@@ -1,0 +1,13 @@
+---
+description: KIS Creativity Space — decluttered mobile-web Resources list (grouped rows + item sheet)
+alwaysApply: true
+---
+
+- This folder is a design handoff; README.md is the source of truth. Direction is 10a (flat grouped list + bottom sheet); 10b accordion was rejected — never hide the list behind collapsed sections.
+- Mobile rendering only; desktop Resources is unchanged.
+- Rows are one line and navigation-only (min 44px hit target); ALL detail and actions (Reserve, availability bar, loan note) live in the bottom sheet.
+- Status compresses to one 7px dot: green available, amber low (≤25% of total), black in-space-only; no per-row pills, bars, or buttons.
+- Area jump chips + section headers render from the managed areas store; empty areas render nothing; chip tap scrolls via scrollTo/anchors — never scrollIntoView.
+- Search is an icon that expands in place and filters live.
+- In-space-only items keep the existing "Use in the space" / "Book the space" behavior in the sheet; Reserve opens the existing reserve flow unchanged.
+- designs/*.html are browser-openable prototypes for reference only — never import or port support.js / android-frame.jsx / image-slot.js.

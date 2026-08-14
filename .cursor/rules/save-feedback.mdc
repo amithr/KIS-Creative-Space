@@ -1,0 +1,12 @@
+---
+description: KIS Creativity Space — save feedback (sync chip, pending states) + in-app confirm dialogs
+alwaysApply: true
+---
+
+- This folder is a design handoff; README.md is the source of truth (chip states, dialog spec, the exact list of confirmed actions).
+- Never use window.confirm/alert — all confirmations go through the ONE shared dialog component (askConfirm-style API: title, body, action verb, fn).
+- Dialog bodies name the specific record and consequence; the primary button is an action verb ("Delete item", "Cancel booking"), the secondary is "Keep it"; click-outside dismisses safely.
+- Two feedback tiers: blocking writes (add/delete/reset) show the pending sync chip tied to the real request; inline edits are optimistic with a SAVED-only flash — no spinner on steppers/toggles.
+- Delete = confirm → animated row-out (by id) → write; new rows flash green; failed writes turn the chip red and roll back.
+- Only destructive actions get confirms — add, approve, status advances, check-out/in stay one-click.
+- designs/*.html are browser-openable prototypes for reference only — never import or port their runtime (support.js, image-slot.js).

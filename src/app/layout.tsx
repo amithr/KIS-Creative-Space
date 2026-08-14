@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Space_Mono } from "next/font/google";
+import { ConfirmProvider } from "@/components/ConfirmDialog";
 import { Header } from "@/components/Header";
 import "./globals.css";
 
@@ -16,9 +17,9 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "KIS Creativity Space",
+  title: "KIS Design Studio",
   description:
-    "School makerspace resources, room schedule, and inventory for KIS Creativity Space.",
+    "School makerspace resources, room schedule, and inventory for KIS Design Studio.",
 };
 
 export default function RootLayout({
@@ -32,8 +33,10 @@ export default function RootLayout({
       className={`${spaceGrotesk.variable} ${spaceMono.variable} h-full`}
     >
       <body className="min-h-full font-sans">
-        <Header />
-        <main>{children}</main>
+        <ConfirmProvider>
+          <Header />
+          <main>{children}</main>
+        </ConfirmProvider>
       </body>
     </html>
   );

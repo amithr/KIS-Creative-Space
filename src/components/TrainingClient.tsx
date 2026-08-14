@@ -5,6 +5,7 @@ import {
   cancelTrainingSession,
   createTrainingSession,
 } from "@/app/actions/public";
+import { useConfirm } from "@/components/ConfirmDialog";
 import { SiteFooter } from "@/components/SiteFooter";
 import {
   bookingKey,
@@ -54,6 +55,7 @@ export function TrainingClient({
   initialSpaceBookings,
   initialBlocks,
 }: TrainingClientProps) {
+  const askConfirm = useConfirm();
   const [sessions, setSessions] = useState(initialSessions);
   const spaceBookings = initialSpaceBookings;
   const blocks = initialBlocks;
@@ -176,23 +178,29 @@ export function TrainingClient({
               <button
                 type="button"
                 disabled={pending}
-                onClick={() =>
-                  startTransition(async () => {
-                    const result = await cancelTrainingSession(sel.session!.id);
-                    if (!result.ok) {
-                      setError(result.error);
-                      return;
-                    }
-                    setSessions((prev) =>
-                      prev.map((s) =>
-                        s.id === sel.session!.id
-                          ? { ...s, status: "cancelled" as const }
-                          : s,
-                      ),
-                    );
-                    setSel(null);
-                  })
-                }
+                onClick={() => {
+                  const session = sel.session!;
+                  askConfirm({
+                    title: "Cancel this session?",
+                    body: `${session.teacher_name} · ${sel.day} ${sel.dateLabel} · Period ${sel.period} — “${session.topic}”. The slot opens up again.`,
+                    action: "Cancel session",
+                    fn: async () => {
+                      const result = await cancelTrainingSession(session.id);
+                      if (!result.ok) {
+                        setError(result.error);
+                        throw new Error(result.error);
+                      }
+                      setSessions((prev) =>
+                        prev.map((s) =>
+                          s.id === session.id
+                            ? { ...s, status: "cancelled" as const }
+                            : s,
+                        ),
+                      );
+                      setSel(null);
+                    },
+                  });
+                }}
                 className="kis-press min-h-11 border border-[#c8102e] px-4 py-3 text-[14px] font-semibold text-[#c8102e] hover:bg-[#c8102e] hover:text-white md:py-2"
               >
                 Cancel this session
@@ -298,7 +306,7 @@ export function TrainingClient({
               Request help for a free class period
             </span>
             <span className="hidden md:inline">
-              Pick a free class period and tell the Creativity Space coordinator
+              Pick a free class period and tell the Design Studio coordinator
               what you want help with. Availability follows the space schedule —
               booked or blocked periods aren&apos;t open for training.
             </span>
@@ -499,7 +507,7 @@ export function TrainingClient({
                 "repeating-linear-gradient(45deg, #fbeeee 0, #fbeeee 3px, #f3dcdc 3px, #f3dcdc 6px)",
             }}
           />{" "}
-          Blocked by the Creativity Space team
+          Blocked by the Design Studio team
         </span>
       </div>
 
