@@ -5,8 +5,10 @@ import {
   cancelTrainingSession,
   createTrainingSession,
 } from "@/app/actions/public";
+import { DayTypeLegend } from "@/components/DayTypeLegend";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { SiteFooter } from "@/components/SiteFooter";
+import { WeekPager } from "@/components/WeekPager";
 import {
   bookingKey,
   formatDayShort,
@@ -19,11 +21,12 @@ import {
   evaluatePeriodSlot,
 } from "@/lib/period-slot";
 import {
-  cellVisual,
-  rollingSevenDays,
-  statusPillColors,
-  weekdayOfDate,
-} from "@/lib/schedule-ui";
+  dayHeaderPillStyle,
+  dayTypeOf,
+  isScheduleBookableDate,
+  weekDays,
+} from "@/lib/school-calendar";
+import { cellVisual, statusPillColors, weekdayOfDate } from "@/lib/schedule-ui";
 import type { SpaceBlock, SpaceBooking, TrainingSession } from "@/lib/types";
 
 const PERIODS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
@@ -59,6 +62,7 @@ export function TrainingClient({
   const [sessions, setSessions] = useState(initialSessions);
   const spaceBookings = initialSpaceBookings;
   const blocks = initialBlocks;
+  const [weekIndex, setWeekIndex] = useState(0);
   const [sel, setSel] = useState<Selection | null>(null);
   const [bookName, setBookName] = useState("");
   const [topic, setTopic] = useState("");
@@ -68,7 +72,7 @@ export function TrainingClient({
   const [popKey, setPopKey] = useState<string | null>(null);
 
   const now = startOfDay(new Date());
-  const dates = rollingSevenDays(now);
+  const dates = useMemo(() => weekDays(weekIndex, now), [weekIndex, now]);
   const todayIso = toISODate(now);
 
   const sessionBySlot = useMemo(() => {
@@ -82,13 +86,20 @@ export function TrainingClient({
 
   const canSubmit = bookName.trim().length > 0 && topic.trim().length > 0;
 
+  function changeWeek(next: number) {
+    setWeekIndex(next);
+    setSel(null);
+    setMobileDay(0);
+  }
+
   function slotFor(iso: string, period: number, isSel: boolean) {
     const session = sessionBySlot.get(bookingKey(iso, period));
     const spaceBooking = activeSpaceAt(spaceBookings, iso, period);
     const block = blockAt(blocks, iso, period);
+    const d = new Date(`${iso}T00:00:00`);
     const state = evaluatePeriodSlot({
       mode: "training",
-      inWindow: true,
+      inWindow: isScheduleBookableDate(d, now),
       isSelected: isSel,
       block,
       spaceBooking,
@@ -303,25 +314,25 @@ export function TrainingClient({
           <span className="kis-title-underline !mt-2.5 !w-12 md:!mt-3.5 md:!w-16" />
           <p className="mt-2.5 text-[12.5px] text-[#8a857a] md:mt-3 md:text-[14.5px] md:text-[#6d6759]">
             <span className="md:hidden">
-              Request help for a free class period
+              Pick a free period up to three weeks ahead
             </span>
             <span className="hidden md:inline">
-              Pick a free class period and tell the Design Studio coordinator
-              what you want help with. Availability follows the space schedule —
-              booked or blocked periods aren&apos;t open for training.
+              Pick a free period up to three weeks ahead and say what you&apos;d
+              like help with. Availability follows the space schedule — booked
+              or blocked periods aren&apos;t open for training.
             </span>
           </p>
         </div>
-        <p className="hidden pb-1 font-mono text-[12px] tracking-[0.16em] text-[#6d6759] md:block">
-          NEXT 7 DAYS
-        </p>
+        <WeekPager weekIndex={weekIndex} days={dates} onChange={changeWeek} />
       </section>
 
       <div className="page-gutter mb-4 flex gap-1.5 overflow-x-auto pb-1 md:hidden">
         {dates.map((d, i) => {
           const iso = toISODate(d);
           const active = mobileDay === i;
-          const dayNum = d.getDate();
+          const type = dayTypeOf(iso);
+          const bookable = isScheduleBookableDate(d, now);
+          const pill = dayHeaderPillStyle(type, iso === todayIso);
           return (
             <button
               key={iso}
@@ -332,9 +343,9 @@ export function TrainingClient({
               }}
               className="kis-press min-h-11 min-w-[48px] flex-1 rounded-[10px] px-1 py-2 text-center"
               style={{
-                background: active ? "#c8102e" : "#fff",
-                color: active ? "#fff" : "#3f3b33",
-                border: `1px solid ${active ? "#c8102e" : "#e3e0d8"}`,
+                background: active ? "#c8102e" : pill.background,
+                color: active ? "#fff" : bookable ? "#3f3b33" : "#b6b0a3",
+                border: active ? "1px solid #c8102e" : pill.border,
                 boxShadow: active
                   ? "0 0 0 3px rgba(200,16,46,.15)"
                   : undefined,
@@ -343,21 +354,26 @@ export function TrainingClient({
               <div className="font-mono text-[9px] tracking-[0.1em]">
                 {weekdayOfDate(d)}
               </div>
-              <div className="mt-0.5 text-[13.5px] font-semibold">{dayNum}</div>
+              <div className="mt-0.5 text-[13.5px] font-semibold">
+                {d.getDate()}
+              </div>
             </button>
           );
         })}
       </div>
 
       <div className="page-gutter mb-8 hidden border-t border-[#141414] md:block">
-        <div className="grid grid-cols-[90px_repeat(7,1fr)] border-b border-[#e3e0d8]">
+        <div className="grid grid-cols-[90px_repeat(5,1fr)] border-b border-[#e3e0d8]">
           <div className="py-3 font-mono text-[11px] tracking-[0.16em] text-[#6d6759]">
             PERIOD
           </div>
           {dates.map((d) => {
-            const today = toISODate(d) === todayIso;
+            const iso = toISODate(d);
+            const today = iso === todayIso;
+            const type = dayTypeOf(iso);
+            const pill = dayHeaderPillStyle(type, today);
             return (
-              <div key={toISODate(d)} className="px-1 py-3 text-center">
+              <div key={iso} className="px-1 py-3 text-center">
                 <div
                   className="font-mono text-[11px] tracking-[0.16em]"
                   style={{ color: today ? "#c8102e" : "#6d6759" }}
@@ -365,8 +381,8 @@ export function TrainingClient({
                   {weekdayOfDate(d)}
                 </div>
                 <div
-                  className="mt-1 text-[14.5px] font-semibold"
-                  style={{ color: today ? "#c8102e" : "#141414" }}
+                  className="mt-1 inline-block rounded-lg px-3 py-0.5 text-[14.5px] font-semibold"
+                  style={pill}
                 >
                   {formatDayShort(d)}
                 </div>
@@ -378,7 +394,7 @@ export function TrainingClient({
         {PERIODS.map((period) => (
           <div
             key={period}
-            className="grid grid-cols-[90px_repeat(7,1fr)] border-b border-[#eeece5]"
+            className="grid grid-cols-[90px_repeat(5,1fr)] border-b border-[#eeece5]"
           >
             <div className="flex items-center font-mono text-[12px] text-[#6d6759]">
               P{period}
@@ -509,11 +525,13 @@ export function TrainingClient({
           />{" "}
           Blocked by the Design Studio team
         </span>
+        <DayTypeLegend />
       </div>
 
       <p className="page-gutter mb-10 hidden text-[14.5px] text-[#6d6759] md:block">
-        Sessions are one class period · next 7 days · availability matches
-        Schedule the space · the coordinator confirms each request
+        Sessions are one class period · up to three weeks ahead · day colors
+        follow the 2026–27 school calendar · availability matches Schedule the
+        space · the coordinator confirms each request
       </p>
 
       <SiteFooter />

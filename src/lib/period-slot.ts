@@ -65,9 +65,12 @@ export function evaluatePeriodSlot(input: {
     }
   }
 
-  // One-way: space bookings block training; training never blocks the space schedule.
+  // Mutual exclusion: space ↔ training share the period.
   if (mode === "training" && spaceBooking) {
     return { kind: "cross-occupied", label: "Space in use" };
+  }
+  if (mode === "space" && trainingSession) {
+    return { kind: "cross-occupied", label: "Training booked" };
   }
 
   if (!inWindow) return { kind: "past" };

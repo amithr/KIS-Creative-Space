@@ -1,0 +1,12 @@
+---
+description: KIS Creativity Space — 3-week booking horizon + school-calendar day types on Schedule/Training pages
+alwaysApply: true
+---
+
+- This folder is a design handoff; README.md is the source of truth. The pages keep their existing UI — only the pager, day-type headers, and (Schedule only) optional note are new.
+- designs/school-calendar-2026-27.json is the single source of truth for red/black/green day types and no-school days — never derive them from a weekday rule (several Fridays are irregular).
+- Date keys/comparisons in LOCAL time, never via toISOString (UTC shifts dates in negative-offset timezones).
+- Horizon: current Monday-based week + 2 more; clamp the pager and enforce server-side; dates without a dayType are unbookable.
+- The optional note (≤280 chars) rides on space-booking requests only and is shown to the coordinator everywhere requests appear; training keeps its required topic field.
+- Availability engine, stores, staff gate, and confirm lifecycle are unchanged.
+- designs/*.html are browser-openable prototypes for reference only — never import or port their runtime (support.js).

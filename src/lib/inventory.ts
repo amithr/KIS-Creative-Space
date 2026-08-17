@@ -49,9 +49,13 @@ export function formatDayShort(date: Date) {
   return date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
-export function isBookableDate(date: Date, now = startOfDay(new Date())) {
+export function isBookableDate(
+  date: Date,
+  now = startOfDay(new Date()),
+  maxDays = 21,
+) {
   const limit = new Date(now);
-  limit.setDate(now.getDate() + 7);
+  limit.setDate(now.getDate() + maxDays);
   const d = startOfDay(date);
   return d.getTime() >= now.getTime() && d.getTime() <= limit.getTime();
 }

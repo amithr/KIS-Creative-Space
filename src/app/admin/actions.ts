@@ -567,11 +567,13 @@ export type SpaceBookingActionResult =
 function revalidateSpace() {
   revalidatePath("/schedule");
   revalidatePath("/training");
+  revalidatePath("/book");
   revalidatePath("/admin");
 }
 
 function revalidateTraining() {
   revalidatePath("/training");
+  revalidatePath("/book");
   revalidatePath("/admin");
 }
 

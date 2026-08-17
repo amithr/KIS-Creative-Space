@@ -6,11 +6,10 @@ import {
   getSpaceBlocks,
   getTrainingSessions,
 } from "@/lib/data";
-import { startOfDay } from "@/lib/inventory";
-import { rollingSevenRange } from "@/lib/schedule-ui";
+import { threeWeekHorizon } from "@/lib/school-calendar";
 
 export default async function TrainingPage() {
-  const { from, to } = rollingSevenRange(startOfDay(new Date()));
+  const { from, to } = threeWeekHorizon();
 
   const [sessions, spaceBookings, blocks] = await Promise.all([
     getTrainingSessions(from, to),

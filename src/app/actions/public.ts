@@ -19,6 +19,7 @@ import {
   blockAt,
   slotIsRequestable,
 } from "@/lib/period-slot";
+import { isScheduleBookableDate } from "@/lib/school-calendar";
 import type { Reservation } from "@/lib/types";
 
 export type ActionResult =
@@ -249,17 +250,20 @@ export async function createPeriodBooking(
   if (period < 1 || period > 8) return { ok: false, error: "Invalid period." };
 
   const date = new Date(`${bookingDate}T00:00:00`);
-  if (Number.isNaN(date.getTime()) || !isBookableDate(date)) {
+  if (Number.isNaN(date.getTime()) || !isScheduleBookableDate(date)) {
     return { ok: false, error: "That date is not bookable." };
   }
 
+  const purposeTrim = purpose?.trim().slice(0, 280) || null;
+
   if (!hasSupabaseEnv()) {
-    return { ok: true };
+    return { ok: true, bookingId: `local-${Date.now()}` };
   }
 
-  const [blocks, spaceBookings] = await Promise.all([
+  const [blocks, spaceBookings, trainingSessions] = await Promise.all([
     getSpaceBlocks(),
     getPeriodBookings(bookingDate, bookingDate),
+    getTrainingSessions(bookingDate, bookingDate),
   ]);
 
   const gate = slotIsRequestable({
@@ -267,6 +271,7 @@ export async function createPeriodBooking(
     inWindow: true,
     block: blockAt(blocks, bookingDate, period),
     spaceBooking: activeSpaceAt(spaceBookings, bookingDate, period),
+    trainingSession: activeTrainingAt(trainingSessions, bookingDate, period),
   });
   if (!gate.ok) return { ok: false, error: gate.error };
 
@@ -277,7 +282,7 @@ export async function createPeriodBooking(
       booking_date: bookingDate,
       period,
       teacher_name: name,
-      purpose: purpose?.trim() || null,
+      purpose: purposeTrim,
       area: area?.trim() || null,
       status: "pending",
     })
@@ -290,6 +295,7 @@ export async function createPeriodBooking(
 
   revalidatePath("/schedule");
   revalidatePath("/training");
+  revalidatePath("/book");
   revalidatePath("/admin");
   return { ok: true, bookingId: data?.id as string | undefined };
 }
@@ -324,12 +330,14 @@ export async function cancelPeriodBooking(
 
   revalidatePath("/schedule");
   revalidatePath("/training");
+  revalidatePath("/book");
   revalidatePath("/admin");
   return { ok: true };
 }
 
 function revalidateTraining() {
   revalidatePath("/training");
+  revalidatePath("/book");
   revalidatePath("/admin");
 }
 
@@ -344,13 +352,12 @@ export async function createTrainingSession(
   topic: string,
 ): Promise<ActionResult> {
   const name = teacherName.trim();
-  const topicTrim = topic.trim();
+  const topicTrim = (topic.trim() || "Training session").slice(0, 280);
   if (!name) return { ok: false, error: "Enter your name." };
-  if (!topicTrim) return { ok: false, error: "Say what you want help with." };
   if (period < 1 || period > 8) return { ok: false, error: "Invalid period." };
 
   const date = new Date(`${sessionDate}T00:00:00`);
-  if (Number.isNaN(date.getTime()) || !isBookableDate(date)) {
+  if (Number.isNaN(date.getTime()) || !isScheduleBookableDate(date)) {
     return { ok: false, error: "That date is not bookable." };
   }
 
