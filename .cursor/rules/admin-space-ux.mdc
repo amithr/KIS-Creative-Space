@@ -1,0 +1,12 @@
+---
+description: KIS admin — Space bookings tab layout, toast+undo feedback, pill pickers
+alwaysApply: true
+---
+
+- This folder is a design handoff; README.md is the source of truth (card layout, toast/undo behavior, pill pickers).
+- Scope: admin Space tab only — Booking requests, Training sessions, Block periods. Stores and lifecycles are unchanged.
+- Every destructive action = confirm dialog first, then a dark toast with a working UNDO (~6s) that restores the exact record.
+- Toast copy is specific (who/when/period), mono, uppercase; green for positive, dark for removals.
+- Row feedback animations play once per action (transient key, ~900ms) — never loop or replay on unrelated re-renders.
+- Block form uses pill pickers, not selects; the P1–P8 row is a range picker (tap later pill extends, other pill resets).
+- designs/*.html is a browser-openable prototype for reference only — never import or port its runtime (support.js).

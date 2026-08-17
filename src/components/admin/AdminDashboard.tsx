@@ -226,18 +226,20 @@ function AdminDashboardInner({
 
       {tab === "space" && (
         <>
-          <SpaceBookingsPanel
-            bookings={spaceBookings}
-            onDone={(msg) => refresh(msg)}
-          />
-          <TrainingSessionsPanel
-            sessions={trainingSessions}
-            onDone={(msg) => refresh(msg)}
-          />
+          <div className="page-gutter mb-5 grid grid-cols-1 items-start gap-5 lg:grid-cols-2">
+            <SpaceBookingsPanel
+              bookings={spaceBookings}
+              onDone={() => router.refresh()}
+            />
+            <TrainingSessionsPanel
+              sessions={trainingSessions}
+              onDone={() => router.refresh()}
+            />
+          </div>
           <BlockPeriodsPanel
             blocks={spaceBlocks}
             bookings={spaceBookings}
-            onDone={(msg) => refresh(msg)}
+            onDone={() => router.refresh()}
           />
         </>
       )}

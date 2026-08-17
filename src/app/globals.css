@@ -223,6 +223,12 @@
   }
 }
 
+.kis-admin-flash {
+  animation:
+    kis-rowin 0.9s ease,
+    kis-pop 0.3s ease;
+}
+
 @keyframes kis-rowout {
   0% {
     opacity: 1;
