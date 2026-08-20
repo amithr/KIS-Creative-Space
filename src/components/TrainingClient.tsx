@@ -95,7 +95,7 @@ export function TrainingClient({
   function slotFor(iso: string, period: number, isSel: boolean) {
     const session = sessionBySlot.get(bookingKey(iso, period));
     const spaceBooking = activeSpaceAt(spaceBookings, iso, period);
-    const block = blockAt(blocks, iso, period);
+    const block = blockAt(blocks, iso, period, "training");
     const d = new Date(`${iso}T00:00:00`);
     const state = evaluatePeriodSlot({
       mode: "training",

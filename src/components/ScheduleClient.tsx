@@ -95,7 +95,7 @@ export function ScheduleClient({
 
   function slotFor(iso: string, period: number, isSel: boolean) {
     const booking = pickDisplayBooking(bySlot.get(bookingKey(iso, period)) ?? []);
-    const block = blockAt(blocks, iso, period);
+    const block = blockAt(blocks, iso, period, "space");
     const trainingSession = activeTrainingAt(training, iso, period);
     const d = new Date(`${iso}T00:00:00`);
     const state = evaluatePeriodSlot({

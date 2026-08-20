@@ -16,7 +16,7 @@ import {
   periodRangeLabel,
   type DowName,
 } from "@/lib/space-blocks";
-import type { SpaceBlock, SpaceBooking } from "@/lib/types";
+import type { SpaceBlock, SpaceBlockScope, SpaceBooking } from "@/lib/types";
 
 type BlockPeriodsPanelProps = {
   blocks: SpaceBlock[];
@@ -70,6 +70,7 @@ export function BlockPeriodsPanel({
   const [blocks, setBlocks] = useState(initialBlocks);
   const [open, setOpen] = useState(false);
   const [repeat, setRepeat] = useState<"once" | "weekly">("once");
+  const [scope, setScope] = useState<SpaceBlockScope>("all");
   const [date, setDate] = useState("");
   const [dow, setDow] = useState<DowName>("MON");
   const [until, setUntil] = useState("");
@@ -95,18 +96,27 @@ export function BlockPeriodsPanel({
       ? `P${range.period_from} — tap a later period to extend the range`
       : `P${range.period_from}–P${range.period_to}`;
 
-  const conflicts = useMemo(
-    () =>
-      countBlockConflicts(bookings, {
-        repeat,
-        block_date: repeat === "once" ? date || null : null,
-        dow: repeat === "weekly" ? dow : null,
-        until_date: repeat === "weekly" && until ? until : null,
-        period_from: range.period_from,
-        period_to: range.period_to,
-      }),
-    [bookings, repeat, date, dow, until, range.period_from, range.period_to],
-  );
+  const conflicts = useMemo(() => {
+    if (scope === "training") return 0;
+    return countBlockConflicts(bookings, {
+      repeat,
+      block_date: repeat === "once" ? date || null : null,
+      dow: repeat === "weekly" ? dow : null,
+      until_date: repeat === "weekly" && until ? until : null,
+      period_from: range.period_from,
+      period_to: range.period_to,
+      scope,
+    });
+  }, [
+    bookings,
+    scope,
+    repeat,
+    date,
+    dow,
+    until,
+    range.period_from,
+    range.period_to,
+  ]);
 
   function pickPeriod(p: number) {
     if (from === to && p > from) {
@@ -135,8 +145,7 @@ export function BlockPeriodsPanel({
               </span>
             )}
             <span className="text-[13.5px] text-[#6d6759]">
-              Close the space for classes, maintenance or events — one day or
-              every week.
+              Close the space entirely — or reserve periods for training only.
             </span>
           </div>
           <span className="shrink-0 border border-[#141414] px-[18px] py-2 text-[14px] font-semibold transition-colors hover:bg-[#141414] hover:text-white">
@@ -162,6 +171,34 @@ export function BlockPeriodsPanel({
                       onClick={() => setRepeat(o.v)}
                       className="rounded-full px-4 py-2 text-[13.5px] font-semibold transition-colors hover:border-[#141414] active:scale-95"
                       style={pillStyle(repeat === o.v)}
+                    >
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <span className={fieldLabel}>APPLIES TO</span>
+                <div className="flex gap-1.5">
+                  {(
+                    [
+                      {
+                        v: "all" as const,
+                        label: "Space + training",
+                      },
+                      {
+                        v: "training" as const,
+                        label: "Training only",
+                      },
+                    ] as const
+                  ).map((o) => (
+                    <button
+                      key={o.v}
+                      type="button"
+                      onClick={() => setScope(o.v)}
+                      className="rounded-full px-4 py-2 text-[13.5px] font-semibold transition-colors hover:border-[#141414] active:scale-95"
+                      style={pillStyle(scope === o.v)}
                     >
                       {o.label}
                     </button>
@@ -255,6 +292,7 @@ export function BlockPeriodsPanel({
                       periodFrom: from,
                       periodTo: to,
                       reason,
+                      scope,
                     });
                     if (!result.ok) {
                       setError(result.error);
@@ -268,8 +306,12 @@ export function BlockPeriodsPanel({
                       range.period_from,
                       range.period_to,
                     );
+                    const scopeTag =
+                      scope === "training" ? " · TRAINING ONLY" : "";
                     setReason("");
-                    notify(`BLOCK ADDED ✓ · ${when} · ${toastRange}`);
+                    notify(
+                      `BLOCK ADDED ✓ · ${when} · ${toastRange}${scopeTag}`,
+                    );
                     if (result.id) flash(result.id);
                     onDone();
                   });
@@ -293,7 +335,9 @@ export function BlockPeriodsPanel({
                 <div className="mb-1 font-mono text-[10px] tracking-[0.16em] text-[#857e6e]">
                   ACTIVE BLOCKS
                 </div>
-                {blocks.map((b) => (
+                {blocks.map((b) => {
+                  const trainingOnly = b.scope === "training";
+                  return (
                   <div
                     key={b.id}
                     className={`flex items-center gap-2.5 py-1.5 text-[14px] ${
@@ -301,16 +345,25 @@ export function BlockPeriodsPanel({
                     }`}
                   >
                     <span
-                      className="h-3 w-3 shrink-0 border border-[#d5d1c8]"
+                      className="h-3 w-3 shrink-0"
                       style={{
-                        background:
-                          "repeating-linear-gradient(45deg, #f2f0ea 0, #f2f0ea 3px, #d5d1c8 3px, #d5d1c8 6px)",
+                        border: trainingOnly
+                          ? "1px solid #eeddb2"
+                          : "1px solid #d5d1c8",
+                        background: trainingOnly
+                          ? "repeating-linear-gradient(45deg, #fdf4e3 0, #fdf4e3 3px, #eeddb2 3px, #eeddb2 6px)"
+                          : "repeating-linear-gradient(45deg, #f2f0ea 0, #f2f0ea 3px, #d5d1c8 3px, #d5d1c8 6px)",
                       }}
                     />
                     <span className="shrink-0 font-mono text-[11px] text-[#3f3b33]">
                       {formatBlockWhen(b)}
                     </span>
                     <span className="text-[#6d6759]">{b.reason}</span>
+                    {trainingOnly && (
+                      <span className="rounded-full bg-[#fdf4e3] px-[7px] py-0.5 font-mono text-[9.5px] tracking-[0.08em] text-[#9a6e06]">
+                        TRAINING ONLY
+                      </span>
+                    )}
                     <span className="flex-1" />
                     <button
                       type="button"
@@ -320,7 +373,9 @@ export function BlockPeriodsPanel({
                         e.stopPropagation();
                         askConfirm({
                           title: "Remove this block?",
-                          body: `${formatBlockWhen(b)} — “${b.reason}”. Teachers can request these periods again.`,
+                          body: trainingOnly
+                            ? `${formatBlockWhen(b)} — “${b.reason}”. Training sessions can be booked in these periods again.`
+                            : `${formatBlockWhen(b)} — “${b.reason}”. Teachers can request these periods again.`,
                           action: "Remove block",
                           fn: async () => {
                             setError("");
@@ -340,6 +395,7 @@ export function BlockPeriodsPanel({
                               periodFrom: b.period_from,
                               periodTo: b.period_to,
                               reason: b.reason,
+                              scope: b.scope,
                             };
                             notify("BLOCK REMOVED · PERIODS OPEN AGAIN", {
                               bg: "#141414",
@@ -361,13 +417,15 @@ export function BlockPeriodsPanel({
                       ×
                     </button>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
             <p className="border-t border-[#eeece5] px-5 py-2.5 text-[12.5px] text-[#857e6e]">
-              Blocked periods show striped on the public Schedule page with your
-              reason — teachers can&apos;t request them.
+              Full blocks show striped on the public Schedule page with your
+              reason. Training-only blocks just hide those periods from Book
+              training — teachers can still book the space.
             </p>
 
             {error && (

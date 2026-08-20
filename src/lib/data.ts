@@ -285,6 +285,7 @@ function normalizeSpaceBlock(row: Record<string, unknown>): SpaceBlock {
     period_from: Number(row.period_from),
     period_to: Number(row.period_to),
     reason: String(row.reason ?? "Blocked"),
+    scope: row.scope === "training" ? "training" : "all",
     created_at: String(row.created_at ?? ""),
   };
 }

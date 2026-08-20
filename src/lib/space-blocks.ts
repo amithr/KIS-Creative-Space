@@ -6,6 +6,9 @@ import type { SpaceBlock, SpaceBooking } from "@/lib/types";
 export const DOW_NAMES = ["MON", "TUE", "WED", "THU", "FRI"] as const;
 export type DowName = (typeof DOW_NAMES)[number];
 
+/** Who is asking whether a block applies. */
+export type BlockConsumer = "space" | "training";
+
 const MONS = [
   "JAN",
   "FEB",
@@ -20,6 +23,10 @@ const MONS = [
   "NOV",
   "DEC",
 ] as const;
+
+export function blockScope(block: Pick<SpaceBlock, "scope"> | { scope?: string }) {
+  return block.scope === "training" ? "training" : "all";
+}
 
 /** @deprecated Prefer weekdayOfIso — kept for call sites that only need Mon–Fri. */
 export function dowOfIso(isoDate: string): DowName | null {
@@ -48,12 +55,21 @@ export function blockApplies(
   return true;
 }
 
+/**
+ * Find an applicable block for a consumer.
+ * - `training`: both scopes apply (full closure also blocks training).
+ * - `space`: only `scope = "all"` (training-only blocks are invisible).
+ */
 export function findBlock(
   blocks: SpaceBlock[],
   isoDate: string,
   period: number,
+  consumer: BlockConsumer = "training",
 ): SpaceBlock | undefined {
-  return blocks.find((b) => blockApplies(b, isoDate, period));
+  return blocks.find((b) => {
+    if (consumer === "space" && blockScope(b) === "training") return false;
+    return blockApplies(b, isoDate, period);
+  });
 }
 
 export function periodRangeLabel(from: number, to: number) {
@@ -82,7 +98,13 @@ export function countBlockConflicts(
   bookings: SpaceBooking[],
   draft: Pick<
     SpaceBlock,
-    "repeat" | "block_date" | "dow" | "until_date" | "period_from" | "period_to"
+    | "repeat"
+    | "block_date"
+    | "dow"
+    | "until_date"
+    | "period_from"
+    | "period_to"
+    | "scope"
   >,
 ): number {
   const probe: SpaceBlock = {
@@ -94,6 +116,7 @@ export function countBlockConflicts(
     period_from: draft.period_from,
     period_to: draft.period_to,
     reason: "Blocked",
+    scope: draft.scope ?? "all",
     created_at: new Date().toISOString(),
   };
 

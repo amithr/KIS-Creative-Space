@@ -839,6 +839,7 @@ export type CreateSpaceBlockInput = {
   periodFrom: number;
   periodTo: number;
   reason?: string;
+  scope?: "all" | "training";
 };
 
 export async function createSpaceBlock(
@@ -853,6 +854,7 @@ export async function createSpaceBlock(
   }
 
   const reason = input.reason?.trim() || "Blocked";
+  const scope = input.scope === "training" ? "training" : "all";
 
   if (input.repeat === "once") {
     const date = input.blockDate?.trim();
@@ -867,6 +869,7 @@ export async function createSpaceBlock(
         period_from: from,
         period_to: to,
         reason,
+        scope,
       })
       .select("id")
       .single();
@@ -887,6 +890,7 @@ export async function createSpaceBlock(
         period_from: from,
         period_to: to,
         reason,
+        scope,
       })
       .select("id")
       .single();

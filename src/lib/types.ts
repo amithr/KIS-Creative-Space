@@ -86,6 +86,7 @@ export type PeriodBooking = SpaceBooking;
 
 export type SpaceBlockRepeat = "once" | "weekly";
 export type SpaceBlockDow = "MON" | "TUE" | "WED" | "THU" | "FRI";
+export type SpaceBlockScope = "all" | "training";
 
 /** Admin-created closed periods on the public schedule. */
 export type SpaceBlock = {
@@ -97,6 +98,8 @@ export type SpaceBlock = {
   period_from: number;
   period_to: number;
   reason: string;
+  /** `all` closes space + training; `training` hides from Book training only. */
+  scope: SpaceBlockScope;
   created_at: string;
 };
 

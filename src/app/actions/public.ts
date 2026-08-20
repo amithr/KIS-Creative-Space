@@ -269,7 +269,7 @@ export async function createPeriodBooking(
   const gate = slotIsRequestable({
     mode: "space",
     inWindow: true,
-    block: blockAt(blocks, bookingDate, period),
+    block: blockAt(blocks, bookingDate, period, "space"),
     spaceBooking: activeSpaceAt(spaceBookings, bookingDate, period),
     trainingSession: activeTrainingAt(trainingSessions, bookingDate, period),
   });
@@ -374,7 +374,7 @@ export async function createTrainingSession(
   const gate = slotIsRequestable({
     mode: "training",
     inWindow: true,
-    block: blockAt(blocks, sessionDate, period),
+    block: blockAt(blocks, sessionDate, period, "training"),
     spaceBooking: activeSpaceAt(spaceBookings, sessionDate, period),
     trainingSession: activeTrainingAt(existing, sessionDate, period),
   });

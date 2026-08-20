@@ -1,0 +1,13 @@
+---
+description: Design handoff rules for the Training-Only Blocks feature (KIS Creativity Space)
+alwaysApply: false
+---
+
+When implementing the Training-Only Blocks feature:
+
+- The spec is handoff_cursor_training_only_blocks/README.md — source of truth for the scope field, per-consumer applicability, colors, and copy. Values are exact, not suggestions.
+- designs/*.dc.html are HTML prototypes for behavior reference only. Never copy their markup, the DCLogic classes, or support.js into the codebase.
+- scope is additive and backward compatible: a block without the field behaves as "all". No data migration.
+- Book training applies blocks of BOTH scopes; the public Schedule applies only scope "all". Enforce both rules server-side, not just in the UI.
+- The overlap warning at creation time is suppressed for scope "training" (space bookings are unaffected).
+- Amber styling (#fdf4e3 / #eeddb2 / #9a6e06) marks training-only blocks in the admin list; full blocks keep the existing grey stripes.

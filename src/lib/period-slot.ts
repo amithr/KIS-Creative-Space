@@ -113,8 +113,9 @@ export function blockAt(
   blocks: SpaceBlock[],
   iso: string,
   period: number,
+  consumer: PeriodSlotMode = "training",
 ): SpaceBlock | undefined {
-  return findBlock(blocks, iso, period);
+  return findBlock(blocks, iso, period, consumer);
 }
 
 /** Server-side: can a new request be created for this mode? */
