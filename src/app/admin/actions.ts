@@ -916,6 +916,25 @@ export async function deleteSpaceBlock(
   return { ok: true };
 }
 
+/** Switch an existing block between space+training and training-only. */
+export async function updateSpaceBlockScope(
+  blockId: string,
+  scope: "all" | "training",
+): Promise<SpaceBookingActionResult> {
+  const { supabase } = await requireTeacher();
+  if (!blockId) return { ok: false, error: "Missing block." };
+  const next = scope === "training" ? "training" : "all";
+
+  const { error } = await supabase
+    .from("space_blocks")
+    .update({ scope: next })
+    .eq("id", blockId);
+
+  if (error) return { ok: false, error: error.message };
+  revalidateSpace();
+  return { ok: true };
+}
+
 /** Re-create a block after undo (new id). */
 export async function restoreSpaceBlock(
   input: CreateSpaceBlockInput,

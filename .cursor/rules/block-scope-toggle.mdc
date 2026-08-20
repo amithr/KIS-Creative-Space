@@ -1,0 +1,13 @@
+---
+description: Design handoff rules for the Block Scope Toggle feature (KIS Creativity Space)
+alwaysApply: false
+---
+
+When implementing the Block Scope Toggle feature:
+
+- The spec is handoff_cursor_block_scope_toggle/README.md — source of truth for the segmented control's exact colors, type, and behavior. Values are exact, not suggestions.
+- designs/KIS Admin.dc.html is an HTML prototype for behavior reference only. Never copy its markup, the DCLogic class, or support.js into the codebase.
+- The toggle replaces the static TRAINING ONLY tag from the training-only-blocks package.
+- Switching scope is an immediate persisted update with toast + Undo — never a confirm dialog. Undo restores the prior scope.
+- Clicking the already-selected segment is a no-op.
+- Scope semantics are unchanged from the base feature: Book training applies both scopes; the public Schedule applies only scope "all"; enforce server-side.

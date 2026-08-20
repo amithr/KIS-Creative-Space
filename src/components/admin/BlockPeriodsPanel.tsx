@@ -5,6 +5,7 @@ import {
   createSpaceBlock,
   deleteSpaceBlock,
   restoreSpaceBlock,
+  updateSpaceBlockScope,
 } from "@/app/admin/actions";
 import { useConfirm } from "@/components/ConfirmDialog";
 import { useAdminWrite } from "@/components/admin/AdminWriteFeedback";
@@ -337,10 +338,14 @@ export function BlockPeriodsPanel({
                 </div>
                 {blocks.map((b) => {
                   const trainingOnly = b.scope === "training";
+                  const scopeOptions = [
+                    { v: "all" as const, label: "SPACE + TRAINING" },
+                    { v: "training" as const, label: "TRAINING ONLY" },
+                  ];
                   return (
                   <div
                     key={b.id}
-                    className={`flex items-center gap-2.5 py-1.5 text-[14px] ${
+                    className={`flex flex-wrap items-center gap-2.5 py-1.5 text-[14px] ${
                       flashId === b.id ? "kis-admin-flash" : ""
                     }`}
                   >
@@ -359,11 +364,94 @@ export function BlockPeriodsPanel({
                       {formatBlockWhen(b)}
                     </span>
                     <span className="text-[#6d6759]">{b.reason}</span>
-                    {trainingOnly && (
-                      <span className="rounded-full bg-[#fdf4e3] px-[7px] py-0.5 font-mono text-[9.5px] tracking-[0.08em] text-[#9a6e06]">
-                        TRAINING ONLY
-                      </span>
-                    )}
+                    <div
+                      className="flex shrink-0 overflow-hidden rounded-full border border-[#e3e0d8]"
+                      title="Switch what this block applies to"
+                    >
+                      {scopeOptions.map((o) => {
+                        const selected = (b.scope || "all") === o.v;
+                        return (
+                          <button
+                            key={o.v}
+                            type="button"
+                            disabled={pending || selected}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (selected) return;
+                              const prevScope = b.scope || "all";
+                              startTransition(async () => {
+                                setError("");
+                                setBlocks((prev) =>
+                                  prev.map((x) =>
+                                    x.id === b.id
+                                      ? { ...x, scope: o.v }
+                                      : x,
+                                  ),
+                                );
+                                flash(b.id);
+                                const result = await updateSpaceBlockScope(
+                                  b.id,
+                                  o.v,
+                                );
+                                if (!result.ok) {
+                                  setBlocks((prev) =>
+                                    prev.map((x) =>
+                                      x.id === b.id
+                                        ? { ...x, scope: prevScope }
+                                        : x,
+                                    ),
+                                  );
+                                  setError(result.error);
+                                  return;
+                                }
+                                notify(
+                                  o.v === "training"
+                                    ? "BLOCK NOW TRAINING ONLY · SPACE OPEN TO TEACHERS"
+                                    : "BLOCK NOW CLOSES THE SPACE TOO",
+                                  {
+                                    bg: "#141414",
+                                    undo: async () => {
+                                      const restored =
+                                        await updateSpaceBlockScope(
+                                          b.id,
+                                          prevScope,
+                                        );
+                                      if (!restored.ok) return;
+                                      setBlocks((prev) =>
+                                        prev.map((x) =>
+                                          x.id === b.id
+                                            ? { ...x, scope: prevScope }
+                                            : x,
+                                        ),
+                                      );
+                                      flash(b.id);
+                                      notify("SCOPE RESTORED ✓");
+                                      onDone();
+                                    },
+                                  },
+                                );
+                                onDone();
+                              });
+                            }}
+                            className="px-[9px] py-[3px] font-mono text-[9.5px] tracking-[0.08em] transition-colors enabled:hover:text-[#141414] disabled:cursor-default"
+                            style={{
+                              background: selected
+                                ? o.v === "training"
+                                  ? "#fdf4e3"
+                                  : "#eeece5"
+                                : "#fff",
+                              color: selected
+                                ? o.v === "training"
+                                  ? "#9a6e06"
+                                  : "#3f3b33"
+                                : "#b5afa1",
+                            }}
+                          >
+                            {o.label}
+                          </button>
+                        );
+                      })}
+                    </div>
                     <span className="flex-1" />
                     <button
                       type="button"
