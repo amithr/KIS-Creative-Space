@@ -1,0 +1,15 @@
+---
+description: Design handoff rules for the Projects Auth Gate + Share Links feature (KIS Creativity Space)
+alwaysApply: false
+---
+
+When implementing the Projects Auth Gate + Share Links feature:
+
+- The spec is handoff_cursor_projects_auth_sharing/README.md — source of truth for the access matrix, link formats, copy strings, and colors. Values are exact, not suggestions.
+- designs/KIS Projects.dc.html is an HTML prototype for behavior reference only. Never copy its markup, the DCLogic class, or support.js into the codebase.
+- The shared teacher password lives in an environment variable and is checked server-side; the prototype's maker2026 is demo-only.
+- Authorization is server-side on every read AND write: owner (session email match), valid editKey, or admin. UI banners are feedback, not enforcement.
+- Student links (?share=<id>) are strictly view-only. Teacher links (?edit=<id>.<editKey>) grant edit on exactly one board. Invalid edit keys degrade silently to the student view — never an error screen.
+- editKey is a per-project server-generated secret, created lazily on first teacher-link request and persisted.
+- Edits via board = sprint status + due date only; creation requires sign-in; deletion stays admin-only.
+- Every visitor state shows its pill badge (owner green #dff2e3/#2f7d3f, guest editor blue #e6edf4/#3b6285, student amber #fdf4e3/#9a6e06) and matching footer note.

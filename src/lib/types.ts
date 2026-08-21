@@ -164,4 +164,6 @@ export type StudentProject = {
   start: string;
   createdAt: number;
   weeks: ProjectSprint[];
+  /** Per-project secret for teacher edit links — never send to students. */
+  editKey?: string;
 };

@@ -289,7 +289,7 @@ export function ScheduleClient({
     <div className="flex min-h-[calc(100vh-73px)] flex-col">
       {bookingBar}
 
-      <section className="page-gutter flex flex-col items-start gap-5 pb-5 pt-6 md:gap-6 md:pb-[26px] md:pt-8">
+      <section className="page-gutter flex flex-wrap items-end gap-8 pb-5 pt-6 md:pb-[26px] md:pt-8">
         <div>
           <p className="mb-2 font-mono text-[10px] tracking-[0.18em] text-[#8a857a] md:mb-3 md:text-[12px] md:tracking-[0.2em] md:text-[#6d6759]">
             РОЗКЛАД · SCHEDULE
@@ -298,7 +298,7 @@ export function ScheduleClient({
             Schedule the space
           </h1>
           <span className="kis-title-underline !mt-2.5 !w-12 md:!mt-3.5 md:!w-16" />
-          <p className="mt-2.5 text-[12.5px] text-[#8a857a] md:mt-3 md:text-[14.5px] md:text-[#6d6759]">
+          <p className="mt-2.5 max-w-xl text-[12.5px] text-[#8a857a] md:mt-3 md:text-[14.5px] md:text-[#6d6759]">
             <span className="md:hidden">
               Book class periods up to three weeks ahead
             </span>

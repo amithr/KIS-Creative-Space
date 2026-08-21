@@ -1223,6 +1223,7 @@ export async function restoreStudentProject(
       summary: project.summary,
       start_date: project.start,
       weeks: project.weeks,
+      ...(project.editKey ? { edit_key: project.editKey } : {}),
     })
     .select("*")
     .single();

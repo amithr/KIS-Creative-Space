@@ -57,6 +57,11 @@ export function normalizeSprint(raw: unknown, index: number): ProjectSprint {
 
 export function normalizeProject(row: Record<string, unknown>): StudentProject {
   const weeksRaw = Array.isArray(row.weeks) ? row.weeks : [];
+  const editKeyRaw = row.edit_key ?? row.editKey;
+  const editKey =
+    typeof editKeyRaw === "string" && editKeyRaw.trim()
+      ? editKeyRaw.trim()
+      : undefined;
   return {
     id: String(row.id),
     email: String(row.email ?? ""),
@@ -69,7 +74,14 @@ export function normalizeProject(row: Record<string, unknown>): StudentProject {
       ? new Date(String(row.created_at)).getTime()
       : Number(row.createdAt) || Date.now(),
     weeks: weeksRaw.map((w, i) => normalizeSprint(w, i)),
+    ...(editKey ? { editKey } : {}),
   };
+}
+
+/** Drop editKey before sending a project to the browser. */
+export function publicProject(project: StudentProject): StudentProject {
+  const { editKey: _secret, ...rest } = project;
+  return rest;
 }
 
 export function sprintProgress(project: StudentProject) {
