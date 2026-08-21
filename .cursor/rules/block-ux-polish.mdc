@@ -1,0 +1,13 @@
+---
+description: Design handoff rules for the Block Periods UX Polish feature (KIS Creativity Space)
+alwaysApply: false
+---
+
+When implementing the Block Periods UX Polish feature:
+
+- The spec is handoff_cursor_block_ux_polish/README.md — source of truth. Values are exact, not suggestions.
+- designs/KIS Admin.dc.html is an HTML prototype for behavior reference only. Never copy its markup, the DCLogic class, or support.js into the codebase.
+- The Block periods panel initializes expanded; do not remove the collapse toggle.
+- Inline rename: click-to-edit, Enter/blur commit, Escape cancel, empty/unchanged input cancels silently. Immediate persisted update with toast + Undo — never a confirm dialog.
+- Rename writes the existing reason field only; no data-model change. Admin-only, enforced server-side like all block mutations.
+- Edit-state styling: 14px text, 1.5px #c8102e bottom border, #fdf1f3 background, auto-focus with text selected. Hover affordance on the display state: #141414 text + dashed #b5afa1 underline.

@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   createSpaceBlock,
   deleteSpaceBlock,
   restoreSpaceBlock,
+  updateSpaceBlockReason,
   updateSpaceBlockScope,
 } from "@/app/admin/actions";
 import { useConfirm } from "@/components/ConfirmDialog";
@@ -18,6 +18,7 @@ import {
   type DowName,
 } from "@/lib/space-blocks";
 import type { SpaceBlock, SpaceBlockScope, SpaceBooking } from "@/lib/types";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 
 type BlockPeriodsPanelProps = {
   blocks: SpaceBlock[];
@@ -69,7 +70,7 @@ export function BlockPeriodsPanel({
   const askConfirm = useConfirm();
   const { notify } = useAdminWrite();
   const [blocks, setBlocks] = useState(initialBlocks);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [repeat, setRepeat] = useState<"once" | "weekly">("once");
   const [scope, setScope] = useState<SpaceBlockScope>("all");
   const [date, setDate] = useState("");
@@ -81,14 +82,76 @@ export function BlockPeriodsPanel({
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
   const [flashId, setFlashId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState("");
+  const editRef = useRef<HTMLInputElement | null>(null);
+  const editingIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     setBlocks(initialBlocks);
   }, [initialBlocks]);
 
+  useEffect(() => {
+    if (!editingId || !editRef.current) return;
+    editRef.current.focus();
+    editRef.current.select();
+  }, [editingId]);
+
   function flash(id: string) {
     setFlashId(id);
     window.setTimeout(() => setFlashId((cur) => (cur === id ? null : cur)), 900);
+  }
+
+  function startEdit(b: SpaceBlock) {
+    editingIdRef.current = b.id;
+    setEditingId(b.id);
+    setEditDraft(b.reason);
+  }
+
+  function cancelEdit() {
+    editingIdRef.current = null;
+    setEditingId(null);
+    setEditDraft("");
+  }
+
+  function commitEdit(b: SpaceBlock) {
+    if (editingIdRef.current !== b.id) return;
+    const next = editDraft.trim();
+    const prev = b.reason;
+    editingIdRef.current = null;
+    setEditingId(null);
+    setEditDraft("");
+    if (!next || next === prev) return;
+
+    startTransition(async () => {
+      setError("");
+      setBlocks((list) =>
+        list.map((x) => (x.id === b.id ? { ...x, reason: next } : x)),
+      );
+      flash(b.id);
+      const result = await updateSpaceBlockReason(b.id, next);
+      if (!result.ok) {
+        setBlocks((list) =>
+          list.map((x) => (x.id === b.id ? { ...x, reason: prev } : x)),
+        );
+        setError(result.error);
+        return;
+      }
+      notify(`BLOCK RENAMED · "${next.toUpperCase()}"`, {
+        bg: "#141414",
+        undo: async () => {
+          const restored = await updateSpaceBlockReason(b.id, prev);
+          if (!restored.ok) return;
+          setBlocks((list) =>
+            list.map((x) => (x.id === b.id ? { ...x, reason: prev } : x)),
+          );
+          flash(b.id);
+          notify("NAME RESTORED ✓");
+          onDone();
+        },
+      });
+      onDone();
+    });
   }
 
   const range = normalizePeriodRange(from, to);
@@ -191,6 +254,10 @@ export function BlockPeriodsPanel({
                       {
                         v: "training" as const,
                         label: "Training only",
+                      },
+                      {
+                        v: "space" as const,
+                        label: "Space only",
                       },
                     ] as const
                   ).map((o) => (
@@ -308,7 +375,11 @@ export function BlockPeriodsPanel({
                       range.period_to,
                     );
                     const scopeTag =
-                      scope === "training" ? " · TRAINING ONLY" : "";
+                      scope === "training"
+                        ? " · TRAINING ONLY"
+                        : scope === "space"
+                          ? " · SPACE ONLY"
+                          : "";
                     setReason("");
                     notify(
                       `BLOCK ADDED ✓ · ${when} · ${toastRange}${scopeTag}`,
@@ -337,11 +408,31 @@ export function BlockPeriodsPanel({
                   ACTIVE BLOCKS
                 </div>
                 {blocks.map((b) => {
-                  const trainingOnly = b.scope === "training";
+                  const scope = b.scope || "all";
+                  const trainingOnly = scope === "training";
+                  const spaceOnly = scope === "space";
                   const scopeOptions = [
                     { v: "all" as const, label: "SPACE + TRAINING" },
                     { v: "training" as const, label: "TRAINING ONLY" },
+                    { v: "space" as const, label: "SPACE ONLY" },
                   ];
+                  const swatch = spaceOnly
+                    ? {
+                        border: "1px solid #b9cede",
+                        background:
+                          "repeating-linear-gradient(45deg, #e6edf4 0, #e6edf4 3px, #b9cede 3px, #b9cede 6px)",
+                      }
+                    : trainingOnly
+                      ? {
+                          border: "1px solid #eeddb2",
+                          background:
+                            "repeating-linear-gradient(45deg, #fdf4e3 0, #fdf4e3 3px, #eeddb2 3px, #eeddb2 6px)",
+                        }
+                      : {
+                          border: "1px solid #d5d1c8",
+                          background:
+                            "repeating-linear-gradient(45deg, #f2f0ea 0, #f2f0ea 3px, #d5d1c8 3px, #d5d1c8 6px)",
+                        };
                   return (
                   <div
                     key={b.id}
@@ -349,27 +440,53 @@ export function BlockPeriodsPanel({
                       flashId === b.id ? "kis-admin-flash" : ""
                     }`}
                   >
-                    <span
-                      className="h-3 w-3 shrink-0"
-                      style={{
-                        border: trainingOnly
-                          ? "1px solid #eeddb2"
-                          : "1px solid #d5d1c8",
-                        background: trainingOnly
-                          ? "repeating-linear-gradient(45deg, #fdf4e3 0, #fdf4e3 3px, #eeddb2 3px, #eeddb2 6px)"
-                          : "repeating-linear-gradient(45deg, #f2f0ea 0, #f2f0ea 3px, #d5d1c8 3px, #d5d1c8 6px)",
-                      }}
-                    />
+                    <span className="h-3 w-3 shrink-0" style={swatch} />
                     <span className="shrink-0 font-mono text-[11px] text-[#3f3b33]">
                       {formatBlockWhen(b)}
                     </span>
-                    <span className="text-[#6d6759]">{b.reason}</span>
+                    {editingId === b.id ? (
+                      <input
+                        ref={editRef}
+                        value={editDraft}
+                        onChange={(e) => setEditDraft(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            commitEdit(b);
+                          } else if (e.key === "Escape") {
+                            e.preventDefault();
+                            cancelEdit();
+                          }
+                        }}
+                        onBlur={() => commitEdit(b)}
+                        className="min-w-[160px] border-0 px-1.5 py-0.5 text-[14px] text-[#141414] outline-none"
+                        style={{
+                          borderBottom: "1.5px solid #c8102e",
+                          background: "#fdf1f3",
+                        }}
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        title="Click to rename"
+                        onClick={() => startEdit(b)}
+                        className="cursor-text text-left text-[14px] text-[#6d6759] hover:text-[#141414] hover:underline hover:decoration-dashed hover:decoration-[#b5afa1] hover:underline-offset-2"
+                      >
+                        {b.reason}
+                      </button>
+                    )}
                     <div
                       className="flex shrink-0 overflow-hidden rounded-full border border-[#e3e0d8]"
                       title="Switch what this block applies to"
                     >
                       {scopeOptions.map((o) => {
-                        const selected = (b.scope || "all") === o.v;
+                        const selected = scope === o.v;
+                        const selectedStyle =
+                          o.v === "training"
+                            ? { background: "#fdf4e3", color: "#9a6e06" }
+                            : o.v === "space"
+                              ? { background: "#e6edf4", color: "#3b6285" }
+                              : { background: "#eeece5", color: "#3f3b33" };
                         return (
                           <button
                             key={o.v}
@@ -378,7 +495,7 @@ export function BlockPeriodsPanel({
                             onClick={(e) => {
                               e.stopPropagation();
                               if (selected) return;
-                              const prevScope = b.scope || "all";
+                              const prevScope = scope;
                               startTransition(async () => {
                                 setError("");
                                 setBlocks((prev) =>
@@ -404,48 +521,42 @@ export function BlockPeriodsPanel({
                                   setError(result.error);
                                   return;
                                 }
-                                notify(
+                                const toastMsg =
                                   o.v === "training"
                                     ? "BLOCK NOW TRAINING ONLY · SPACE OPEN TO TEACHERS"
-                                    : "BLOCK NOW CLOSES THE SPACE TOO",
-                                  {
-                                    bg: "#141414",
-                                    undo: async () => {
-                                      const restored =
-                                        await updateSpaceBlockScope(
-                                          b.id,
-                                          prevScope,
-                                        );
-                                      if (!restored.ok) return;
-                                      setBlocks((prev) =>
-                                        prev.map((x) =>
-                                          x.id === b.id
-                                            ? { ...x, scope: prevScope }
-                                            : x,
-                                        ),
+                                    : o.v === "space"
+                                      ? "BLOCK NOW SPACE ONLY · TRAINING STAYS OPEN"
+                                      : "BLOCK NOW CLOSES SPACE + TRAINING";
+                                notify(toastMsg, {
+                                  bg: "#141414",
+                                  undo: async () => {
+                                    const restored =
+                                      await updateSpaceBlockScope(
+                                        b.id,
+                                        prevScope,
                                       );
-                                      flash(b.id);
-                                      notify("SCOPE RESTORED ✓");
-                                      onDone();
-                                    },
+                                    if (!restored.ok) return;
+                                    setBlocks((prev) =>
+                                      prev.map((x) =>
+                                        x.id === b.id
+                                          ? { ...x, scope: prevScope }
+                                          : x,
+                                      ),
+                                    );
+                                    flash(b.id);
+                                    notify("SCOPE RESTORED ✓");
+                                    onDone();
                                   },
-                                );
+                                });
                                 onDone();
                               });
                             }}
                             className="px-[9px] py-[3px] font-mono text-[9.5px] tracking-[0.08em] transition-colors enabled:hover:text-[#141414] disabled:cursor-default"
-                            style={{
-                              background: selected
-                                ? o.v === "training"
-                                  ? "#fdf4e3"
-                                  : "#eeece5"
-                                : "#fff",
-                              color: selected
-                                ? o.v === "training"
-                                  ? "#9a6e06"
-                                  : "#3f3b33"
-                                : "#b5afa1",
-                            }}
+                            style={
+                              selected
+                                ? selectedStyle
+                                : { background: "#fff", color: "#b5afa1" }
+                            }
                           >
                             {o.label}
                           </button>
@@ -463,7 +574,9 @@ export function BlockPeriodsPanel({
                           title: "Remove this block?",
                           body: trainingOnly
                             ? `${formatBlockWhen(b)} — “${b.reason}”. Training sessions can be booked in these periods again.`
-                            : `${formatBlockWhen(b)} — “${b.reason}”. Teachers can request these periods again.`,
+                            : spaceOnly
+                              ? `${formatBlockWhen(b)} — “${b.reason}”. Teachers can request these periods again.`
+                              : `${formatBlockWhen(b)} — “${b.reason}”. Teachers can request these periods again.`,
                           action: "Remove block",
                           fn: async () => {
                             setError("");
@@ -511,9 +624,10 @@ export function BlockPeriodsPanel({
             )}
 
             <p className="border-t border-[#eeece5] px-5 py-2.5 text-[12.5px] text-[#857e6e]">
-              Full blocks show striped on the public Schedule page with your
-              reason. Training-only blocks just hide those periods from Book
-              training — teachers can still book the space.
+              Full blocks close both pages. Training-only blocks hide the
+              periods from Book training — teachers can still book the space.
+              Space-only blocks close the space on Schedule — training sessions
+              can still be booked.
             </p>
 
             {error && (

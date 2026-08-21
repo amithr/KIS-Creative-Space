@@ -6,8 +6,9 @@ import { createClient } from "@/lib/supabase/server";
 import { generateUniqueItemCode } from "@/lib/qr";
 import { generateUniqueSerialNumber } from "@/lib/serial";
 import { toISODate, startOfDay } from "@/lib/inventory";
+import { normalizeProject } from "@/lib/projects";
 import { dueBackLabel } from "@/lib/reservation-availability";
-import type { Reservation } from "@/lib/types";
+import type { Reservation, StudentProject } from "@/lib/types";
 
 async function requireTeacher() {
   const supabase = await createClient();
@@ -839,7 +840,7 @@ export type CreateSpaceBlockInput = {
   periodFrom: number;
   periodTo: number;
   reason?: string;
-  scope?: "all" | "training";
+  scope?: "all" | "training" | "space";
 };
 
 export async function createSpaceBlock(
@@ -854,7 +855,12 @@ export async function createSpaceBlock(
   }
 
   const reason = input.reason?.trim() || "Blocked";
-  const scope = input.scope === "training" ? "training" : "all";
+  const scope =
+    input.scope === "training"
+      ? "training"
+      : input.scope === "space"
+        ? "space"
+        : "all";
 
   if (input.repeat === "once") {
     const date = input.blockDate?.trim();
@@ -916,18 +922,38 @@ export async function deleteSpaceBlock(
   return { ok: true };
 }
 
-/** Switch an existing block between space+training and training-only. */
+/** Switch an existing block between all / training-only / space-only. */
 export async function updateSpaceBlockScope(
   blockId: string,
-  scope: "all" | "training",
+  scope: "all" | "training" | "space",
 ): Promise<SpaceBookingActionResult> {
   const { supabase } = await requireTeacher();
   if (!blockId) return { ok: false, error: "Missing block." };
-  const next = scope === "training" ? "training" : "all";
+  const next =
+    scope === "training" ? "training" : scope === "space" ? "space" : "all";
 
   const { error } = await supabase
     .from("space_blocks")
     .update({ scope: next })
+    .eq("id", blockId);
+
+  if (error) return { ok: false, error: error.message };
+  revalidateSpace();
+  return { ok: true };
+}
+
+/** Rename a block's reason (shown on Schedule / Training blocked cells). */
+export async function updateSpaceBlockReason(
+  blockId: string,
+  reason: string,
+): Promise<SpaceBookingActionResult> {
+  const { supabase } = await requireTeacher();
+  if (!blockId) return { ok: false, error: "Missing block." };
+  const next = reason.trim() || "Blocked";
+
+  const { error } = await supabase
+    .from("space_blocks")
+    .update({ reason: next })
     .eq("id", blockId);
 
   if (error) return { ok: false, error: error.message };
@@ -1084,4 +1110,127 @@ export async function deleteArea(id: string): Promise<AreaActionResult> {
   if (error) return { ok: false, error: error.message };
   revalidateAreas();
   return { ok: true, name: area.name };
+}
+
+function revalidateProjectsAdmin() {
+  revalidatePath("/projects");
+  revalidatePath("/admin");
+}
+
+export type ProjectAdminResult =
+  | { ok: true; project?: StudentProject }
+  | { ok: false; error: string };
+
+export async function updateProjectSprintStatus(
+  projectId: string,
+  sprintN: number,
+  status: "todo" | "doing" | "done",
+): Promise<ProjectAdminResult> {
+  const { supabase } = await requireTeacher();
+  if (!projectId) return { ok: false, error: "Missing project." };
+  if (!["todo", "doing", "done"].includes(status)) {
+    return { ok: false, error: "Invalid status." };
+  }
+
+  const { data, error: loadError } = await supabase
+    .from("student_projects")
+    .select("*")
+    .eq("id", projectId)
+    .maybeSingle();
+  if (loadError) return { ok: false, error: loadError.message };
+  if (!data) return { ok: false, error: "Project not found." };
+
+  const project = normalizeProject(data as Record<string, unknown>);
+  const weeks = project.weeks.map((w) =>
+    w.n === sprintN ? { ...w, status } : w,
+  );
+
+  const { error } = await supabase
+    .from("student_projects")
+    .update({ weeks })
+    .eq("id", projectId);
+  if (error) return { ok: false, error: error.message };
+
+  revalidateProjectsAdmin();
+  return { ok: true, project: { ...project, weeks } };
+}
+
+export async function updateProjectSprintDue(
+  projectId: string,
+  sprintN: number,
+  due: string,
+): Promise<ProjectAdminResult> {
+  const { supabase } = await requireTeacher();
+  if (!projectId) return { ok: false, error: "Missing project." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(due.trim())) {
+    return { ok: false, error: "Invalid due date." };
+  }
+
+  const { data, error: loadError } = await supabase
+    .from("student_projects")
+    .select("*")
+    .eq("id", projectId)
+    .maybeSingle();
+  if (loadError) return { ok: false, error: loadError.message };
+  if (!data) return { ok: false, error: "Project not found." };
+
+  const project = normalizeProject(data as Record<string, unknown>);
+  const weeks = project.weeks.map((w) =>
+    w.n === sprintN ? { ...w, due: due.trim() } : w,
+  );
+
+  const { error } = await supabase
+    .from("student_projects")
+    .update({ weeks })
+    .eq("id", projectId);
+  if (error) return { ok: false, error: error.message };
+
+  revalidateProjectsAdmin();
+  return { ok: true, project: { ...project, weeks } };
+}
+
+export async function deleteStudentProject(
+  projectId: string,
+): Promise<ProjectAdminResult> {
+  const { supabase } = await requireTeacher();
+  if (!projectId) return { ok: false, error: "Missing project." };
+
+  const { error } = await supabase
+    .from("student_projects")
+    .delete()
+    .eq("id", projectId);
+  if (error) return { ok: false, error: error.message };
+
+  revalidateProjectsAdmin();
+  return { ok: true };
+}
+
+export async function restoreStudentProject(
+  project: StudentProject,
+): Promise<ProjectAdminResult> {
+  const { supabase } = await requireTeacher();
+  if (!project?.email || !project.unit) {
+    return { ok: false, error: "Missing project data." };
+  }
+
+  const { data, error } = await supabase
+    .from("student_projects")
+    .insert({
+      email: project.email.toLowerCase(),
+      course: project.course,
+      unit: project.unit,
+      initials: project.initials,
+      summary: project.summary,
+      start_date: project.start,
+      weeks: project.weeks,
+    })
+    .select("*")
+    .single();
+  if (error) return { ok: false, error: error.message };
+
+  revalidateProjectsAdmin();
+  return {
+    ok: true,
+    project: normalizeProject(data as Record<string, unknown>),
+  };
 }

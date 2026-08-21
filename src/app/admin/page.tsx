@@ -11,6 +11,7 @@ import {
   getEquipmentWithUnits,
   getItemRequests,
   getSpaceBlocks,
+  getStudentProjects,
   isTeacher,
 } from "@/lib/data";
 
@@ -50,6 +51,7 @@ export default async function AdminPage({ searchParams }: PageProps) {
     trainingSessions,
     itemRequests,
     areas,
+    studentProjects,
   ] = await Promise.all([
     getEquipmentWithUnits(),
     getActiveReservations(),
@@ -58,6 +60,7 @@ export default async function AdminPage({ searchParams }: PageProps) {
     getAdminTrainingSessions(),
     getItemRequests(),
     getAreas(),
+    getStudentProjects(),
   ]);
 
   return (
@@ -70,6 +73,7 @@ export default async function AdminPage({ searchParams }: PageProps) {
         trainingSessions={trainingSessions}
         itemRequests={itemRequests}
         areas={areas}
+        studentProjects={studentProjects}
       />
     </AdminShell>
   );

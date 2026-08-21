@@ -20,6 +20,7 @@ import {
   AdminWriteProvider,
   useAdminWrite,
 } from "@/components/admin/AdminWriteFeedback";
+import { AdminProjectsPanel } from "@/components/admin/AdminProjectsPanel";
 import { AreasPanel } from "@/components/admin/AreasPanel";
 import { ItemRequestsPanel } from "@/components/admin/ItemRequestsPanel";
 import { PrintQrLabelsPanel } from "@/components/admin/PrintQrLabelsPanel";
@@ -35,6 +36,7 @@ import type {
   Reservation,
   SpaceBlock,
   SpaceBooking,
+  StudentProject,
   TrainingSession,
 } from "@/lib/types";
 
@@ -46,9 +48,10 @@ type AdminDashboardProps = {
   trainingSessions: TrainingSession[];
   itemRequests: ItemRequest[];
   areas: Area[];
+  studentProjects: StudentProject[];
 };
 
-type Tab = "space" | "items";
+type Tab = "space" | "items" | "projects";
 
 const fieldLabel =
   "font-mono text-[10.5px] tracking-[0.16em] text-[#6d6759]";
@@ -71,6 +74,7 @@ function AdminDashboardInner({
   trainingSessions,
   itemRequests,
   areas,
+  studentProjects,
 }: AdminDashboardProps) {
   const router = useRouter();
   const askConfirm = useConfirm();
@@ -207,14 +211,38 @@ function AdminDashboardInner({
         >
           Items & inventory
           <span
-            className="font-mono text-[10.5px]"
+            className="rounded-full px-[7px] py-0.5 font-mono text-[10.5px]"
             style={{
+              background: tab === "items" ? "rgba(255,255,255,0.15)" : "#eeece5",
               color: tab === "items" ? "#fff" : "#6d6759",
-              opacity: 0.55,
             }}
           >
             {equipment.length}
           </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("projects")}
+          className="flex items-center gap-2 rounded-full px-5 py-2.5 text-[14.5px] font-semibold transition-colors"
+          style={{
+            background: tab === "projects" ? "#141414" : "#fff",
+            color: tab === "projects" ? "#fff" : "#6d6759",
+            border: `1px solid ${tab === "projects" ? "#141414" : "#e3e0d8"}`,
+          }}
+        >
+          Projects
+          {studentProjects.length > 0 && (
+            <span
+              className="rounded-full px-[7px] py-0.5 font-mono text-[10.5px]"
+              style={{
+                background:
+                  tab === "projects" ? "rgba(255,255,255,0.15)" : "#eeece5",
+                color: tab === "projects" ? "#fff" : "#6d6759",
+              }}
+            >
+              {studentProjects.length}
+            </span>
+          )}
         </button>
       </div>
 
@@ -242,6 +270,13 @@ function AdminDashboardInner({
             onDone={() => router.refresh()}
           />
         </>
+      )}
+
+      {tab === "projects" && (
+        <AdminProjectsPanel
+          projects={studentProjects}
+          onDone={() => router.refresh()}
+        />
       )}
 
       {tab === "items" && (

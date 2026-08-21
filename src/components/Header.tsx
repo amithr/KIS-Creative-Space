@@ -18,6 +18,11 @@ const NAV = [
     label: "Book training",
     match: (p: string) => p.startsWith("/training"),
   },
+  {
+    href: "/projects",
+    label: "Projects",
+    match: (p: string) => p.startsWith("/projects"),
+  },
 ] as const;
 
 const panelBase =
@@ -28,7 +33,9 @@ export function Header() {
   const isAdmin = pathname.startsWith("/admin");
   const isHome = pathname === "/";
   const isSubPage =
-    pathname.startsWith("/schedule") || pathname.startsWith("/training");
+    pathname.startsWith("/schedule") ||
+    pathname.startsWith("/training") ||
+    pathname.startsWith("/projects");
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -56,7 +63,9 @@ export function Header() {
                     <span className="md:hidden">
                       {pathname.startsWith("/schedule")
                         ? "SCHEDULE"
-                        : "TRAINING"}
+                        : pathname.startsWith("/projects")
+                          ? "PROJECTS"
+                          : "TRAINING"}
                     </span>
                     <span className="hidden md:inline">
                       KIS DESIGN STUDIO

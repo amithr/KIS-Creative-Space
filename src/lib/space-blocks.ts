@@ -24,8 +24,12 @@ const MONS = [
   "DEC",
 ] as const;
 
-export function blockScope(block: Pick<SpaceBlock, "scope"> | { scope?: string }) {
-  return block.scope === "training" ? "training" : "all";
+export function blockScope(
+  block: Pick<SpaceBlock, "scope"> | { scope?: string },
+): SpaceBlock["scope"] {
+  if (block.scope === "training") return "training";
+  if (block.scope === "space") return "space";
+  return "all";
 }
 
 /** @deprecated Prefer weekdayOfIso — kept for call sites that only need Mon–Fri. */
@@ -57,8 +61,8 @@ export function blockApplies(
 
 /**
  * Find an applicable block for a consumer.
- * - `training`: both scopes apply (full closure also blocks training).
- * - `space`: only `scope = "all"` (training-only blocks are invisible).
+ * - `training`: apply `all` + `training`; skip `space`.
+ * - `space`: apply `all` + `space`; skip `training`.
  */
 export function findBlock(
   blocks: SpaceBlock[],
@@ -67,7 +71,9 @@ export function findBlock(
   consumer: BlockConsumer = "training",
 ): SpaceBlock | undefined {
   return blocks.find((b) => {
-    if (consumer === "space" && blockScope(b) === "training") return false;
+    const scope = blockScope(b);
+    if (consumer === "space" && scope === "training") return false;
+    if (consumer === "training" && scope === "space") return false;
     return blockApplies(b, isoDate, period);
   });
 }

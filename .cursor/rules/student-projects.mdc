@@ -1,0 +1,15 @@
+---
+description: Design handoff rules for the Student Projects feature (KIS Creativity Space)
+alwaysApply: false
+---
+
+When implementing the Student Projects feature:
+
+- The spec is handoff_cursor_projects/README.md — source of truth for the data model, Friday rule, auth model, colors, type, spacing, and motion. Values are exact, not suggestions.
+- designs/*.dc.html are HTML prototypes for behavior reference only. Never copy their markup, the DCLogic classes, or support.js into the codebase.
+- The shared teacher password lives in an environment variable and is checked server-side — never hardcode it or ship it to the client (the prototype's maker2026 is demo-only).
+- Teachers are read-only after creation; ALL sprint mutations (status, due dates, deletion) go through admin-only endpoints. Enforce server-side, not just in the UI.
+- Sprint due-date defaults: first Friday on/after the start date, then +7 days per sprint; individual dates are editable. Weeks are clamped to 6–12.
+- A teacher's board list shows exactly the projects whose email matches their sign-in email (case-insensitive), grouped by course.
+- Board precedence/styling: overdue = due date before today AND status ≠ done → red date + red card edge; DONE cards grey their text.
+- Reuse the app's existing tokens and components (black #141414, red #c8102e, hairlines #e3e0d8, pill radius 999px only).

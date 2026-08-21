@@ -8,7 +8,9 @@ Next.js site for the KIS school makerspace, matching design handoff v5 (Resource
 |-------|-------------|
 | `/` | Resources — live inventory, date/period reservations, OUT bands |
 | `/schedule` | Request room periods (P1–P8); pending until admin confirms |
-| `/admin` | Tabs: Space bookings (requests + blocks) · Items & inventory (loans, check-out/in, QR, stock) |
+| `/training` | Book coordinator training sessions |
+| `/projects` | Teacher project designer + read-only sprint boards |
+| `/admin` | Tabs: Space · Projects · Items & inventory |
 | `/equipment/[qrCode]` | QR landing page |
 
 ## Setup
@@ -20,7 +22,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Run all migrations in `supabase/migrations/` (**001–009**) in the Supabase SQL editor.
+Run all migrations in `supabase/migrations/` in the Supabase SQL editor (through **017** for student projects).
 
 ### Admin access
 
@@ -36,7 +38,7 @@ values ('<auth-user-uuid>', 'teacher@school.edu');
 
 ## Env
 
-See `.env.example` for Supabase variables.
+See `.env.example` for Supabase variables. For the teacher Projects portal, also set `TEACHER_PORTAL_PW` (server-only shared password).
 
 ## Design notes
 

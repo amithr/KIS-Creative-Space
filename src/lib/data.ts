@@ -12,8 +12,10 @@ import type {
   SiteSettings,
   SpaceBlock,
   SpaceBooking,
+  StudentProject,
   TrainingSession,
 } from "@/lib/types";
+import { normalizeProject } from "@/lib/projects";
 
 function hasSupabaseEnv() {
   return hasSupabasePublicEnv();
@@ -285,7 +287,12 @@ function normalizeSpaceBlock(row: Record<string, unknown>): SpaceBlock {
     period_from: Number(row.period_from),
     period_to: Number(row.period_to),
     reason: String(row.reason ?? "Blocked"),
-    scope: row.scope === "training" ? "training" : "all",
+    scope:
+      row.scope === "training"
+        ? "training"
+        : row.scope === "space"
+          ? "space"
+          : "all",
     created_at: String(row.created_at ?? ""),
   };
 }
@@ -549,6 +556,71 @@ export async function getEffectiveAreaNames(
     areas.map((a) => a.name),
     fromItems,
   );
+}
+
+/** All projects, newest first — admin queue. */
+export async function getStudentProjects(): Promise<StudentProject[]> {
+  if (!hasSupabaseEnv()) return [];
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("student_projects")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Failed to load student projects:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row) =>
+    normalizeProject(row as Record<string, unknown>),
+  );
+}
+
+/** Projects for one teacher email (case-insensitive). */
+export async function getStudentProjectsByEmail(
+  email: string,
+): Promise<StudentProject[]> {
+  if (!hasSupabaseEnv()) return [];
+  const needle = email.trim().toLowerCase();
+  if (!needle) return [];
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("student_projects")
+    .select("*")
+    .eq("email", needle)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Failed to load teacher projects:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row) =>
+    normalizeProject(row as Record<string, unknown>),
+  );
+}
+
+export async function getStudentProjectById(
+  id: string,
+): Promise<StudentProject | null> {
+  if (!hasSupabaseEnv() || !id) return null;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("student_projects")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Failed to load student project:", error.message);
+    return null;
+  }
+  if (!data) return null;
+  return normalizeProject(data as Record<string, unknown>);
 }
 
 export { hasSupabaseEnv };

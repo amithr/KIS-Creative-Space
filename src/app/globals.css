@@ -298,6 +298,43 @@
   box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.15);
 }
 
+@keyframes kis-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+.kis-shake {
+  animation: kis-shake 0.4s ease;
+}
+
+@keyframes kis-bar {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.kis-bar {
+  transform-origin: left;
+  animation: kis-bar 0.55s ease both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

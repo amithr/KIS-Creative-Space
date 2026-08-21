@@ -86,7 +86,7 @@ export type PeriodBooking = SpaceBooking;
 
 export type SpaceBlockRepeat = "once" | "weekly";
 export type SpaceBlockDow = "MON" | "TUE" | "WED" | "THU" | "FRI";
-export type SpaceBlockScope = "all" | "training";
+export type SpaceBlockScope = "all" | "training" | "space";
 
 /** Admin-created closed periods on the public schedule. */
 export type SpaceBlock = {
@@ -142,4 +142,26 @@ export type ItemRequest = {
   created_at: string;
   /** Whether the current viewer has voted (client/session-specific). */
   voted?: boolean;
+};
+
+export type SprintStatus = "todo" | "doing" | "done";
+
+export type ProjectSprint = {
+  n: number;
+  objective: string;
+  due: string;
+  status: SprintStatus;
+};
+
+/** Teacher-designed multi-week student project. */
+export type StudentProject = {
+  id: string;
+  email: string;
+  course: string;
+  unit: string;
+  initials: string;
+  summary: string;
+  start: string;
+  createdAt: number;
+  weeks: ProjectSprint[];
 };

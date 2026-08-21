@@ -289,7 +289,7 @@ export function ScheduleClient({
     <div className="flex min-h-[calc(100vh-73px)] flex-col">
       {bookingBar}
 
-      <section className="page-gutter flex flex-wrap items-end justify-between gap-6 pb-5 pt-6 md:pb-[26px] md:pt-8">
+      <section className="page-gutter flex flex-col items-start gap-5 pb-5 pt-6 md:gap-6 md:pb-[26px] md:pt-8">
         <div>
           <p className="mb-2 font-mono text-[10px] tracking-[0.18em] text-[#8a857a] md:mb-3 md:text-[12px] md:tracking-[0.2em] md:text-[#6d6759]">
             РОЗКЛАД · SCHEDULE
