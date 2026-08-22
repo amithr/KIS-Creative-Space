@@ -293,6 +293,7 @@ export async function createPeriodBooking(
     return { ok: false, error: error.message };
   }
 
+  revalidatePath("/calendar");
   revalidatePath("/schedule");
   revalidatePath("/training");
   revalidatePath("/book");
@@ -328,6 +329,7 @@ export async function cancelPeriodBooking(
 
   if (error) return { ok: false, error: error.message };
 
+  revalidatePath("/calendar");
   revalidatePath("/schedule");
   revalidatePath("/training");
   revalidatePath("/book");
@@ -336,6 +338,7 @@ export async function cancelPeriodBooking(
 }
 
 function revalidateTraining() {
+  revalidatePath("/calendar");
   revalidatePath("/training");
   revalidatePath("/book");
   revalidatePath("/admin");

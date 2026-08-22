@@ -9,6 +9,11 @@ import { signOut } from "@/app/admin/actions";
 const NAV = [
   { href: "/", label: "Resources", match: (p: string) => p === "/" },
   {
+    href: "/calendar",
+    label: "Calendar",
+    match: (p: string) => p.startsWith("/calendar"),
+  },
+  {
     href: "/schedule",
     label: "Schedule the space",
     match: (p: string) => p.startsWith("/schedule"),
@@ -33,6 +38,7 @@ export function Header() {
   const isAdmin = pathname.startsWith("/admin");
   const isHome = pathname === "/";
   const isSubPage =
+    pathname.startsWith("/calendar") ||
     pathname.startsWith("/schedule") ||
     pathname.startsWith("/training") ||
     pathname.startsWith("/projects");
@@ -61,11 +67,13 @@ export function Header() {
                 {isSubPage && !isAdmin ? (
                   <>
                     <span className="md:hidden">
-                      {pathname.startsWith("/schedule")
-                        ? "SCHEDULE"
-                        : pathname.startsWith("/projects")
-                          ? "PROJECTS"
-                          : "TRAINING"}
+                      {pathname.startsWith("/calendar")
+                        ? "CALENDAR"
+                        : pathname.startsWith("/schedule")
+                          ? "SCHEDULE"
+                          : pathname.startsWith("/projects")
+                            ? "PROJECTS"
+                            : "TRAINING"}
                     </span>
                     <span className="hidden md:inline">
                       KIS DESIGN STUDIO

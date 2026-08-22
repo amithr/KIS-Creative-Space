@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import {
   deleteStudentProject,
+  ensureAdminProjectEditKey,
   restoreStudentProject,
   updateProjectSprintDue,
   updateProjectSprintStatus,
@@ -106,6 +107,34 @@ export function AdminProjectsPanel({
                       ? `NEXT ${formatSprintDue(next.due)}`
                       : ""}
               </span>
+              <button
+                type="button"
+                title="Open drag-and-drop board"
+                disabled={pending}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  startTransition(async () => {
+                    const result = await ensureAdminProjectEditKey(p.id);
+                    if (!result.ok || !result.editKey) {
+                      notify(result.ok ? "Could not open board" : result.error, {
+                        bg: "#141414",
+                      });
+                      return;
+                    }
+                    window.open(
+                      `/projects?edit=${p.id}.${result.editKey}`,
+                      "_blank",
+                      "noopener,noreferrer",
+                    );
+                    notify("BOARD OPENED · DRAG CARDS BETWEEN COLUMNS", {
+                      bg: "#141414",
+                    });
+                  });
+                }}
+                className="rounded-full border border-[#e3e0d8] px-3 py-1.5 font-mono text-[10px] tracking-[0.08em] text-[#3f3b33] transition-colors hover:border-[#141414] hover:bg-[#141414] hover:text-white"
+              >
+                BOARD ↗
+              </button>
               <button
                 type="button"
                 title="Remove project"

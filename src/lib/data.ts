@@ -283,6 +283,7 @@ function normalizeSpaceBlock(row: Record<string, unknown>): SpaceBlock {
     repeat: (row.repeat as SpaceBlock["repeat"]) ?? "once",
     block_date: (row.block_date as string | null) ?? null,
     dow: (row.dow as SpaceBlock["dow"] | null) ?? null,
+    start_date: (row.start_date as string | null) ?? null,
     until_date: (row.until_date as string | null) ?? null,
     period_from: Number(row.period_from),
     period_to: Number(row.period_to),

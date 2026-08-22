@@ -566,6 +566,7 @@ export type SpaceBookingActionResult =
   | { ok: false; error: string };
 
 function revalidateSpace() {
+  revalidatePath("/calendar");
   revalidatePath("/schedule");
   revalidatePath("/training");
   revalidatePath("/book");
@@ -573,6 +574,7 @@ function revalidateSpace() {
 }
 
 function revalidateTraining() {
+  revalidatePath("/calendar");
   revalidatePath("/training");
   revalidatePath("/book");
   revalidatePath("/admin");
@@ -836,6 +838,7 @@ export type CreateSpaceBlockInput = {
   repeat: "once" | "weekly";
   blockDate?: string;
   dow?: "MON" | "TUE" | "WED" | "THU" | "FRI";
+  startDate?: string;
   untilDate?: string;
   periodFrom: number;
   periodTo: number;
@@ -871,6 +874,7 @@ export async function createSpaceBlock(
         repeat: "once",
         block_date: date,
         dow: null,
+        start_date: null,
         until_date: null,
         period_from: from,
         period_to: to,
@@ -885,13 +889,18 @@ export async function createSpaceBlock(
   } else {
     const dow = input.dow;
     if (!dow) return { ok: false, error: "Pick a weekday." };
+    const start = input.startDate?.trim() || null;
     const until = input.untilDate?.trim() || null;
+    if (start && until && until < start) {
+      return { ok: false, error: "End date is before the start date." };
+    }
     const { data, error } = await supabase
       .from("space_blocks")
       .insert({
         repeat: "weekly",
         block_date: null,
         dow,
+        start_date: start,
         until_date: until,
         period_from: from,
         period_to: to,
@@ -1118,8 +1127,38 @@ function revalidateProjectsAdmin() {
 }
 
 export type ProjectAdminResult =
-  | { ok: true; project?: StudentProject }
+  | { ok: true; project?: StudentProject; editKey?: string }
   | { ok: false; error: string };
+
+/** Ensure a project has an edit_key so admin can open the board as an editor. */
+export async function ensureAdminProjectEditKey(
+  projectId: string,
+): Promise<ProjectAdminResult> {
+  const { supabase } = await requireTeacher();
+  if (!projectId) return { ok: false, error: "Missing project." };
+
+  const { data, error: loadError } = await supabase
+    .from("student_projects")
+    .select("*")
+    .eq("id", projectId)
+    .maybeSingle();
+  if (loadError) return { ok: false, error: loadError.message };
+  if (!data) return { ok: false, error: "Project not found." };
+
+  const project = normalizeProject(data as Record<string, unknown>);
+  if (project.editKey) {
+    return { ok: true, editKey: project.editKey, project };
+  }
+
+  const { randomBytes } = await import("crypto");
+  const key = randomBytes(6).toString("base64url").slice(0, 8);
+  const { error } = await supabase
+    .from("student_projects")
+    .update({ edit_key: key })
+    .eq("id", projectId);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, editKey: key, project: { ...project, editKey: key } };
+}
 
 export async function updateProjectSprintStatus(
   projectId: string,

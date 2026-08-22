@@ -1,0 +1,14 @@
+---
+description: Design handoff rules for the Board Drag-and-Drop feature (KIS Creativity Space)
+alwaysApply: false
+---
+
+When implementing the Board Drag-and-Drop feature:
+
+- The spec is handoff_cursor_board_drag_drop/README.md — the interaction states (dim %, tint colors, dashed borders, drop-slot label, toast copy) are exact, not suggestions.
+- designs/*.dc.html are HTML prototypes for behavior reference only. Never copy their markup, the DCLogic classes, or support.js.
+- Drag writes the same Sprint.status field through the same authorized endpoint as the tap pills — no separate code path, enforced server-side.
+- Only editor states get drag affordances (owner, valid editKey, admin). Read-only states have no draggable, no cursor change, no drop targets.
+- Same-column drops and drops without edit rights are silent no-ops.
+- Every successful move shows the undo toast; UNDO restores the previous status and confirms with MOVED BACK ✓.
+- Keep the segmented status pills — they are the touch and accessibility path.

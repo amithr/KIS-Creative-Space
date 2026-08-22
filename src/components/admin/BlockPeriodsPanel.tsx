@@ -15,6 +15,7 @@ import {
   formatBlockWhen,
   normalizePeriodRange,
   periodRangeLabel,
+  todayIsoDate,
   type DowName,
 } from "@/lib/space-blocks";
 import type { SpaceBlock, SpaceBlockScope, SpaceBooking } from "@/lib/types";
@@ -75,6 +76,7 @@ export function BlockPeriodsPanel({
   const [scope, setScope] = useState<SpaceBlockScope>("all");
   const [date, setDate] = useState("");
   const [dow, setDow] = useState<DowName>("MON");
+  const [start, setStart] = useState(todayIsoDate);
   const [until, setUntil] = useState("");
   const [from, setFrom] = useState(1);
   const [to, setTo] = useState(1);
@@ -160,12 +162,19 @@ export function BlockPeriodsPanel({
       ? `P${range.period_from} — tap a later period to extend the range`
       : `P${range.period_from}–P${range.period_to}`;
 
+  const dateRangeError =
+    repeat === "weekly" && start && until && until < start
+      ? "End date is before the start date."
+      : "";
+
   const conflicts = useMemo(() => {
     if (scope === "training") return 0;
+    if (dateRangeError) return 0;
     return countBlockConflicts(bookings, {
       repeat,
       block_date: repeat === "once" ? date || null : null,
       dow: repeat === "weekly" ? dow : null,
+      start_date: repeat === "weekly" && start ? start : null,
       until_date: repeat === "weekly" && until ? until : null,
       period_from: range.period_from,
       period_to: range.period_to,
@@ -177,7 +186,9 @@ export function BlockPeriodsPanel({
     repeat,
     date,
     dow,
+    start,
     until,
+    dateRangeError,
     range.period_from,
     range.period_to,
   ]);
@@ -303,12 +314,24 @@ export function BlockPeriodsPanel({
                     </div>
                   </div>
                   <label className="flex flex-col gap-1.5">
-                    <span className={fieldLabel}>UNTIL · OPTIONAL</span>
+                    <span className={fieldLabel}>STARTS</span>
+                    <input
+                      type="date"
+                      value={start}
+                      onChange={(e) => setStart(e.target.value)}
+                      className={underline}
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1.5">
+                    <span className={fieldLabel}>ENDS · OPTIONAL</span>
                     <input
                       type="date"
                       value={until}
                       onChange={(e) => setUntil(e.target.value)}
                       className={underline}
+                      style={
+                        dateRangeError ? { borderColor: "#c8102e" } : undefined
+                      }
                     />
                   </label>
                 </>
@@ -347,15 +370,21 @@ export function BlockPeriodsPanel({
 
               <button
                 type="button"
-                disabled={pending || (repeat === "once" && !date)}
+                disabled={
+                  pending ||
+                  (repeat === "once" && !date) ||
+                  !!dateRangeError
+                }
                 onClick={() => {
                   if (repeat === "once" && !date) return;
+                  if (dateRangeError) return;
                   startTransition(async () => {
                     setError("");
                     const result = await createSpaceBlock({
                       repeat,
                       blockDate: date,
                       dow,
+                      startDate: start,
                       untilDate: until,
                       periodFrom: from,
                       periodTo: to,
@@ -393,6 +422,13 @@ export function BlockPeriodsPanel({
                 Block →
               </button>
             </div>
+
+            {dateRangeError && (
+              <div className="mx-5 mt-2 flex items-center gap-1.5 text-[13px] text-[#c8102e]">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#c8102e]" />
+                {dateRangeError}
+              </div>
+            )}
 
             {conflicts > 0 && (
               <div className="mx-5 my-2.5 bg-[#fdf8ec] px-3.5 py-2.5 text-[13.5px] text-[#9a6e06]">
@@ -592,6 +628,7 @@ export function BlockPeriodsPanel({
                               repeat: b.repeat,
                               blockDate: b.block_date ?? undefined,
                               dow: (b.dow as DowName | null) ?? undefined,
+                              startDate: b.start_date ?? undefined,
                               untilDate: b.until_date ?? undefined,
                               periodFrom: b.period_from,
                               periodTo: b.period_to,

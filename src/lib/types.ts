@@ -94,6 +94,8 @@ export type SpaceBlock = {
   repeat: SpaceBlockRepeat;
   block_date: string | null;
   dow: SpaceBlockDow | null;
+  /** Weekly only: apply on/after this ISO date. Null = no lower bound. */
+  start_date: string | null;
   until_date: string | null;
   period_from: number;
   period_to: number;

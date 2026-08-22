@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   createStudentProject,
@@ -11,6 +11,7 @@ import {
   updatePortalSprintDue,
   updatePortalSprintStatus,
 } from "@/app/actions/projects";
+import { ProjectsBoardView } from "@/components/ProjectsBoardView";
 import { SiteFooter } from "@/components/SiteFooter";
 import { toISODate } from "@/lib/inventory";
 import {
@@ -47,17 +48,6 @@ const fieldLabel =
 const underline =
   "w-full border-0 border-b border-[#e3e0d8] bg-transparent px-0 py-2 text-[14.5px] outline-none focus:border-[#141414]";
 
-const STATUS_OPTS: Array<{
-  v: SprintStatus;
-  label: string;
-  bg: string;
-  fg: string;
-}> = [
-  { v: "todo", label: "TO DO", bg: "#eeece5", fg: "#3f3b33" },
-  { v: "doing", label: "DOING", bg: "#fdf4e3", fg: "#9a6e06" },
-  { v: "done", label: "DONE", bg: "#dff2e3", fg: "#2f7d3f" },
-];
-
 function copyText(url: string) {
   if (navigator.clipboard?.writeText) {
     return navigator.clipboard.writeText(url).catch(() => {
@@ -66,6 +56,19 @@ function copyText(url: string) {
   }
   window.prompt("Copy this link:", url);
   return Promise.resolve();
+}
+
+async function shareOrCopy(url: string, title: string) {
+  if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+    try {
+      await navigator.share({ title, url });
+      return "shared" as const;
+    } catch {
+      /* cancelled or unsupported — fall through */
+    }
+  }
+  await copyText(url);
+  return "copied" as const;
 }
 
 export function ProjectsClient({
@@ -89,7 +92,12 @@ export function ProjectsClient({
   );
   const [email, setEmail] = useState(signedInEmail ?? "");
   const [pending, startTransition] = useTransition();
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{
+    msg: string;
+    bg?: string;
+    undo?: () => void;
+  } | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [shake, setShake] = useState(0);
   const [copiedMsg, setCopiedMsg] = useState<string | null>(null);
 
@@ -138,9 +146,14 @@ export function ProjectsClient({
     return () => window.clearInterval(id);
   }, [link?.projectId]);
 
-  function showToast(msg: string) {
-    setToast(msg);
-    window.setTimeout(() => setToast(null), 2800);
+  function showToast(
+    msg: string,
+    opts?: { bg?: string; undo?: () => void },
+  ) {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ msg, bg: opts?.bg, undo: opts?.undo });
+    const ms = opts?.undo ? 4500 : 2800;
+    toastTimer.current = setTimeout(() => setToast(null), ms);
   }
 
   function go(next: View) {
@@ -168,6 +181,8 @@ export function ProjectsClient({
 
   const canEdit = role === "owner" || role === "guest";
   const editKeyForWrite = link?.canEdit ? link.editKey : null;
+  const boardRef = useRef(board);
+  boardRef.current = board;
 
   const today = todayIsoLocal();
 
@@ -260,7 +275,7 @@ export function ProjectsClient({
 
   async function copyShareLink(project: StudentProject) {
     const url = `${window.location.origin}/projects?share=${project.id}`;
-    await copyText(url);
+    await shareOrCopy(url, project.unit);
     setCopiedMsg("STUDENT LINK COPIED ✓ · VIEW ONLY, NO PASSWORD");
     window.setTimeout(() => setCopiedMsg(null), 4500);
     showToast("STUDENT LINK COPIED ✓ · VIEW ONLY");
@@ -274,16 +289,23 @@ export function ProjectsClient({
         return;
       }
       const url = `${window.location.origin}/projects?edit=${project.id}.${result.editKey}`;
-      await copyText(url);
+      await shareOrCopy(url, `${project.unit} (edit)`);
       setCopiedMsg("TEACHER LINK COPIED ✓ · ANYONE WITH IT CAN EDIT THIS BOARD");
       window.setTimeout(() => setCopiedMsg(null), 4500);
       showToast("TEACHER LINK COPIED ✓ · VIEW + EDIT");
     });
   }
 
-  function setSprintStatus(project: StudentProject, n: number, status: SprintStatus) {
-    if (project.weeks.find((w) => w.n === n)?.status === status) return;
-    const label = STATUS_OPTS.find((o) => o.v === status)?.label ?? status;
+  function setSprintStatus(
+    project: StudentProject,
+    n: number,
+    status: SprintStatus,
+    opts?: { skipUndo?: boolean },
+  ) {
+    const prevStatus = project.weeks.find((w) => w.n === n)?.status;
+    if (prevStatus === status) return;
+    const label =
+      status === "todo" ? "TO DO" : status === "doing" ? "DOING" : "DONE";
     const prev = project;
     const next: StudentProject = {
       ...project,
@@ -303,7 +325,18 @@ export function ProjectsClient({
         return;
       }
       if (result.project) patchBoard(result.project);
-      showToast(`SPRINT ${n} → ${label} ✓`);
+      if (opts?.skipUndo) return;
+      const from = prevStatus;
+      showToast(`SPRINT ${n} → ${label} ✓`, {
+        bg: "#141414",
+        undo: from
+          ? () => {
+              const current = boardRef.current ?? next;
+              setSprintStatus(current, n, from, { skipUndo: true });
+              showToast("MOVED BACK ✓");
+            }
+          : undefined,
+      });
     });
   }
 
@@ -593,9 +626,9 @@ export function ProjectsClient({
               type="button"
               disabled={pending}
               onClick={submitCreate}
-              className="mt-5 bg-[#c8102e] px-6 py-3 text-[14.5px] font-semibold text-white hover:bg-[#a50d26] disabled:opacity-60"
+              className="mt-5 min-h-12 w-full rounded-full bg-[#c8102e] px-6 py-3.5 text-[14px] font-semibold text-white hover:bg-[#a50d26] disabled:opacity-60 md:w-auto md:rounded-none md:text-[14.5px]"
             >
-              Create project →
+              Create project · {fWeeks} sprints →
             </button>
           </div>
         )}
@@ -607,40 +640,44 @@ export function ProjectsClient({
                 <p className="font-mono text-[12px] tracking-[0.2em] text-[#6d6759]">
                   ПРОЄКТИ · PROJECTS
                 </p>
-                <h1 className="mt-2 text-[26px] font-semibold md:text-[38px] md:font-normal md:tracking-[-0.02em]">
+                <h1 className="mt-2 text-[23px] font-light tracking-[-0.01em] md:text-[38px] md:tracking-[-0.02em]">
                   Your project boards
                 </h1>
-                <span className="kis-title-underline !mt-3 !w-14" />
-                <p className="mt-2.5 max-w-xl text-[14px] text-[#6d6759]">
+                <span className="kis-title-underline !mt-2 !w-12 md:!mt-3 md:!w-14" />
+                <p className="mt-2.5 hidden max-w-xl text-[14px] text-[#6d6759] md:block">
                   You can edit every board under your email. Students see boards
                   through a read-only link you copy from any board.
                 </p>
               </div>
-              <div className="flex flex-wrap items-center gap-3.5 pb-1">
-                <span className="font-mono text-[11px] tracking-[0.1em] text-[#6d6759]">
+              <div className="flex w-full flex-wrap items-center justify-between gap-3 pb-1 md:w-auto md:justify-end md:gap-3.5">
+                <span className="font-mono text-[9.5px] tracking-[0.08em] text-[#8a857a] md:text-[11px] md:tracking-[0.1em] md:text-[#6d6759]">
                   {email.toUpperCase()}
+                  <span className="md:hidden"> · CAN EDIT ALL BELOW</span>
                 </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    startTransition(async () => {
-                      await signOutTeacherPortal();
-                      setEmail("");
-                      go("signin");
-                      router.refresh();
-                    });
-                  }}
-                  className="border border-[#e3e0d8] px-4 py-2 text-[13.5px] font-semibold text-[#3f3b33] hover:border-[#141414]"
-                >
-                  Sign out
-                </button>
-                <button
-                  type="button"
-                  onClick={() => go("create")}
-                  className="bg-[#141414] px-4 py-2 text-[13.5px] font-semibold text-white hover:bg-[#c8102e]"
-                >
-                  + New project
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      startTransition(async () => {
+                        await signOutTeacherPortal();
+                        setEmail("");
+                        go("signin");
+                        router.refresh();
+                      });
+                    }}
+                    className="min-h-11 border border-[#e3e0d8] px-3 py-2 text-[12px] font-semibold text-[#3f3b33] hover:border-[#141414] md:px-4 md:text-[13.5px]"
+                  >
+                    Sign out
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => go("create")}
+                    className="min-h-11 rounded-full bg-[#141414] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#c8102e] md:rounded-none md:text-[13.5px]"
+                  >
+                    + New
+                    <span className="hidden md:inline"> project</span>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -661,7 +698,7 @@ export function ProjectsClient({
                 {byCourse.map(([course, rows]) => {
                   const open = openCourses[course] !== false;
                   return (
-                    <div key={course} className="border border-[#e3e0d8] bg-white">
+                    <div key={course} className="overflow-hidden rounded-[14px] border border-[#e3e0d8] bg-white md:rounded-none">
                       <button
                         type="button"
                         onClick={() =>
@@ -670,16 +707,16 @@ export function ProjectsClient({
                             [course]: !open,
                           }))
                         }
-                        className="flex w-full items-center gap-3 px-5 py-3.5 text-left hover:bg-[#faf9f5]"
+                        className="flex min-h-11 w-full items-center gap-3 bg-[#faf9f5] px-3.5 py-3 text-left md:bg-transparent md:px-5 md:py-3.5 md:hover:bg-[#faf9f5]"
                       >
-                        <span className="h-2.5 w-2.5 shrink-0 bg-[#c8102e]" />
-                        <span className="text-[17px] font-semibold">
+                        <span className="h-2 w-2 shrink-0 bg-[#c8102e]" />
+                        <span className="flex-1 text-[14.5px] font-semibold md:text-[17px]">
                           {course}
                         </span>
-                        <span className="rounded-full bg-[#eeece5] px-2 py-0.5 font-mono text-[10px] tracking-wide text-[#3f3b33]">
+                        <span className="rounded-full bg-[#eeece5] px-2 py-0.5 font-mono text-[9px] tracking-wide text-[#3f3b33] md:text-[10px]">
                           {rows.length}
                         </span>
-                        <span className="ml-auto font-mono text-[12px] text-[#98917f]">
+                        <span className="font-mono text-[10px] text-[#98917f] md:text-[12px]">
                           {open ? "▲" : "▼"}
                         </span>
                       </button>
@@ -690,6 +727,13 @@ export function ProjectsClient({
                           const overdue = next
                             ? isSprintOverdue(next, today)
                             : false;
+                          const meta = prog.done === prog.total
+                            ? `${prog.done}/${prog.total} DONE`
+                            : overdue && next
+                              ? `${prog.done}/${prog.total} DONE · OVERDUE · ${formatSprintDue(next.due)}`
+                              : next
+                                ? `${prog.done}/${prog.total} DONE · NEXT DUE ${formatSprintDue(next.due)}`
+                                : `${prog.done}/${prog.total} DONE`;
                           return (
                             <button
                               key={p.id}
@@ -698,29 +742,41 @@ export function ProjectsClient({
                                 setBoardId(p.id);
                                 go("board");
                               }}
-                              className="kis-fadeup flex w-full flex-wrap items-center gap-4 border-t border-[#eeece5] px-5 py-3.5 text-left hover:bg-[#fdf1f3]"
+                              className="kis-fadeup flex min-h-11 w-full items-center gap-3 border-t border-[#eeece5] px-3.5 py-3 text-left hover:bg-[#fdf1f3] md:gap-4 md:px-5 md:py-3.5"
                               style={{ animationDelay: `${i * 50}ms` }}
                             >
-                              <span className="shrink-0 bg-[#141414] px-2.5 py-1.5 font-mono text-[12px] font-bold text-white">
+                              <span className="shrink-0 bg-[#141414] px-2 py-1.5 font-mono text-[10.5px] font-bold text-white md:px-2.5 md:text-[12px]">
                                 {p.initials}
                               </span>
-                              <div className="min-w-[160px]">
-                                <p className="text-[15.5px] font-semibold">
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[13.5px] font-semibold md:text-[15.5px]">
                                   {p.unit}
                                 </p>
-                                <p className="mt-0.5 font-mono text-[10px] tracking-[0.1em] text-[#98917f]">
+                                <div className="mt-1.5 h-[5px] overflow-hidden rounded-full bg-[#eeece5] md:mt-2 md:h-1.5 md:rounded-none md:max-w-[220px]">
+                                  <div
+                                    className="kis-bar h-full bg-[#c8102e]"
+                                    style={{ width: `${prog.pct}%` }}
+                                  />
+                                </div>
+                                <p
+                                  className="mt-1 font-mono text-[8.5px] tracking-[0.08em] md:hidden"
+                                  style={{
+                                    color: overdue
+                                      ? "#c8102e"
+                                      : prog.done === prog.total
+                                        ? "#2f9e44"
+                                        : "#6d6759",
+                                  }}
+                                >
+                                  {meta}
+                                </p>
+                                <p className="mt-0.5 hidden font-mono text-[10px] tracking-[0.1em] text-[#98917f] md:block">
                                   {p.weeks.length} SPRINTS · STARTED{" "}
                                   {formatSprintDue(p.start)}
                                 </p>
                               </div>
-                              <div className="h-1.5 min-w-[120px] flex-1 overflow-hidden bg-[#eeece5]">
-                                <div
-                                  className="kis-bar h-full bg-[#c8102e]"
-                                  style={{ width: `${prog.pct}%` }}
-                                />
-                              </div>
                               <span
-                                className="shrink-0 font-mono text-[10.5px] tracking-[0.1em]"
+                                className="hidden shrink-0 font-mono text-[10.5px] tracking-[0.1em] md:inline"
                                 style={{
                                   color: overdue
                                     ? "#c8102e"
@@ -737,7 +793,7 @@ export function ProjectsClient({
                                       ? `NEXT DUE ${formatSprintDue(next.due)}`
                                       : ""}
                               </span>
-                              <span className="font-mono text-[12px] text-[#98917f]">
+                              <span className="font-mono text-[11px] text-[#98917f]">
                                 →
                               </span>
                             </button>
@@ -752,7 +808,7 @@ export function ProjectsClient({
         )}
 
         {view === "board" && (
-          <BoardView
+          <ProjectsBoardView
             project={board}
             today={today}
             role={
@@ -771,8 +827,12 @@ export function ProjectsClient({
             copiedMsg={copiedMsg}
             showBack={!link}
             onBack={() => go(email ? "list" : "signin")}
-            onCopyShare={() => board && void copyShareLink(board)}
-            onCopyEdit={() => board && void copyEditLink(board)}
+            onShareStudent={async () => {
+              if (board) await copyShareLink(board);
+            }}
+            onShareTeacher={async () => {
+              if (board) await copyEditLink(board);
+            }}
             onStatus={(n, status) =>
               board && setSprintStatus(board, n, status)
             }
@@ -782,287 +842,28 @@ export function ProjectsClient({
       </div>
 
       {toast && (
-        <div className="kis-sync-chip fixed right-6 bottom-6 z-[90] bg-[#2f9e44] px-[18px] py-[11px] font-mono text-[11px] tracking-[0.12em] text-white shadow-[0_10px_30px_rgba(20,20,20,0.28)]">
-          {toast}
+        <div
+          className="kis-sync-chip fixed right-6 bottom-6 z-[90] flex items-center gap-3 px-[18px] py-[11px] font-mono text-[11px] tracking-[0.12em] text-white shadow-[0_10px_30px_rgba(20,20,20,0.28)]"
+          style={{ background: toast.bg ?? "#2f9e44" }}
+        >
+          <span>{toast.msg}</span>
+          {toast.undo && (
+            <button
+              type="button"
+              onClick={() => {
+                const fn = toast.undo;
+                setToast(null);
+                fn?.();
+              }}
+              className="underline underline-offset-2"
+            >
+              UNDO
+            </button>
+          )}
         </div>
       )}
 
       <SiteFooter />
-    </div>
-  );
-}
-
-function BoardView({
-  project,
-  today,
-  role,
-  canEdit,
-  pending,
-  copiedMsg,
-  showBack,
-  onBack,
-  onCopyShare,
-  onCopyEdit,
-  onStatus,
-  onDue,
-}: {
-  project: StudentProject | null;
-  today: string;
-  role: "owner" | "guest" | "student";
-  canEdit: boolean;
-  pending: boolean;
-  copiedMsg: string | null;
-  showBack: boolean;
-  onBack: () => void;
-  onCopyShare: () => void;
-  onCopyEdit: () => void;
-  onStatus: (n: number, status: SprintStatus) => void;
-  onDue: (n: number, due: string) => void;
-}) {
-  const missing = !project;
-  const prog = project ? sprintProgress(project) : { done: 0, total: 0, pct: 0 };
-  const next = project ? nextOpenSprint(project) : null;
-  const cols = [
-    { key: "todo" as const, label: "TO DO", dot: "#98917f", edge: "#98917f" },
-    {
-      key: "doing" as const,
-      label: "IN PROGRESS",
-      dot: "#e0a010",
-      edge: "#e0a010",
-    },
-    { key: "done" as const, label: "DONE", dot: "#2f9e44", edge: "#2f9e44" },
-  ];
-
-  const footNote =
-    role === "student"
-      ? "Read-only student view — cards move as your teacher updates sprints. Check back after each Friday."
-      : role === "guest"
-        ? "You have edit access via a teacher link — click a status to move a card, or change a due date."
-        : "Click a status to move a card, or change a due date — students with your link see it instantly.";
-
-  return (
-    <div className="kis-pop">
-      {showBack && (
-        <button
-          type="button"
-          onClick={onBack}
-          className="mb-3 font-mono text-[11px] tracking-[0.14em] text-[#6d6759] hover:text-[#c8102e]"
-        >
-          ← YOUR PROJECTS
-        </button>
-      )}
-      <div className="flex flex-wrap items-end justify-between gap-6">
-        <div>
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-[26px] font-semibold md:text-[38px] md:font-normal md:tracking-[-0.02em]">
-              {missing ? "Board not found" : project.unit}
-            </h1>
-            {!missing && (
-              <span className="bg-[#141414] px-2.5 py-1.5 font-mono text-[12px] font-bold text-white">
-                {project.initials}
-              </span>
-            )}
-          </div>
-          {!missing && <span className="kis-title-underline !mt-3 !w-14" />}
-          {!missing && (
-            <div className="mt-3 flex flex-wrap items-center gap-2.5">
-              <span className="rounded-full bg-[#eeece5] px-2.5 py-0.5 font-mono text-[10px] tracking-[0.12em] text-[#3f3b33]">
-                {project.course.toUpperCase()}
-              </span>
-              <span className="font-mono text-[10px] tracking-[0.12em] text-[#6d6759]">
-                {project.email.toUpperCase()}
-              </span>
-              {next && (
-                <span
-                  className="font-mono text-[10px] tracking-[0.12em]"
-                  style={{
-                    color: isSprintOverdue(next, today) ? "#c8102e" : "#6d6759",
-                  }}
-                >
-                  {isSprintOverdue(next, today)
-                    ? `OVERDUE · ${formatSprintDue(next.due)}`
-                    : `NEXT DUE ${formatSprintDue(next.due)}`}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-        {!missing && (
-          <div className="min-w-[200px] pb-1">
-            <div className="flex justify-between font-mono text-[10.5px] tracking-[0.12em] text-[#6d6759]">
-              <span>SPRINTS DONE</span>
-              <span>
-                {prog.done} / {prog.total}
-              </span>
-            </div>
-            <div className="mt-1.5 h-2 overflow-hidden bg-[#eeece5]">
-              <div
-                className="kis-bar h-full bg-[#c8102e]"
-                style={{ width: `${prog.pct}%` }}
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
-      <p className="mt-3.5 max-w-2xl text-[15px] leading-relaxed text-[#6d6759]">
-        {missing
-          ? "This link doesn't match a project any more — ask your teacher for a fresh one."
-          : project.summary}
-      </p>
-
-      {!missing && (
-        <div className="mt-[18px] flex flex-wrap items-center gap-3">
-          {role === "owner" && (
-            <>
-              <span className="rounded-full bg-[#dff2e3] px-3 py-1.5 font-mono text-[10px] tracking-[0.12em] text-[#2f7d3f]">
-                YOUR BOARD · EDITS SAVE INSTANTLY
-              </span>
-              <button
-                type="button"
-                onClick={onCopyShare}
-                className="bg-[#141414] px-[18px] py-2 text-[13.5px] font-semibold text-white transition-colors hover:bg-[#c8102e]"
-              >
-                ⧉ Copy student link
-              </button>
-              <button
-                type="button"
-                onClick={onCopyEdit}
-                disabled={pending}
-                className="border-[1.5px] border-[#141414] px-[18px] py-2 text-[13.5px] font-semibold text-[#141414] transition-colors hover:bg-[#141414] hover:text-white disabled:opacity-60"
-              >
-                ✎ Copy teacher link
-              </button>
-              {copiedMsg && (
-                <span className="kis-pop font-mono text-[10.5px] tracking-[0.1em] text-[#2f9e44]">
-                  {copiedMsg}
-                </span>
-              )}
-            </>
-          )}
-          {role === "student" && (
-            <>
-              <span className="rounded-full bg-[#fdf4e3] px-3 py-1.5 font-mono text-[10px] tracking-[0.12em] text-[#9a6e06]">
-                STUDENT VIEW · READ-ONLY
-              </span>
-              <span className="font-mono text-[10.5px] tracking-[0.08em] text-[#98917f]">
-                CARDS MOVE HERE AS YOUR TEACHER UPDATES SPRINTS
-              </span>
-            </>
-          )}
-          {role === "guest" && (
-            <>
-              <span className="rounded-full bg-[#e6edf4] px-3 py-1.5 font-mono text-[10px] tracking-[0.12em] text-[#3b6285]">
-                SHARED WITH YOU · CAN EDIT
-              </span>
-              <span className="font-mono text-[10.5px] tracking-[0.08em] text-[#98917f]">
-                EDITS SAVE INSTANTLY — THE OWNER AND STUDENTS SEE THEM LIVE
-              </span>
-            </>
-          )}
-        </div>
-      )}
-
-      {!missing && (
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          {cols.map((col) => {
-            const cards = project.weeks.filter((w) => w.status === col.key);
-            return (
-              <div
-                key={col.key}
-                className="min-h-[220px] border border-[#eeece5] bg-[#faf9f5] p-3.5"
-              >
-                <div className="mb-3 flex items-center gap-2">
-                  <span
-                    className="h-2 w-2 rounded-full"
-                    style={{ background: col.dot }}
-                  />
-                  <span className="font-mono text-[11px] tracking-[0.16em] text-[#3f3b33]">
-                    {col.label}
-                  </span>
-                  <span className="font-mono text-[10px] text-[#98917f]">
-                    {cards.length}
-                  </span>
-                </div>
-                <div className="space-y-2.5">
-                  {cards.map((w, i) => {
-                    const overdue = isSprintOverdue(w, today);
-                    const edge = overdue ? "#c8102e" : col.edge;
-                    return (
-                      <div
-                        key={w.n}
-                        className="kis-pop border border-[#e3e0d8] border-l-[3px] bg-white px-3.5 py-3"
-                        style={{
-                          borderLeftColor: edge,
-                          animationDelay: `${i * 60}ms`,
-                        }}
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="font-mono text-[9.5px] tracking-[0.14em] text-[#98917f]">
-                            SPRINT {w.n}
-                          </span>
-                          <span
-                            className="font-mono text-[9.5px] tracking-[0.1em]"
-                            style={{
-                              color: overdue ? "#c8102e" : "#98917f",
-                            }}
-                          >
-                            {formatSprintDue(w.due)}
-                          </span>
-                        </div>
-                        <p
-                          className="mt-1.5 text-[14.5px] leading-snug"
-                          style={{
-                            color: col.key === "done" ? "#98917f" : "#3f3b33",
-                          }}
-                        >
-                          {w.objective}
-                        </p>
-                        {canEdit && (
-                          <div className="mt-2.5 flex flex-wrap items-center gap-2">
-                            <div
-                              className="flex overflow-hidden rounded-full border border-[#e3e0d8]"
-                              title="Move this sprint"
-                            >
-                              {STATUS_OPTS.map((o) => {
-                                const selected = w.status === o.v;
-                                return (
-                                  <button
-                                    key={o.v}
-                                    type="button"
-                                    disabled={pending || selected}
-                                    onClick={() => onStatus(w.n, o.v)}
-                                    className="px-[9px] py-1 font-mono text-[9px] tracking-[0.08em] transition-colors hover:text-[#141414] disabled:cursor-default"
-                                    style={{
-                                      background: selected ? o.bg : "#fff",
-                                      color: selected ? o.fg : "#b5afa1",
-                                    }}
-                                  >
-                                    {o.label}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                            <input
-                              type="date"
-                              value={w.due}
-                              disabled={pending}
-                              onChange={(e) => onDue(w.n, e.target.value)}
-                              className="border border-[#e3e0d8] px-1.5 py-1 text-[12px] outline-none focus:border-[#141414]"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      <p className="mt-4 text-[13px] text-[#98917f]">{footNote}</p>
     </div>
   );
 }

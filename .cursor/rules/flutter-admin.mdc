@@ -1,0 +1,14 @@
+---
+description: Design handoff rules for the Flutter Admin Console (KIS Creativity Space app)
+alwaysApply: false
+---
+
+When implementing the Flutter Admin Console:
+
+- The spec is handoff_cursor_flutter_admin/README.md — layout, tokens, copy, and tab structure are exact, not suggestions.
+- designs/KIS Mobile Designs.dc.html is a static mockup for reference only (section 14). Never copy its markup or support.js.
+- Functional behavior comes from the already-implemented web admin — reuse its endpoints and the earlier handoff package specs (blocks scopes/rename, projects sprint editing, board edit grant). No new data model.
+- Snackbar + working UNDO is the universal feedback pattern for every admin mutation.
+- Block scope colors: all=grey stripes, training=amber (#fdf4e3/#eeddb2/#9a6e06), space=blue (#e6edf4/#b9cede/#3b6285). Selected status segments: todo #eeece5/#3f3b33, doing #fdf4e3/#9a6e06, done #dff2e3/#2f7d3f.
+- QR scanning keeps its current functionality — visual restyle per 14d only.
+- Tap targets ≥ 44px; black app bar with 3px red rule; 999px pills; 12px-radius cards.

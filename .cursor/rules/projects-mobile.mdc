@@ -1,0 +1,14 @@
+---
+description: Design handoff rules for the Projects mobile screens (KIS Creativity Space Flutter app + mobile web)
+alwaysApply: false
+---
+
+When implementing the Projects mobile screens:
+
+- The spec is handoff_cursor_projects_mobile/README.md — source of truth for layout, tokens, copy, and behavior. Values are exact, not suggestions.
+- designs/KIS Mobile Designs.dc.html is a static mockup for reference only (section 13). Never copy its markup or support.js.
+- Kanban is NEVER a horizontal three-column scroll on mobile: use the status-tab pattern from 13d/13f.
+- Share links go through the bottom sheet (13e) → native share sheet; the two link types must be visually distinct (VIEW ONLY amber vs CAN EDIT blue) before sharing.
+- Access matrix, editKey validation, and server-side enforcement are defined in handoff_cursor_projects_auth_sharing — reuse, don't redefine.
+- Status change = immediate persist + snackbar with sprint number and new status; card animates to its new tab. Overdue (past due, not done) = red date + red card edge.
+- Tap targets ≥ 44px; pills radius 999px; cards 12–14px radius; black app bar with 3px red rule.
