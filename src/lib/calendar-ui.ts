@@ -1,4 +1,3 @@
-import { BLOCKED_BG } from "@/lib/period-slot";
 import { blockScope } from "@/lib/space-blocks";
 import type { SpaceBlock, SpaceBooking, TrainingSession } from "@/lib/types";
 
@@ -17,7 +16,8 @@ export type CalendarCell =
     }
   | {
       kind: "block";
-      tag: "CLOSED" | "NO TRAINING" | "SPACE CLOSED";
+      tag: "CLASSES OK · NO TRAINING" | "TRAINING OK · NO CLASSES" | "FULLY CLOSED";
+      scope: "training" | "space" | "all";
       reason: string;
     };
 
@@ -29,6 +29,13 @@ export type CalendarCellVisual = {
   tagColor?: string;
   text: string;
 };
+
+const BLOCK_TRAINING_BG =
+  "repeating-linear-gradient(45deg, #fdf4e3 0, #fdf4e3 6px, #f7e7c3 6px, #f7e7c3 12px)";
+const BLOCK_SPACE_BG =
+  "repeating-linear-gradient(45deg, #e6edf4 0, #e6edf4 6px, #d3e0ec 6px, #d3e0ec 12px)";
+const BLOCK_ALL_BG =
+  "repeating-linear-gradient(45deg, #fbeeee 0, #fbeeee 6px, #f3dcdc 6px, #f3dcdc 12px)";
 
 /** Precedence: space → training → block → free / no-school. */
 export function resolveCalendarCell(input: {
@@ -68,15 +75,26 @@ export function resolveCalendarCell(input: {
 
   if (input.block) {
     const scope = blockScope(input.block);
-    const tag =
-      scope === "training"
-        ? "NO TRAINING"
-        : scope === "space"
-          ? "SPACE CLOSED"
-          : "CLOSED";
+    if (scope === "training") {
+      return {
+        kind: "block",
+        scope: "training",
+        tag: "CLASSES OK · NO TRAINING",
+        reason: input.block.reason,
+      };
+    }
+    if (scope === "space") {
+      return {
+        kind: "block",
+        scope: "space",
+        tag: "TRAINING OK · NO CLASSES",
+        reason: input.block.reason,
+      };
+    }
     return {
       kind: "block",
-      tag,
+      scope: "all",
+      tag: "FULLY CLOSED",
       reason: input.block.reason,
     };
   }
@@ -137,8 +155,28 @@ export function calendarCellVisual(cell: CalendarCell): CalendarCellVisual {
             text: cell.text,
           };
     case "block":
+      if (cell.scope === "training") {
+        return {
+          background: BLOCK_TRAINING_BG,
+          color: "#9a6e06",
+          border: "1px solid #eeddb2",
+          tag: cell.tag,
+          tagColor: "#9a6e06",
+          text: cell.reason,
+        };
+      }
+      if (cell.scope === "space") {
+        return {
+          background: BLOCK_SPACE_BG,
+          color: "#3b6285",
+          border: "1px solid #b9cede",
+          tag: cell.tag,
+          tagColor: "#3b6285",
+          text: cell.reason,
+        };
+      }
       return {
-        background: BLOCKED_BG,
+        background: BLOCK_ALL_BG,
         color: "#a05252",
         border: "1px solid #eccfcf",
         tag: cell.tag,

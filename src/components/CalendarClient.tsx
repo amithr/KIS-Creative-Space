@@ -290,12 +290,34 @@ export function CalendarClient({
           <span
             className="inline-block h-3 w-3 rounded-[4px]"
             style={{
+              border: "1px solid #eeddb2",
+              background:
+                "repeating-linear-gradient(45deg, #fdf4e3 0, #fdf4e3 3px, #f7e7c3 3px, #f7e7c3 6px)",
+            }}
+          />
+          Open for classes — no training
+        </span>
+        <span className="flex items-center gap-[7px]">
+          <span
+            className="inline-block h-3 w-3 rounded-[4px]"
+            style={{
+              border: "1px solid #b9cede",
+              background:
+                "repeating-linear-gradient(45deg, #e6edf4 0, #e6edf4 3px, #d3e0ec 3px, #d3e0ec 6px)",
+            }}
+          />
+          Open for training — no classes
+        </span>
+        <span className="flex items-center gap-[7px]">
+          <span
+            className="inline-block h-3 w-3 rounded-[4px]"
+            style={{
               border: "1px solid #eccfcf",
               background:
                 "repeating-linear-gradient(45deg, #fbeeee 0, #fbeeee 3px, #f3dcdc 3px, #f3dcdc 6px)",
             }}
           />
-          Closed by the Creativity Space team
+          Fully closed
         </span>
         <span className="hidden h-4 w-px bg-[#e3e0d8] md:inline-block" />
         <span className="flex items-center gap-[7px]">
