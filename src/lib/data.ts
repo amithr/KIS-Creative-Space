@@ -14,12 +14,17 @@ import type {
   SpaceBooking,
   StudentProject,
   TrainingSession,
+  FilamentColor,
   PrintRequest,
   WednesdayEntry,
 } from "@/lib/types";
 import { normalizeProject } from "@/lib/projects";
 import { normalizeWednesdayEntry } from "@/lib/wednesdays";
-import { normalizePrintRequest } from "@/lib/prints";
+import {
+  DEFAULT_COLORS,
+  normalizeFilamentColor,
+  normalizePrintRequest,
+} from "@/lib/prints";
 
 function hasSupabaseEnv() {
   return hasSupabasePublicEnv();
@@ -653,8 +658,8 @@ export async function getWednesdayEntries(
   );
 }
 
-/** All print requests for the admin Print requests tab. */
-export async function getAdminPrintRequests(): Promise<PrintRequest[]> {
+/** Every print request — Studio Admin queue, ledgers and the leaderboard. */
+export async function getAllPrintRequests(): Promise<PrintRequest[]> {
   if (!hasSupabaseEnv()) return [];
 
   const supabase = await createClient();
@@ -695,6 +700,27 @@ export async function getPrintRequestsByEmail(
   return (data ?? []).map((row) =>
     normalizePrintRequest(row as Record<string, unknown>),
   );
+}
+
+/** Filament colours, admin order. Falls back to the default palette offline. */
+export async function getFilamentColors(): Promise<FilamentColor[]> {
+  if (!hasSupabaseEnv()) return DEFAULT_COLORS;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("filament_colors")
+    .select("*")
+    .order("sort", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("Failed to load filament colours:", error.message);
+    return DEFAULT_COLORS;
+  }
+  const list = (data ?? []).map((row) =>
+    normalizeFilamentColor(row as Record<string, unknown>),
+  );
+  return list.length ? list : DEFAULT_COLORS;
 }
 
 export async function getPrintRequestById(

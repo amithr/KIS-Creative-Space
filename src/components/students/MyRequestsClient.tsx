@@ -4,22 +4,44 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cancelPrintRequest, listPrintRequests } from "@/app/actions/prints";
 import { JobCard, TrackTitleMotif } from "@/components/students/JobCard";
+import { useLocale } from "@/components/students/Locale";
+import { RushnykCard } from "@/components/students/RushnykCard";
 import { useStudentToast } from "@/components/students/StudentToast";
+import { PRINT_COST, costOf, ledgerFor, rankFor } from "@/lib/ledger";
 import { isValidEmail } from "@/lib/prints";
 import { readStudentEmail, writeStudentEmail } from "@/lib/student-session";
-import type { PrintRequest } from "@/lib/types";
+import type { FilamentColor, PrintRequest } from "@/lib/types";
 
 const label = "st-mono text-[10.5px] tracking-[0.16em] text-[#8c7a68]";
+const RANK_KEY = "kis-last-rank:";
 
-export function MyRequestsClient() {
+function readLastRank(email: string): number | null {
+  try {
+    const v = localStorage.getItem(RANK_KEY + email);
+    return v === null ? null : Number(v);
+  } catch {
+    return null;
+  }
+}
+function writeLastRank(email: string, rank: number) {
+  try {
+    localStorage.setItem(RANK_KEY + email, String(rank));
+  } catch {
+    // ignore
+  }
+}
+
+export function MyRequestsClient({ colors }: { colors: FilamentColor[] }) {
   const toast = useStudentToast();
+  const { t } = useLocale();
   const [email, setEmail] = useState("");
   const [hydrated, setHydrated] = useState(false);
   const [requests, setRequests] = useState<PrintRequest[]>([]);
+  const [celebrate, setCelebrate] = useState(0);
   const seq = useRef(0);
 
   const load = useCallback(async (value: string) => {
-    const needle = value.trim();
+    const needle = value.trim().toLowerCase();
     const mine = ++seq.current;
     if (!isValidEmail(needle)) {
       setRequests([]);
@@ -42,23 +64,17 @@ export function MyRequestsClient() {
       setEmail(sess);
       setHydrated(true);
     });
-    const t = sess
-      ? null
-      : window.setTimeout(
-          () => toast("TYPE YOUR KIS EMAIL TO SEE YOUR PRINTS"),
-          200,
-        );
+    const timer = sess ? null : window.setTimeout(() => toast(t.track.nudge), 200);
     return () => {
       cancelled = true;
-      if (t) window.clearTimeout(t);
+      if (timer) window.clearTimeout(timer);
     };
-  }, [toast]);
+  }, [toast, t.track.nudge]);
 
-  // Live filter as you type (debounced), and keep fresh while the tab is open.
   useEffect(() => {
     if (!hydrated) return;
-    const t = window.setTimeout(() => void load(email), 250);
-    return () => window.clearTimeout(t);
+    const tm = window.setTimeout(() => void load(email), 250);
+    return () => window.clearTimeout(tm);
   }, [email, hydrated, load]);
 
   useEffect(() => {
@@ -74,8 +90,25 @@ export function MyRequestsClient() {
     };
   }, [email, hydrated, load]);
 
-  const sess = email.trim();
+  const sess = email.trim().toLowerCase();
   const emailOk = isValidEmail(sess);
+  const ledger = ledgerFor(requests, sess);
+
+  // Level-up moment: fires the first time the student sees a higher rank.
+  const rank = rankFor(ledger.earned);
+  useEffect(() => {
+    if (!emailOk || requests.length === 0) return;
+    const last = readLastRank(sess);
+    if (last !== null && rank > last) {
+      const tm = window.setTimeout(() => {
+        setCelebrate((n) => n + 1);
+        toast(t.track.levelUp(t.track.ranks[rank].name));
+      }, 400);
+      writeLastRank(sess, rank);
+      return () => window.clearTimeout(tm);
+    }
+    if (last === null || rank !== last) writeLastRank(sess, rank);
+  }, [emailOk, requests.length, rank, sess, toast, t.track]);
 
   function onEmail(v: string) {
     setEmail(v);
@@ -90,23 +123,19 @@ export function MyRequestsClient() {
       return;
     }
     setRequests((prev) => prev.filter((x) => x.id !== r.id));
-    toast(`REQUEST CANCELLED · ${r.file.toUpperCase()}`);
+    toast(t.track.cancelled(r.file.toUpperCase()) + (costOf(r) ? t.track.refunded : ""));
   }
 
-  const emptyMsg = emailOk
-    ? `Nothing yet under ${sess} — your first request will appear here the moment you send it.`
-    : "Enter your KIS email in the form and your prints will show up here.";
+  const walletColor =
+    ledger.balance < PRINT_COST ? "#b5342c" : ledger.balance <= 10 ? "#9a6e06" : "#2f7d3f";
+  const emptyMsg = emailOk ? t.form.emptyUnder(sess) : t.form.emptyNoEmail;
 
   return (
     <>
       <section className="st-fadeup-4 st-gutter flex flex-wrap items-end justify-between gap-5 pt-10 pb-2.5">
         <div>
-          <p className="st-mono text-[11px] tracking-[0.2em] text-[#b5342c]">
-            × MY REQUESTS ×
-          </p>
-          <h1 className="mt-2.5 text-[clamp(34px,4.5vw,52px)] leading-[1.05] font-semibold">
-            Where are my prints?
-          </h1>
+          <p className="st-mono text-[11px] tracking-[0.2em] text-[#b5342c]">{t.track.eyebrow}</p>
+          <h1 className="mt-2.5 text-[clamp(34px,4.5vw,52px)] leading-[1.05] font-semibold">{t.track.title}</h1>
         </div>
         <div className="st-sway">
           <TrackTitleMotif />
@@ -114,9 +143,12 @@ export function MyRequestsClient() {
       </section>
 
       <section className="st-grid-track mx-[5vw] mt-[18px] mb-14">
-        <div className="st-fadeup-45 border border-[#e9dfd0] border-t-[4px] border-t-[#2a211c] bg-white px-6 py-[22px]" style={{ animationDelay: ".1s" }}>
+        <div
+          className="st-fadeup-45 border border-[#e9dfd0] border-t-[4px] border-t-[#2a211c] bg-white px-6 py-[22px]"
+          style={{ animationDelay: ".1s" }}
+        >
           <label className={label} htmlFor="st-track-email">
-            YOUR KIS EMAIL
+            {t.track.email}
           </label>
           <input
             id="st-track-email"
@@ -127,52 +159,36 @@ export function MyRequestsClient() {
             placeholder="olena.k@kis.edu"
             className="mt-[7px] box-border w-full border border-[#e9dfd0] px-[13px] py-[11px] text-[18px]"
           />
-          <p className="mt-1.5 text-[15px] leading-[1.45] text-[#8c7a68]">
-            Type the email you used on your request — your list updates as you
-            type. No password needed.
-          </p>
+          <p className="mt-1.5 text-[15px] leading-[1.45] text-[#8c7a68]">{t.track.help}</p>
           <div className="mt-[18px] border-t border-[#eee5d8] pt-3.5">
-            <p className={label}>WHAT THE STAGES MEAN</p>
+            <p className={label}>{t.track.stagesTitle}</p>
             <dl className="mt-2.5 flex flex-col gap-2 text-[16px] leading-[1.4]">
-              <div>
-                <dt className="st-mono inline text-[10px] tracking-[0.1em] text-[#b5342c]">
-                  RECEIVED
-                </dt>
-                <dd className="inline"> — we&apos;ve got your file and it&apos;s in the queue.</dd>
-              </div>
-              <div>
-                <dt className="st-mono inline text-[10px] tracking-[0.1em] text-[#b5342c]">
-                  SLICING / PRINTING
-                </dt>
-                <dd className="inline"> — it&apos;s being prepared or is on the machine.</dd>
-              </div>
-              <div>
-                <dt className="st-mono inline text-[10px] tracking-[0.1em] text-[#b5342c]">
-                  CUTTING
-                </dt>
-                <dd className="inline"> — stickers and posters are going through the vinyl cutter.</dd>
-              </div>
-              <div>
-                <dt className="st-mono inline text-[10px] tracking-[0.1em] text-[#2f7d3f]">
-                  READY
-                </dt>
-                <dd className="inline"> — come and collect it from the Creativity Space.</dd>
-              </div>
+              {t.track.glossary.map((g) => (
+                <div key={g.term}>
+                  <dt
+                    className="st-mono inline text-[10px] tracking-[0.1em]"
+                    style={{ color: g.ready ? "#2f7d3f" : "#b5342c" }}
+                  >
+                    {g.term}
+                  </dt>
+                  <dd className="inline">{g.text}</dd>
+                </div>
+              ))}
             </dl>
           </div>
-          <Link
-            href="/print"
-            className="st-btn st-btn-red st-btn-small mt-[18px] !text-[#fbf6ee]"
-          >
-            + NEW REQUEST
+          <Link href="/print" className="st-btn st-btn-red st-btn-small mt-[18px] !text-[#fbf6ee]">
+            {t.track.newRequest}
           </Link>
         </div>
 
         <div className="st-fadeup-45" style={{ animationDelay: ".18s" }}>
+          {emailOk && (
+            <RushnykCard ledger={ledger} celebrate={celebrate} walletColor={walletColor} />
+          )}
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-[26px] font-semibold">Your prints</h2>
+            <h2 className="text-[26px] font-semibold">{t.track.yourPrints}</h2>
             <span className="st-mono text-[10.5px] tracking-[0.12em] text-[#8c7a68]">
-              {sess ? sess.toUpperCase() : "TYPE YOUR EMAIL ABOVE"}
+              {sess ? sess.toUpperCase() : t.track.typeAbove}
             </span>
           </div>
           {requests.length === 0 && (
@@ -182,7 +198,7 @@ export function MyRequestsClient() {
           )}
           <div className="mt-3 flex flex-col gap-3">
             {requests.map((r, i) => (
-              <JobCard key={r.id} request={r} index={i} onCancel={cancel} />
+              <JobCard key={r.id} request={r} colors={colors} index={i} onCancel={cancel} />
             ))}
           </div>
         </div>

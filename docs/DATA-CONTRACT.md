@@ -103,27 +103,34 @@ ActivityEvent {
 - Optimistic writes with a local offline queue on the app; last-write-wins per field via server timestamps.
 - Both clients subscribe to realtime changes on `items`, `reservations`, `space_bookings`, `activity`; a status change on either side must appear on the other within ~1s when online.
 
-### PrintRequest (student print site) — table `print_requests`, migration 022
-Students are identified by email only. Status changes are admin-only (RLS: teacher session); students may cancel (delete) only while `status = 0`. Files live in the public-read storage bucket `print-files` under `<token>/<filename>` (50 MB cap).
+### PrintRequest (student print site v2) — table `print_requests`, migrations 022 + 023
+Students are identified by email only. Admin mutations (status, origin, quality, adjust, remove) are admin-only: the web Studio Admin runs them through the service role after a password gate, the Flutter admin through a teacher session (RLS). Students may cancel (delete) only while `status = 0`. Files live in the public-read storage bucket `print-files` under `<token>/<filename>` (50 MB cap).
 ```
 PrintRequest {
   id: string
   kind: "3d" | "poster" | "sticker"
-  name: string; email: string; grade: "G6"…"G12"
-  file_name: string            // original filename shown everywhere
-  file_path: string | null     // storage object path; null for seeded rows
+  origin: "mine" | "school" | "found"     // who designed it (student claims; admin can change)
+  teacher: string | null                   // required when origin = "school" (id from the teacher list)
+  quality: 1 | 2 | 3                       // admin rating, default 1; only meaningful for origin = "mine"
+  adjust: int                              // admin manual point adjustments (+10 top-ups), default 0
+  name: string; email: string
+  file_name: string                        // original filename shown everywhere
+  file_path: string | null                 // storage object path; null for seeded rows
   file_size: int
-  color: "red"|"white"|"black"|"blue"|"yellow"|"natural"|"vinyl"  // vinyl for poster/sticker
-  size: string                 // 3d: S|M|L · poster: A4|A3|A2|A1 · sticker: XS|S|M|L
-  qty: int                     // 1 for 3d; 1–50 for vinyl
-  cut: "contour"|"border"|"square"|null   // vinyl only
-  due: ISO date | null
-  notes: string
-  status: 0|1|2|3              // index into the kind's stage list
+  color: string                            // FilamentColor.v for 3d; "vinyl" for poster/sticker
+  qty: int                                 // 1 for 3d; 1–50 for vinyl
+  cut: "contour" | "border" | "square" | null   // vinyl only
+  status: 0 | 1 | 2 | 3                    // index into the kind's stage list
   ready_at?: timestamp
   created_at: timestamp
 }
+FilamentColor { v: string (slug, pk); label: string (UPPERCASE); hex: string; on: boolean; sort: int }
 Stages — 3d: RECEIVED → SLICING → PRINTING → READY
        — poster/sticker: RECEIVED → PRINTING → CUTTING → READY
 ```
-No email is sent: students follow the stage on the tracker page, which shows READY with a collect notice.
+Points (compute identically on every client — web `src/lib/ledger.ts`, Flutter `lib/data/ledger.dart`):
+- start 30; each print costs 10 unless `origin = school` (free); cancelling while RECEIVED refunds (row deleted).
+- `ORG = { mine: {base 15, bonus [0,5,10,15]}, school: {base 0}, found: {base 0} }`; `earn = base + bonus[quality]`, paid only at READY.
+- `balance = 30 − 10 × non-free prints + Σ earn(READY) + Σ adjust`; `stitches = Σ earn(READY)`.
+- Ranks by stitches: Thread 0 · Needle 15 · Stitcher 40 · Weaver 80 · Master Embroiderer 150.
+No email is sent at READY; students follow the tracker page.

@@ -2,20 +2,24 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getPrintRequestsByEmail, hasSupabaseEnv } from "@/lib/data";
+import {
+  getFilamentColors,
+  getPrintRequestsByEmail,
+  hasSupabaseEnv,
+} from "@/lib/data";
+import { canAfford, ledgerFor } from "@/lib/ledger";
 import {
   MAX_PRINT_FILE_BYTES,
   PRINT_FILES_BUCKET,
   fileMatchesKind,
-  isPrintColor,
   isPrintCut,
-  isPrintGrade,
   isPrintKind,
+  isPrintOrigin,
   isValidEmail,
-  isValidSize,
   normalizePrintRequest,
 } from "@/lib/prints";
-import type { PrintRequest } from "@/lib/types";
+import { teacherById } from "@/lib/teachers";
+import type { FilamentColor, PrintRequest } from "@/lib/types";
 
 export type PrintActionResult =
   | { ok: true; request?: PrintRequest; id?: string }
@@ -23,24 +27,23 @@ export type PrintActionResult =
 
 export type CreatePrintRequestInput = {
   kind: string;
+  origin: string;
+  teacher: string | null;
   name: string;
   email: string;
-  grade: string;
   fileName: string;
   /** Object path returned by the browser upload (`<token>/<file>`). */
   filePath: string;
   color: string;
-  size: string;
   qty: number;
   cut: string | null;
-  due: string | null;
-  notes: string;
 };
 
 function revalidatePrints() {
+  revalidatePath("/");
   revalidatePath("/print");
   revalidatePath("/requests");
-  revalidatePath("/admin");
+  revalidatePath("/studio");
 }
 
 /** Confirms the browser upload landed in the bucket and is within the cap. */
@@ -71,6 +74,19 @@ async function verifyUpload(
   return { ok: true, size };
 }
 
+/**
+ * Teacher notification hook for school-project prints. Email is switched off
+ * for this deployment (students can't receive external mail and staff see the
+ * job in the Studio Admin with "FOR MS. X · FREE"), so this only logs. Wire a
+ * chat/webhook here if the school wants a ping.
+ */
+async function notifyTeacherOfSchoolPrint(r: PrintRequest) {
+  const t = teacherById(r.teacher);
+  console.info(
+    `[prints] school-project print for ${t?.name ?? r.teacher}: ${r.file} from ${r.name} <${r.email}>`,
+  );
+}
+
 export async function createPrintRequest(
   input: CreatePrintRequestInput,
 ): Promise<PrintActionResult> {
@@ -82,7 +98,14 @@ export async function createPrintRequest(
   const email = input.email.trim().toLowerCase();
   if (!name) return { ok: false, error: "Add your name." };
   if (!isValidEmail(email)) return { ok: false, error: "Add your KIS email." };
-  if (!isPrintGrade(input.grade)) return { ok: false, error: "Pick your grade." };
+  if (!isPrintOrigin(input.origin)) {
+    return { ok: false, error: "Tell us whether you designed it." };
+  }
+  const origin = input.origin;
+  const teacher = origin === "school" ? (input.teacher ?? "").trim() : null;
+  if (origin === "school" && !teacherById(teacher)) {
+    return { ok: false, error: "Pick the teacher it's for." };
+  }
 
   const fileName = input.fileName.trim();
   if (!fileName || !fileMatchesKind(kind, fileName)) {
@@ -94,19 +117,29 @@ export async function createPrintRequest(
           : "That file type won't print — use PDF, PNG or SVG.",
     };
   }
-  if (!isValidSize(kind, input.size)) return { ok: false, error: "Pick a size." };
 
   const is3d = kind === "3d";
-  const color = is3d ? input.color : "vinyl";
-  if (!isPrintColor(color) || (is3d && color === "vinyl")) {
-    return { ok: false, error: "Pick a filament colour." };
+  let color = "vinyl";
+  if (is3d) {
+    const colors = await getFilamentColors();
+    const chosen = colors.find((c) => c.v === input.color && c.on);
+    if (!chosen) return { ok: false, error: "Pick a filament colour that's in stock." };
+    color = chosen.v;
   }
   const qty = is3d ? 1 : Math.round(Number(input.qty) || 1);
   if (qty < 1 || qty > 50) return { ok: false, error: "Quantity must be 1–50." };
   const cut = is3d ? null : input.cut;
   if (!is3d && !isPrintCut(cut)) return { ok: false, error: "Pick a cut style." };
-  const due = input.due && /^\d{4}-\d{2}-\d{2}$/.test(input.due) ? input.due : null;
-  const notes = input.notes.trim().slice(0, 500);
+
+  // Points: server-side ledger decides whether the student can afford it.
+  const existing = await getPrintRequestsByEmail(email);
+  const ledger = ledgerFor(existing, email);
+  if (!canAfford(ledger.balance, origin)) {
+    return {
+      ok: false,
+      error: `Not enough points — you have ${ledger.balance} and a print costs 10. Ask the studio team for a top-up, or mark it as a school project.`,
+    };
+  }
 
   const supabase = await createClient();
   const upload = await verifyUpload(supabase, input.filePath.trim());
@@ -116,29 +149,28 @@ export async function createPrintRequest(
     .from("print_requests")
     .insert({
       kind,
+      origin,
+      teacher,
+      quality: 1,
+      adjust: 0,
       name,
       email,
-      grade: input.grade,
       file_name: fileName,
       file_path: input.filePath.trim(),
       file_size: upload.size,
       color,
-      size: input.size,
       qty,
       cut,
-      due,
-      notes,
       status: 0,
     })
     .select("*")
     .single();
 
   if (error) return { ok: false, error: error.message };
+  const request = normalizePrintRequest(data as Record<string, unknown>);
+  if (request.origin === "school") await notifyTeacherOfSchoolPrint(request);
   revalidatePrints();
-  return {
-    ok: true,
-    request: normalizePrintRequest(data as Record<string, unknown>),
-  };
+  return { ok: true, request };
 }
 
 /** Students may cancel only their own job and only while it is RECEIVED. */
@@ -182,8 +214,10 @@ export async function cancelPrintRequest(
 }
 
 /** Live list for the tracker — filters as the student types their email. */
-export async function listPrintRequests(
-  email: string,
-): Promise<PrintRequest[]> {
+export async function listPrintRequests(email: string): Promise<PrintRequest[]> {
   return getPrintRequestsByEmail(email);
+}
+
+export async function listFilamentColors(): Promise<FilamentColor[]> {
+  return getFilamentColors();
 }

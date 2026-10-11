@@ -20,7 +20,6 @@ import {
   AdminWriteProvider,
   useAdminWrite,
 } from "@/components/admin/AdminWriteFeedback";
-import { AdminPrintsPanel } from "@/components/admin/AdminPrintsPanel";
 import { AdminProjectsPanel } from "@/components/admin/AdminProjectsPanel";
 import { AdminWednesdaysPanel } from "@/components/admin/AdminWednesdaysPanel";
 import { AreasPanel } from "@/components/admin/AreasPanel";
@@ -35,7 +34,6 @@ import { dueBackLabel } from "@/lib/reservation-availability";
 import type {
   EquipmentWithUnits,
   ItemRequest,
-  PrintRequest,
   Reservation,
   SpaceBlock,
   SpaceBooking,
@@ -54,10 +52,9 @@ type AdminDashboardProps = {
   areas: Area[];
   studentProjects: StudentProject[];
   wednesdayEntries: WednesdayEntry[];
-  printRequests: PrintRequest[];
 };
 
-type Tab = "space" | "items" | "projects" | "wednesdays" | "prints";
+type Tab = "space" | "items" | "projects" | "wednesdays";
 
 const fieldLabel =
   "font-mono text-[10.5px] tracking-[0.16em] text-[#6d6759]";
@@ -82,7 +79,6 @@ function AdminDashboardInner({
   areas,
   studentProjects,
   wednesdayEntries,
-  printRequests,
 }: AdminDashboardProps) {
   const router = useRouter();
   const askConfirm = useConfirm();
@@ -146,11 +142,6 @@ function AdminDashboardInner({
     }
     return map;
   }, [reservations]);
-
-  const openPrintCount = useMemo(
-    () => printRequests.filter((r) => r.status < 3).length,
-    [printRequests],
-  );
 
   const pendingSpaceCount = useMemo(
     () =>
@@ -281,30 +272,6 @@ function AdminDashboardInner({
             </span>
           )}
         </button>
-        <button
-          type="button"
-          onClick={() => setTab("prints")}
-          className="flex items-center gap-2 rounded-full px-5 py-2.5 text-[14.5px] font-semibold transition-colors"
-          style={{
-            background: tab === "prints" ? "#141414" : "#fff",
-            color: tab === "prints" ? "#fff" : "#6d6759",
-            border: `1px solid ${tab === "prints" ? "#141414" : "#e3e0d8"}`,
-          }}
-        >
-          Print requests
-          {openPrintCount > 0 && (
-            <span
-              className="rounded-full px-[7px] py-0.5 font-mono text-[10.5px]"
-              style={{
-                background:
-                  tab === "prints" ? "rgba(255,255,255,0.15)" : "#eeece5",
-                color: tab === "prints" ? "#fff" : "#6d6759",
-              }}
-            >
-              {openPrintCount}
-            </span>
-          )}
-        </button>
       </div>
 
       {message && (
@@ -347,12 +314,6 @@ function AdminDashboardInner({
         />
       )}
 
-      {tab === "prints" && (
-        <AdminPrintsPanel
-          requests={printRequests}
-          onDone={() => router.refresh()}
-        />
-      )}
 
       {tab === "items" && (
         <>

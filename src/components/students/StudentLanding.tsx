@@ -1,82 +1,49 @@
-import Link from "next/link";
-import { DiamondRow, Motif, type MotifName } from "@/components/students/Motif";
+"use client";
 
-const STEPS: {
-  n: string;
-  title: string;
-  body: string;
-  motif: MotifName;
-  delay: number;
-  speed: number;
-}[] = [
-  {
-    n: "01",
-    title: "Design it",
-    body: "A 3D model (.STL/.3MF), or poster and sticker artwork (PDF, PNG, SVG).",
-    motif: "cube",
-    delay: 0,
-    speed: 25,
-  },
-  {
-    n: "02",
-    title: "Send the file",
-    body: "Fill in the short request form. Pick a colour, a size — or how many stickers.",
-    motif: "file",
-    delay: 300,
-    speed: 25,
-  },
-  {
-    n: "03",
-    title: "We make it",
-    body: "3D prints go slicing → printing; vinyl goes printing → cutting. Follow along on your list.",
-    motif: "smallPrinter",
-    delay: 600,
-    speed: 20,
-  },
-  {
-    n: "04",
-    title: "Collect it",
-    body: "My requests shows READY when it's done. Pick up at the Creativity Space.",
-    motif: "check",
-    delay: 900,
-    speed: 40,
-  },
+import Link from "next/link";
+import { useLocale } from "@/components/students/Locale";
+import { DiamondRow, Motif, type MotifName } from "@/components/students/Motif";
+import { RANKS, rankFor, type LeaderRow } from "@/lib/ledger";
+
+const STEP_MOTIFS: { motif: MotifName; delay: number; speed: number }[] = [
+  { motif: "cube", delay: 0, speed: 25 },
+  { motif: "file", delay: 300, speed: 25 },
+  { motif: "smallPrinter", delay: 600, speed: 20 },
+  { motif: "check", delay: 900, speed: 40 },
 ];
 
-export function StudentLanding() {
+type Props = { board: LeaderRow[]; showLeaderboard: boolean };
+
+export function StudentLanding({ board, showLeaderboard }: Props) {
+  const { t } = useLocale();
+  const L = t.landing;
+  const showBoard = showLeaderboard && board.length >= 3;
   return (
     <>
       <section className="st-grid-hero st-gutter pt-14 pb-9">
         <div className="st-fadeup">
-          <p className="st-mono text-[11px] tracking-[0.2em] text-[#b5342c]">
-            × MAKE · BUILD · PRINT ×
-          </p>
+          <p className="st-mono text-[11px] tracking-[0.2em] text-[#b5342c]">{L.eyebrow}</p>
           <h1
             className="mt-3.5 text-[clamp(42px,6vw,76px)] leading-[1.02] font-semibold tracking-[-0.01em]"
             style={{ textWrap: "balance" }}
           >
-            Stitch your idea into something real.
+            {L.headline}
           </h1>
           <p
             className="mt-[18px] max-w-[520px] text-[20px] leading-[1.5] text-[#5e5047]"
             style={{ textWrap: "pretty" }}
           >
-            The Creativity Space prints student work every week — 3D models,
-            posters, and vinyl stickers cut to shape. Send us your file and
-            we&apos;ll tell you when it&apos;s ready to collect.
+            {L.body}
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link href="/print?kind=3d" className="st-btn st-btn-red !text-[#fbf6ee]">
-              REQUEST A 3D PRINT →
+              {L.btn3d}
             </Link>
-            <Link
-              href="/print?kind=sticker"
-              className="st-btn st-btn-ink !text-[#fbf6ee]"
-            >
-              POSTERS &amp; STICKERS →
+            <Link href="/print?kind=sticker" className="st-btn st-btn-ink !text-[#fbf6ee]">
+              {L.btnVinyl}
             </Link>
             <Link href="/requests" className="st-btn st-btn-outline">
-              CHECK MY PRINTS
+              {L.btnTrack}
             </Link>
           </div>
         </div>
@@ -96,29 +63,21 @@ export function StudentLanding() {
       <DiamondRow />
 
       <section className="st-gutter pt-9 pb-5">
-        <p className="st-mono text-[11px] tracking-[0.2em] text-[#8c7a68]">
-          HOW IT WORKS · ЯК ЦЕ ПРАЦЮЄ
-        </p>
+        <p className="st-mono text-[11px] tracking-[0.2em] text-[#8c7a68]">{L.how}</p>
         <div className="st-grid-steps mt-[18px]">
-          {STEPS.map((st, i) => (
-            <article
-              key={st.n}
-              className="st-step-card"
-              style={{ animationDelay: `${i * 0.08}s` }}
-            >
+          {L.steps.map((st, i) => (
+            <article key={st.n} className="st-step-card" style={{ animationDelay: `${i * 0.08}s` }}>
               <div className="flex items-center justify-between">
-                <span className="st-mono text-[11px] tracking-[0.14em] text-[#b5342c]">
-                  {st.n}
-                </span>
-                <Motif name={st.motif} cell={5} delay={st.delay} speed={st.speed} />
+                <span className="st-mono text-[11px] tracking-[0.14em] text-[#b5342c]">{st.n}</span>
+                <Motif
+                  name={STEP_MOTIFS[i].motif}
+                  cell={5}
+                  delay={STEP_MOTIFS[i].delay}
+                  speed={STEP_MOTIFS[i].speed}
+                />
               </div>
-              <h2 className="mt-2.5 text-[25px] leading-[1.15] font-semibold">
-                {st.title}
-              </h2>
-              <p
-                className="mt-2 text-[16.5px] leading-[1.5] text-[#5e5047]"
-                style={{ textWrap: "pretty" }}
-              >
+              <h2 className="mt-2.5 text-[25px] leading-[1.15] font-semibold">{st.title}</h2>
+              <p className="mt-2 text-[16.5px] leading-[1.5] text-[#5e5047]" style={{ textWrap: "pretty" }}>
                 {st.body}
               </p>
             </article>
@@ -126,29 +85,92 @@ export function StudentLanding() {
         </div>
       </section>
 
+      {/* rushnyk teaser */}
+      <section
+        className="st-grid-rules st-fadeup mx-[5vw] mt-6 border border-[#e9dfd0] bg-white px-7 py-6"
+        style={{ animationDelay: ".2s", animationDuration: ".5s" }}
+      >
+        <div>
+          <p className="st-mono text-[11px] tracking-[0.2em] text-[#b5342c]">{L.teaserEyebrow}</p>
+          <h2 className="mt-2 text-[30px] leading-[1.15] font-semibold">{L.teaserTitle}</h2>
+          <p className="mt-2 text-[17px] leading-[1.5] text-[#5e5047]" style={{ textWrap: "pretty" }}>
+            {L.teaserBody}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-end justify-center gap-[18px]">
+          {RANKS.map((rk, i) => (
+            <div key={rk.key} className="flex flex-col items-center gap-2">
+              <Motif
+                name={rk.band}
+                cell={4}
+                color={i % 2 ? "#2a211c" : "#b5342c"}
+                delay={600 + i * 300}
+                speed={12}
+              />
+              <span className="st-mono text-center text-[8.5px] tracking-[0.1em] text-[#8c7a68]">
+                {t.track.ranks[i].short}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {showBoard && (
+        <section
+          className="st-fadeup mx-[5vw] mt-6 border border-[#e9dfd0] bg-white px-7 py-6"
+          style={{ animationDelay: ".25s", animationDuration: ".5s" }}
+        >
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <p className="st-mono text-[11px] tracking-[0.2em] text-[#b5342c]">{L.boardEyebrow}</p>
+            <p className="st-mono text-[9.5px] tracking-[0.1em] text-[#8c7a68]">{L.boardMeta(board.length)}</p>
+          </div>
+          <div className="mt-4 grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+            {board.map((b, i) => {
+              const ri = rankFor(b.earned);
+              return (
+                <div
+                  key={b.email}
+                  className="flex items-center gap-3.5 border border-[#e9dfd0] px-3.5 py-3"
+                  style={{ background: i === 0 ? "#fbf6ee" : "#fff" }}
+                >
+                  <span
+                    className="st-mono min-w-[28px] text-[22px] font-bold"
+                    style={{ color: i === 0 ? "#b5342c" : "#c9b9a1" }}
+                  >
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[19px] font-semibold">{b.name}</p>
+                    <p className="st-mono mt-0.5 text-[9px] tracking-[0.1em] text-[#8c7a68]">
+                      {L.boardRow(t.track.ranks[ri].short, b.earned, b.own)}
+                    </p>
+                  </div>
+                  <Motif
+                    name={RANKS[ri].band}
+                    cell={3}
+                    color={i === 0 ? "#b5342c" : "#c9b9a1"}
+                    delay={i * 150}
+                    speed={10}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       <section className="st-grid-rules mx-[5vw] mt-6 mb-14 bg-[#2a211c] px-[30px] py-7 text-[#fbf6ee]">
         <div>
-          <p className="st-mono text-[11px] tracking-[0.2em] text-[#e2b1ab]">
-            BEFORE YOU SEND
-          </p>
-          <h2 className="mt-2 text-[30px] leading-[1.15] font-semibold">
-            Three small things that make prints succeed
-          </h2>
+          <p className="st-mono text-[11px] tracking-[0.2em] text-[#e2b1ab]">{L.rulesEyebrow}</p>
+          <h2 className="mt-2 text-[30px] leading-[1.15] font-semibold">{L.rulesTitle}</h2>
         </div>
         <ul className="flex flex-col gap-2.5 text-[17.5px] leading-[1.45]">
-          <li className="flex gap-3">
-            <span className="st-mono text-[#e2b1ab]">×</span>
-            3D models: export .STL or .3MF, under 18 cm on every side.
-          </li>
-          <li className="flex gap-3">
-            <span className="st-mono text-[#e2b1ab]">×</span>
-            Posters &amp; stickers: a PDF, PNG or SVG at full size — SVG with a
-            clean outline cuts best.
-          </li>
-          <li className="flex gap-3">
-            <span className="st-mono text-[#e2b1ab]">×</span>
-            Give us at least a week — big prints take a whole night.
-          </li>
+          {L.rules.map((rule) => (
+            <li key={rule} className="flex gap-3">
+              <span className="st-mono text-[#e2b1ab]">×</span>
+              {rule}
+            </li>
+          ))}
         </ul>
       </section>
     </>

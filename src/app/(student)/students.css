@@ -47,7 +47,7 @@
 }
 
 .st-mono {
-  font-family: var(--font-space-mono), "Space Mono", ui-monospace, monospace;
+  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
 }
 
 .st-gutter {
@@ -118,12 +118,15 @@
   animation: st-drift 24s linear infinite;
 }
 
+/* Mono stack note: the literal "Space Mono" family (registered by next/font)
+   is used instead of its CSS variable so the synthetic "Space Mono Fallback"
+   never supplies Cyrillic glyphs — Plex Mono does, at a matching size. */
 /* Cross-stitch motif: a CSS grid of × glyphs; each stitch animates in. */
 .st-motif {
   display: grid;
   grid-template-columns: repeat(var(--cols), var(--cell));
   line-height: var(--cell);
-  font-family: var(--font-space-mono), "Space Mono", ui-monospace, monospace;
+  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
   font-size: calc(var(--cell) * 1.25);
   font-weight: 700;
   user-select: none;
@@ -157,7 +160,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-space-mono), "Space Mono", ui-monospace, monospace;
+  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
   font-size: 12.5px;
   letter-spacing: 0.12em;
   padding: 15px 26px;
@@ -216,9 +219,35 @@
   box-shadow: 3px 3px 0 var(--st-ink);
 }
 
+/* Language switch (EN / УКР) */
+.st-lang {
+  display: inline-flex;
+  border: 1px solid var(--st-hair);
+  background: #fff;
+}
+.st-lang button {
+  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  padding: 9px 12px;
+  min-height: 38px;
+  border: 0;
+  background: transparent;
+  color: var(--st-faint);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.st-lang button:hover {
+  color: var(--st-red);
+}
+.st-lang button[aria-pressed="true"] {
+  background: var(--st-ink);
+  color: var(--st-ground);
+}
+
 /* Nav tabs */
 .st-nav-tab {
-  font-family: var(--font-space-mono), "Space Mono", ui-monospace, monospace;
+  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
   font-size: 11.5px;
   letter-spacing: 0.12em;
   padding: 9px 16px;
@@ -246,7 +275,7 @@
 
 /* Pills */
 .st-pill {
-  font-family: var(--font-space-mono), "Space Mono", ui-monospace, monospace;
+  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
   font-size: 11.5px;
   padding: 8px 12px;
   border: 1px solid var(--st-hair);
@@ -391,7 +420,7 @@
 }
 
 .st-link-red {
-  font-family: var(--font-space-mono), "Space Mono", ui-monospace, monospace;
+  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
   font-size: 10.5px;
   letter-spacing: 0.12em;
   color: var(--st-red) !important;
@@ -494,7 +523,7 @@
   left: 0;
 }
 .st-tracker-glyph {
-  font-family: var(--font-space-mono), "Space Mono", ui-monospace, monospace;
+  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
   font-size: 16px;
   line-height: 20px;
   background: #fff;
@@ -507,7 +536,7 @@
     st-sway 2.4s ease-in-out 0.6s infinite;
 }
 .st-tracker-label {
-  font-family: var(--font-space-mono), "Space Mono", ui-monospace, monospace;
+  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
   font-size: 9px;
   letter-spacing: 0.1em;
   text-align: center;
@@ -542,7 +571,7 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  font-family: var(--font-space-mono), "Space Mono", ui-monospace, monospace;
+  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
   font-size: 11.5px;
   letter-spacing: 0.1em;
   white-space: nowrap;
@@ -668,5 +697,287 @@
 @media (max-width: 359px) {
   .st-vinyl-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- v2: points, rushnyk, studio admin ---------- */
+.st-toast-undo {
+  font: inherit;
+  letter-spacing: 0.12em;
+  font-size: 11px;
+  text-decoration: underline;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  flex: none;
+}
+
+@keyframes st-burst {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.4);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) scale(1.1) rotate(90deg);
+  }
+}
+@keyframes st-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-8px);
+  }
+  40%,
+  80% {
+    transform: translateX(8px);
+  }
+}
+@keyframes st-rowflash {
+  0% {
+    background: #fdecea;
+  }
+  100% {
+    background: #fff;
+  }
+}
+.st-shake {
+  animation:
+    st-fadeup 0.3s ease both,
+    st-shake 0.4s ease;
+}
+.st-rowflash {
+  animation: st-rowflash 0.9s ease;
+}
+
+/* Origin tiles */
+.st-origin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px;
+}
+.st-origin-tile {
+  padding: 11px 14px;
+  border: 1.5px solid var(--st-hair);
+  background: #fff;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+.st-origin-tile:hover {
+  border-color: var(--st-red);
+}
+.st-origin-tile:active {
+  transform: scale(0.97);
+}
+.st-origin-tile[data-on="true"] {
+  background: var(--st-ground);
+  border-color: var(--st-ink);
+}
+.st-origin-tile[data-err="true"] {
+  border-color: var(--st-red);
+}
+.kis-students select {
+  font-family: inherit;
+  font-weight: 500;
+  color: var(--st-ink);
+  background: #fff;
+  border-radius: 0;
+}
+.kis-students select:focus {
+  outline: none;
+  border-color: var(--st-red) !important;
+}
+
+/* Rushnyk card */
+.st-rushnyk {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 20px;
+  align-items: start;
+  position: relative;
+  overflow: hidden;
+}
+.st-cloth {
+  background: var(--st-ground);
+  border: 1px solid var(--st-hair);
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.st-band {
+  transition: all 0.4s;
+}
+.st-band[data-locked="true"] {
+  opacity: 0.18;
+  filter: grayscale(1);
+}
+.st-rank-bar {
+  height: 10px;
+  background: #f1ebe0;
+  margin-top: 6px;
+  position: relative;
+  overflow: hidden;
+}
+.st-rank-bar > span {
+  display: block;
+  height: 100%;
+  background: repeating-linear-gradient(45deg, #b5342c 0 4px, #d9574e 4px 8px);
+  transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.st-burst {
+  position: absolute;
+  inset: -20px;
+  pointer-events: none;
+}
+.st-burst > span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  font-family: var(--font-space-mono), var(--font-plex-mono), "Space Mono", ui-monospace, monospace;
+  font-weight: 700;
+  animation: st-burst 1.4s ease-out both;
+}
+
+/* Studio admin */
+.st-band-ink {
+  background-image:
+    repeating-linear-gradient(45deg, var(--st-ink) 0 2px, transparent 2px 8px),
+    repeating-linear-gradient(-45deg, var(--st-ink) 0 2px, transparent 2px 8px);
+}
+.st-seg {
+  display: flex;
+  flex: none;
+  border: 1px solid var(--st-hair);
+}
+.st-seg > button {
+  font-family: var(--font-space-mono), var(--font-plex-mono), "Space Mono", ui-monospace, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  padding: 7px 11px;
+  cursor: pointer;
+  user-select: none;
+  border: 0;
+  background: #fff;
+  color: var(--st-dis);
+  transition: all 0.15s;
+  min-height: 32px;
+}
+.st-seg > button:hover {
+  color: var(--st-ink);
+}
+.st-star {
+  font-family: var(--font-space-mono), var(--font-plex-mono), "Space Mono", ui-monospace, monospace;
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  background: none;
+  border: 0;
+  padding: 2px 3px;
+  transition: color 0.15s;
+}
+.st-star:hover {
+  color: var(--st-red) !important;
+}
+.st-ghost-btn {
+  font-family: var(--font-space-mono), var(--font-plex-mono), "Space Mono", ui-monospace, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  border: 1px solid var(--st-hair);
+  background: #fff;
+  padding: 6px 10px;
+  cursor: pointer;
+  user-select: none;
+  color: var(--st-muted);
+  flex: none;
+  transition: all 0.15s;
+}
+.st-ghost-btn:hover {
+  border-color: var(--st-ink);
+  color: var(--st-ink);
+}
+.st-colour-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px 7px 8px;
+  border: 1.5px solid var(--st-hair);
+  background: #fff;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s;
+}
+.st-colour-chip:hover {
+  border-color: var(--st-red);
+}
+.st-colour-chip[data-on="true"] {
+  border-color: var(--st-ink);
+}
+.st-colour-chip[data-on="false"] {
+  background: var(--st-ground);
+  opacity: 0.7;
+}
+.st-colour-chip[data-on="false"] .st-colour-label {
+  text-decoration: line-through;
+  color: var(--st-faint);
+}
+.st-colour-x {
+  font-size: 15px;
+  line-height: 1;
+  color: var(--st-dis);
+  padding-left: 2px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.st-colour-x:hover {
+  color: var(--st-red);
+}
+.st-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(42, 33, 28, 0.45);
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.st-confirm {
+  background: var(--st-ground);
+  border: 1.5px solid var(--st-ink);
+  padding: 24px 26px;
+  width: 420px;
+  max-width: 100%;
+  box-shadow: 8px 8px 0 var(--st-red);
+  animation: st-fadeup 0.25s ease both;
+}
+
+@media (max-width: 699px) {
+  .st-origin-grid {
+    grid-template-columns: 1fr;
+  }
+  .st-rushnyk {
+    grid-template-columns: 72px 1fr;
+    gap: 14px;
+  }
+  .st-cloth {
+    --cell: 4px;
   }
 }

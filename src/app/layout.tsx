@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Space_Grotesk, Space_Mono } from "next/font/google";
+import {
+  Cormorant_Garamond,
+  IBM_Plex_Mono,
+  Space_Grotesk,
+  Space_Mono,
+} from "next/font/google";
 import { ConfirmProvider } from "@/components/ConfirmDialog";
 import "./globals.css";
+import "./(student)/students.css";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -13,6 +19,15 @@ const spaceMono = Space_Mono({
   variable: "--font-space-mono",
   subsets: ["latin", "latin-ext", "vietnamese"],
   weight: ["400", "700"],
+});
+
+// Space Mono has no Cyrillic glyphs; Plex Mono steps in per-glyph at a
+// matching size so "ДЛЯ УЧНІВ" sits on the same line as "FOR STUDENTS".
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
+  subsets: ["cyrillic", "latin"],
+  weight: ["400", "700"],
+  display: "swap",
 });
 
 const cormorant = Cormorant_Garamond({
@@ -37,7 +52,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${spaceGrotesk.variable} ${spaceMono.variable} ${cormorant.variable} h-full`}
+      className={`${spaceGrotesk.variable} ${spaceMono.variable} ${plexMono.variable} ${cormorant.variable} h-full`}
     >
       <body className="min-h-full font-sans">
         <ConfirmProvider>

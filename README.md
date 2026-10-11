@@ -9,7 +9,8 @@ Next.js site for the KIS school makerspace: the public **student print site** (3
 | `/` | **Student print site** landing (cross-stitch theme) |
 | `/print` | Request a 3D print, poster or stickers — email only, no password |
 | `/requests` | Track your jobs (RECEIVED → … → READY), cancel while RECEIVED |
-| `/admin` | Staff: Space · Items & inventory · Projects · Wednesdays · **Print requests** |
+| `/studio` | **Studio Admin** (same folk aesthetic): password gate, print queue, origin / quality / stage / top-up controls, filament colours on offer |
+| `/admin` | Teacher-platform admin (Space · Items & inventory · Projects · Wednesdays) — out of scope for the print site, kept for the Flutter-backed tools |
 
 ## Setup
 
@@ -20,7 +21,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Run all migrations in `supabase/migrations/` in the Supabase SQL editor (through **022** for student print requests — it also creates the `print-files` storage bucket).
+Run all migrations in `supabase/migrations/` in the Supabase SQL editor (through **023**: `022` creates `print_requests` and the `print-files` storage bucket, `023` adds the points economy columns and `filament_colors`).
 
 ### Admin access
 
@@ -40,19 +41,11 @@ See `.env.example` for Supabase variables.
 
 ## Student print site
 
-- Students request 3D prints, vinyl posters and die-cut stickers at `/print`, identified by email only (`kis-student-email` session key). Files upload from the browser straight into the public-read `print-files` bucket; the `createPrintRequest` server action then checks the extension per kind (`.stl/.3mf/.obj` · `.pdf/.png/.jpg/.svg` · `.svg/.pdf/.png`), the 50 MB cap and inserts the row.
+- Students request 3D prints, vinyl posters and die-cut stickers at `/print`, identified by email only (`kis-student-email` session key). Files upload from the browser straight into the public-read `print-files` bucket; the `createPrintRequest` server action then checks the extension per kind (`.stl/.3mf/.obj` · `.pdf/.png/.jpg/.svg` · `.svg/.pdf/.png`), the 50 MB cap, the balance, and inserts the row.
 - Stage lists — 3D: RECEIVED → SLICING → PRINTING → READY · poster/sticker: RECEIVED → PRINTING → CUTTING → READY. `status` is the index into the kind's list.
-- Status changes are admin-only (RLS requires a teacher session; web admin + Flutter admin). Students may cancel only while RECEIVED. There is no email: students check the tracker, which shows READY (with a collect notice) and polls while open.
+- **Points economy** lives in one module, `src/lib/ledger.ts`, used by the form, the tracker, the Studio Admin and the server actions (mirrored in the Flutter app's `lib/data/ledger.dart`): start 30, each print costs 10, school-project prints are free (and need a teacher from `src/lib/teachers.ts`), own designs earn 15 + quality bonus (20 / 25 / 30) when READY, found files earn 0. `balance = 30 − 10 × non-free prints + Σ earn(READY) + Σ adjust`; `stitches = Σ earn(READY)` drives the rank (Thread 0 · Needle 15 · Stitcher 40 · Weaver 80 · Master Embroiderer 150) and the rushnyk bands on `/requests`. Level-ups fire the next time the student opens the tracker (`kis-last-rank:<email>` in `localStorage`).
+- **Studio Admin** at `/studio`: `STUDIO_ADMIN_PW` gates it (HMAC cookie, 12 h); mutations (stage, origin, quality, +10 top-up, remove/restore, colours) run through the service-role client, so `SUPABASE_SECRET_KEY` must be set. Students may cancel only while RECEIVED. The Flutter admin uses its teacher session instead (RLS).
+- No email is sent: students check the tracker, which shows READY with a collect notice and polls while open. The school-project teacher notification is a logging hook in `src/app/actions/prints.ts` (`notifyTeacherOfSchoolPrint`) — plug a webhook in there if wanted.
+- The landing leaderboard is built but hidden: `NEXT_PUBLIC_SHOW_LEADERBOARD=1` shows it once ≥ 3 students have earned stitches.
+- The site is bilingual: an EN / УКР switch in the nav (remembered in `localStorage`, defaults to Ukrainian for `uk` browsers). All student copy lives in `src/lib/i18n.ts`; the Studio Admin stays English. Space Mono has no Cyrillic, so IBM Plex Mono is loaded as the per-glyph fallback.
 - The student site is the whole public site. The black teacher header now appears only on `/admin`; the public chrome is Cormorant Garamond + Space Mono with the cross-stitch `×` motifs (see `src/components/students/Motif.tsx`).
-
-## Design notes
-
-- Background: white (`#ffffff`)
-- Accent: `#c8102e` / black `#141414`
-- Body `#3f3b33` · secondary `#6d6759` · faint `#98917f`
-- Type: Space Grotesk + Space Mono
-- Inventory uses `quantity_available` + `quantity_total`; serials in `equipment_units`
-- Space bookings live in `space_bookings` (`pending → confirmed | declined | cancelled`); item reservations stay auto-approved
-- Training sessions live in `training_sessions` (same lifecycle); space bookings + blocks constrain training (one-way — trainings do not block the space schedule)
-- Admin block periods live in `space_blocks` (one-day or weekly); striped on `/schedule`, requests rejected server-side
-- Push notifications (FCM) for space/training requests are not wired yet — confirm/decline syncs over Supabase realtime in the app

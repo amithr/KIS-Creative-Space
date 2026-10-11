@@ -38,6 +38,9 @@ export function Header() {
         </Link>
 
         <nav className="flex shrink-0 items-stretch">
+          <Link href="/studio" className={panelBase}>
+            Print queue
+          </Link>
           <Link href="/" className={panelBase}>
             Student site
           </Link>

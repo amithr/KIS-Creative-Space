@@ -3,27 +3,35 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { LocaleProvider, useLocale } from "@/components/students/Locale";
 import { DiamondRow, Motif } from "@/components/students/Motif";
 import { StudentToastProvider } from "@/components/students/StudentToast";
 
-const TABS = [
-  { href: "/", label: "HOME", match: (p: string) => p === "/" },
-  {
-    href: "/print",
-    label: "PRINT REQUEST",
-    match: (p: string) => p.startsWith("/print"),
-  },
-  {
-    href: "/requests",
-    label: "MY REQUESTS",
-    match: (p: string) => p.startsWith("/requests"),
-  },
-] as const;
-
 export function StudentShell({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
   return (
-    <StudentToastProvider>
+    <LocaleProvider>
+      <StudentToastProvider>
+        <ShellInner>{children}</ShellInner>
+      </StudentToastProvider>
+    </LocaleProvider>
+  );
+}
+
+function ShellInner({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const { t, lang, setLang } = useLocale();
+  const tabs = [
+    { href: "/", label: t.nav.home, active: pathname === "/" },
+    { href: "/print", label: t.nav.print, active: pathname.startsWith("/print") },
+    {
+      href: "/requests",
+      label: t.nav.track,
+      active: pathname.startsWith("/requests"),
+    },
+  ];
+
+  return (
+    <>
       <div className="st-band" aria-hidden />
 
       <header className="st-gutter flex flex-wrap items-center justify-between gap-4 border-b border-[#e9dfd0] py-[18px]">
@@ -39,22 +47,40 @@ export function StudentShell({ children }: { children: ReactNode }) {
               KIS Creativity Space
             </span>
             <span className="st-mono mt-1 block text-[10px] tracking-[0.18em] text-[#8c7a68]">
-              FOR STUDENTS · ДЛЯ УЧНІВ
+              {t.brandSub}
             </span>
           </span>
         </Link>
-        <nav className="flex flex-wrap gap-1.5" aria-label="Student site">
-          {TABS.map((t) => (
+        <nav className="flex flex-wrap items-center gap-1.5" aria-label="Site">
+          {tabs.map((tab) => (
             <Link
-              key={t.href}
-              href={t.href}
+              key={tab.href}
+              href={tab.href}
               className="st-nav-tab"
-              data-active={t.match(pathname)}
-              aria-current={t.match(pathname) ? "page" : undefined}
+              data-active={tab.active}
+              aria-current={tab.active ? "page" : undefined}
             >
-              {t.label}
+              {tab.label}
             </Link>
           ))}
+          <div className="st-lang ml-1" role="group" aria-label={t.langLabel}>
+            <button
+              type="button"
+              aria-pressed={lang === "en"}
+              onClick={() => setLang("en")}
+              lang="en"
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              aria-pressed={lang === "uk"}
+              onClick={() => setLang("uk")}
+              lang="uk"
+            >
+              УКР
+            </button>
+          </div>
         </nav>
       </header>
 
@@ -63,15 +89,12 @@ export function StudentShell({ children }: { children: ReactNode }) {
       <footer className="mt-auto">
         <DiamondRow className="!py-1" />
         <div className="st-gutter flex flex-wrap justify-between gap-3 border-t border-[#e9dfd0] py-4 text-[16px] text-[#8c7a68]">
-          <span>
-            KIS Creativity Space · prints run Tuesday–Thursday · collect within
-            a week
-          </span>
+          <span>{t.footer}</span>
           <span className="st-mono text-[10.5px] tracking-[0.14em]">
-            ТВОРЧИЙ ПРОСТІР
+            {t.footerMark}
           </span>
         </div>
       </footer>
-    </StudentToastProvider>
+    </>
   );
 }

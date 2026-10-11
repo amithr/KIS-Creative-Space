@@ -10,11 +10,12 @@ import {
 } from "react";
 
 type Tone = "ok" | "err";
-type Toast = { msg: string; tone: Tone };
+type ToastOpts = { tone?: Tone; undo?: () => void | Promise<void> };
+type Toast = { msg: string; tone: Tone; undo: (() => void | Promise<void>) | null };
 
-type Ctx = { toast: (msg: string, tone?: Tone) => void };
+export type ToastFn = (msg: string, opts?: Tone | ToastOpts) => void;
 
-const StudentToastContext = createContext<Ctx | null>(null);
+const StudentToastContext = createContext<{ toast: ToastFn } | null>(null);
 
 export function useStudentToast() {
   const ctx = useContext(StudentToastContext);
@@ -22,15 +23,16 @@ export function useStudentToast() {
   return ctx.toast;
 }
 
-/** Fixed bottom-centre toast: ink for info, red for errors, ~3.2s. */
+/** Fixed bottom-centre toast: ink for info, red for errors; UNDO keeps it 4.8s. */
 export function StudentToastProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<Toast | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const show = useCallback((msg: string, tone: Tone = "ok") => {
+  const show = useCallback<ToastFn>((msg, opts) => {
+    const o: ToastOpts = typeof opts === "string" ? { tone: opts } : (opts ?? {});
     if (timer.current) clearTimeout(timer.current);
-    setToast({ msg, tone });
-    timer.current = setTimeout(() => setToast(null), 3200);
+    setToast({ msg, tone: o.tone ?? "ok", undo: o.undo ?? null });
+    timer.current = setTimeout(() => setToast(null), o.undo ? 4800 : 3200);
   }, []);
 
   return (
@@ -43,6 +45,20 @@ export function StudentToastProvider({ children }: { children: ReactNode }) {
           style={{ background: toast.tone === "err" ? "#b5342c" : "#2a211c" }}
         >
           <span>{toast.msg}</span>
+          {toast.undo && (
+            <button
+              type="button"
+              className="st-toast-undo"
+              onClick={() => {
+                const fn = toast.undo;
+                if (timer.current) clearTimeout(timer.current);
+                setToast(null);
+                void fn?.();
+              }}
+            >
+              UNDO
+            </button>
+          )}
         </div>
       )}
     </StudentToastContext.Provider>

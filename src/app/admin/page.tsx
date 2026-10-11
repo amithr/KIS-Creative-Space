@@ -5,7 +5,6 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { LoginForm } from "@/components/admin/LoginForm";
 import {
   getActiveReservations,
-  getAdminPrintRequests,
   getAdminSpaceBookings,
   getAdminTrainingSessions,
   getAreas,
@@ -56,7 +55,6 @@ export default async function AdminPage({ searchParams }: PageProps) {
     areas,
     studentProjects,
     wednesdayEntries,
-    printRequests,
   ] = await Promise.all([
     getEquipmentWithUnits(),
     getActiveReservations(),
@@ -70,7 +68,6 @@ export default async function AdminPage({ searchParams }: PageProps) {
       wednesdayHorizonIso().from,
       wednesdayHorizonIso().to,
     ),
-    getAdminPrintRequests(),
   ]);
 
   return (
@@ -85,7 +82,6 @@ export default async function AdminPage({ searchParams }: PageProps) {
         areas={areas}
         studentProjects={studentProjects}
         wednesdayEntries={wednesdayEntries}
-        printRequests={printRequests}
       />
     </AdminShell>
   );
