@@ -299,7 +299,7 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
               aria-selected={filter === v}
               onClick={() => setFilter(v)}
               className="st-nav-tab !text-[11px] !tracking-[0.1em]"
-              style={sel(filter === v)}
+              style={{ ...sel(filter === v), minHeight: 40 }}
             >
               {l}
             </button>
@@ -374,7 +374,7 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
             <button
               type="button"
               onClick={addColor}
-              className={`${mono} bg-[#2a211c] px-2.5 py-[7px] text-[10px] tracking-[0.1em] text-[#fbf6ee] hover:bg-[#b5342c]`}
+              className={`${mono} min-h-[40px] bg-[#2a211c] px-2.5 py-[7px] text-[10px] tracking-[0.1em] text-[#fbf6ee] hover:bg-[#b5342c]`}
             >
               + ADD
             </button>
@@ -540,7 +540,7 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
                   </button>
                   <button
                     type="button"
-                    className="st-cancel !text-[20px] !text-[#c9b9a1]"
+                    className="st-cancel min-h-[40px] min-w-[40px] !text-[20px] !text-[#c9b9a1]"
                     title="Remove request"
                     aria-label={`Remove ${r.file}`}
                     onClick={() =>

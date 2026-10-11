@@ -38,7 +38,7 @@
   outline: none;
   border-color: var(--st-red) !important;
 }
-.kis-students button {
+.kis-students :where(button) {
   font-family: inherit;
   border-radius: 0;
 }
@@ -875,7 +875,8 @@
   background: #fff;
   color: var(--st-dis);
   transition: all 0.15s;
-  min-height: 32px;
+  /* Handoff: hit targets >= 40px on every segment and pill. */
+  min-height: 40px;
 }
 .st-seg > button:hover {
   color: var(--st-ink);
@@ -890,6 +891,8 @@
   background: none;
   border: 0;
   padding: 2px 3px;
+  min-width: 24px;
+  min-height: 40px;
   transition: color 0.15s;
 }
 .st-star:hover {
@@ -906,6 +909,7 @@
   user-select: none;
   color: var(--st-muted);
   flex: none;
+  min-height: 40px;
   transition: all 0.15s;
 }
 .st-ghost-btn:hover {
@@ -921,6 +925,7 @@
   background: #fff;
   cursor: pointer;
   user-select: none;
+  min-height: 40px;
   transition: all 0.15s;
 }
 .st-colour-chip:hover {
@@ -941,7 +946,11 @@
   font-size: 15px;
   line-height: 1;
   color: var(--st-dis);
-  padding-left: 2px;
+  padding: 0 2px 0 4px;
+  min-width: 24px;
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
   background: none;
   border: 0;
   cursor: pointer;
