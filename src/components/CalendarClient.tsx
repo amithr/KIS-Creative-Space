@@ -63,6 +63,8 @@ export function CalendarClient({
   const now = startOfDay(new Date());
   const dates = useMemo(() => weekDays(weekIndex, now), [weekIndex, now]);
   const todayIso = toISODate(now);
+  const allNoSchool = dates.every((d) => !isSchoolDay(toISODate(d)));
+  const canJumpAhead = weekIndex < 2;
 
   function changeWeek(next: number) {
     setWeekIndex(next);
@@ -115,6 +117,21 @@ export function CalendarClient({
           />
         </div>
       </section>
+
+      {allNoSchool && (
+        <div className="page-gutter mt-3.5 flex flex-wrap items-center gap-3.5 border border-dashed border-[#d5d1c8] bg-[#faf9f5] px-[18px] py-3.5 text-[14px] text-[#6d6759]">
+          No school this week — the studio is closed.
+          {canJumpAhead && (
+            <button
+              type="button"
+              onClick={() => changeWeek(weekIndex + 1)}
+              className="font-semibold text-[#c8102e] hover:underline"
+            >
+              Jump to next week →
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="page-gutter mb-4 flex gap-1.5 overflow-x-auto pb-1 md:hidden">
         {dates.map((d, i) => {

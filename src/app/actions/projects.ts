@@ -200,12 +200,14 @@ export async function signInTeacherPortal(
   }
   await setTeacherPortalSession(email.trim());
   revalidatePath("/projects");
+  revalidatePath("/wednesdays");
   return { ok: true };
 }
 
 export async function signOutTeacherPortal(): Promise<void> {
   await clearTeacherPortalSession();
   revalidatePath("/projects");
+  revalidatePath("/wednesdays");
 }
 
 /** Lazy-generate editKey for the signed-in owner. */

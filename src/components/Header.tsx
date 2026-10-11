@@ -24,6 +24,11 @@ const NAV = [
     match: (p: string) => p.startsWith("/training"),
   },
   {
+    href: "/wednesdays",
+    label: "Wednesdays",
+    match: (p: string) => p.startsWith("/wednesdays"),
+  },
+  {
     href: "/projects",
     label: "Projects",
     match: (p: string) => p.startsWith("/projects"),
@@ -41,12 +46,16 @@ export function Header() {
     pathname.startsWith("/calendar") ||
     pathname.startsWith("/schedule") ||
     pathname.startsWith("/training") ||
+    pathname.startsWith("/wednesdays") ||
     pathname.startsWith("/projects");
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     setMenuOpen(false);
   }, [pathname]);
+
+  // The student print site has its own cross-stitch chrome.
+  if (pathname.startsWith("/students")) return null;
 
   return (
     <header className="sticky top-0 z-50 no-print">
@@ -71,9 +80,11 @@ export function Header() {
                         ? "CALENDAR"
                         : pathname.startsWith("/schedule")
                           ? "SCHEDULE"
-                          : pathname.startsWith("/projects")
-                            ? "PROJECTS"
-                            : "TRAINING"}
+                          : pathname.startsWith("/wednesdays")
+                            ? "WEDNESDAYS"
+                            : pathname.startsWith("/projects")
+                              ? "PROJECTS"
+                              : "TRAINING"}
                     </span>
                     <span className="hidden md:inline">
                       KIS DESIGN STUDIO
@@ -128,7 +139,7 @@ export function Header() {
         )}
 
         {/* Desktop nav panels */}
-        <nav className="hidden shrink-0 items-stretch md:flex">
+        <nav className="hidden shrink-0 flex-wrap items-stretch justify-end md:flex">
           {NAV.map((item) => {
             const active = !isAdmin && item.match(pathname);
             return (

@@ -1,0 +1,15 @@
+---
+description: Design handoff rules for Wednesday Design Sessions + UX polish (KIS Creativity Space)
+alwaysApply: false
+---
+
+When implementing this package:
+
+- The spec is handoff_cursor_wednesdays_ux/README.md — data shape, copy strings, colors, and feedback patterns are exact.
+- designs/*.dc.html are HTML prototypes for behavior reference only. Never copy their markup, the DCLogic classes, or support.js.
+- The Wednesdays page uses the SAME auth as Projects (email + shared env-var password, server-checked). Any valid email is accepted; the KIS-email line is a soft note, not validation.
+- Period availability comes from the studio calendar (bookings, training, blocks honoring scope + date range) — taken periods are unselectable with the explanatory error, never silently double-booked.
+- The submit button stays disabled-grey until the live summary reads READY TO ADD ✓; every mutation (add, edit, remove — teacher or admin) gets a toast/snackbar with working UNDO.
+- Teachers may edit/remove only their own entries; admin may remove any (confirm dialog first).
+- Resources are optional free text, surfaced as ⚒ chips on both teacher and admin views so the studio can be prepped.
+- Apply the UX polish items site-wide (nav wrap, tooltips, copy fixes, calendar no-school banner) — they are part of this package.

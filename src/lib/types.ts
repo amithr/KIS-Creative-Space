@@ -169,3 +169,54 @@ export type StudentProject = {
   /** Per-project secret for teacher edit links — never send to students. */
   editKey?: string;
 };
+
+/** Teacher sign-up for a Wednesday design session. */
+export type WednesdayEntry = {
+  id: string;
+  session_date: string;
+  email: string;
+  period: number;
+  cls: string;
+  text: string;
+  resources: string | null;
+  project_id: string | null;
+  created_at: string;
+};
+
+export type PrintKind = "3d" | "poster" | "sticker";
+export type PrintColor =
+  | "red"
+  | "white"
+  | "black"
+  | "blue"
+  | "yellow"
+  | "natural"
+  | "vinyl";
+export type PrintCut = "contour" | "border" | "square";
+export type PrintGrade = "G6" | "G7" | "G8" | "G9" | "G10" | "G11" | "G12";
+
+/** Student print request (3D print, vinyl poster or die-cut stickers). */
+export type PrintRequest = {
+  id: string;
+  kind: PrintKind;
+  name: string;
+  email: string;
+  grade: PrintGrade;
+  /** Original upload filename, shown everywhere. */
+  file: string;
+  /** Object path in the `print-files` bucket; null for seeded demo rows. */
+  file_path: string | null;
+  file_size: number;
+  color: PrintColor;
+  size: string;
+  qty: number;
+  cut: PrintCut | null;
+  /** ISO date or null. */
+  due: string | null;
+  notes: string;
+  /** Index into the kind's stage list (0 RECEIVED … 3 READY). */
+  status: 0 | 1 | 2 | 3;
+  /** Epoch ms of creation. */
+  at: number;
+  ready_at: string | null;
+};

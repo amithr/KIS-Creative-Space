@@ -1,0 +1,672 @@
+/* Student print site — cross-stitch folk aesthetic. Scoped under .kis-students. */
+.kis-students {
+  --st-ground: #fbf6ee;
+  --st-ink: #2a211c;
+  --st-red: #b5342c;
+  --st-muted: #5e5047;
+  --st-faint: #8c7a68;
+  --st-hair: #e9dfd0;
+  --st-ok: #2f7d3f;
+  --st-ok-bg: #eef6ef;
+  --st-dis: #c9b9a1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  background: var(--st-ground);
+  color: var(--st-ink);
+  font-family: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  font-weight: 500;
+}
+
+.kis-students a {
+  color: var(--st-ink);
+}
+.kis-students a:hover {
+  color: var(--st-red);
+}
+.kis-students input,
+.kis-students textarea {
+  font-family: inherit;
+  font-weight: 500;
+  color: var(--st-ink);
+  background: #fff;
+  border-radius: 0;
+}
+.kis-students input:focus,
+.kis-students textarea:focus {
+  outline: none;
+  border-color: var(--st-red) !important;
+}
+.kis-students button {
+  font-family: inherit;
+  border-radius: 0;
+}
+.kis-students button:active:not(:disabled) {
+  transform: none;
+}
+
+.st-mono {
+  font-family: var(--font-space-mono), "Space Mono", ui-monospace, monospace;
+}
+
+.st-gutter {
+  padding-left: 5vw;
+  padding-right: 5vw;
+}
+
+@keyframes st-stitch {
+  0% {
+    opacity: 0;
+    transform: scale(0.2) rotate(-25deg);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.25) rotate(4deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+@keyframes st-sway {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes st-drift {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -320px 0;
+  }
+}
+@keyframes st-fadeup {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes st-toastin {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* Top stitched band: two crossed repeating gradients drifting horizontally. */
+.st-band {
+  height: 14px;
+  background-image:
+    repeating-linear-gradient(45deg, var(--st-red) 0 2px, transparent 2px 8px),
+    repeating-linear-gradient(-45deg, var(--st-red) 0 2px, transparent 2px 8px);
+  background-size: 16px 14px;
+  opacity: 0.85;
+  animation: st-drift 24s linear infinite;
+}
+
+/* Cross-stitch motif: a CSS grid of × glyphs; each stitch animates in. */
+.st-motif {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), var(--cell));
+  line-height: var(--cell);
+  font-family: var(--font-space-mono), "Space Mono", ui-monospace, monospace;
+  font-size: calc(var(--cell) * 1.25);
+  font-weight: 700;
+  user-select: none;
+}
+.st-motif > span {
+  display: block;
+  text-align: center;
+}
+.st-motif > .x {
+  animation: st-stitch 0.45s ease both;
+}
+
+.st-sway {
+  animation: st-sway 6s ease-in-out infinite;
+}
+.st-sway-7 {
+  animation: st-sway 7s ease-in-out 1s infinite;
+}
+.st-fadeup {
+  animation: st-fadeup 0.6s ease both;
+}
+.st-fadeup-4 {
+  animation: st-fadeup 0.4s ease both;
+}
+.st-fadeup-45 {
+  animation: st-fadeup 0.45s ease both;
+}
+
+/* Buttons: square corners, hard offset shadow. */
+.st-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-space-mono), "Space Mono", ui-monospace, monospace;
+  font-size: 12.5px;
+  letter-spacing: 0.12em;
+  padding: 15px 26px;
+  cursor: pointer;
+  user-select: none;
+  border: 0;
+  transition: all 0.2s;
+  text-align: center;
+}
+.st-btn-red {
+  background: var(--st-red);
+  color: var(--st-ground);
+  box-shadow: 4px 4px 0 var(--st-ink);
+}
+.st-btn-red:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--st-ink);
+}
+.st-btn-red:active {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 var(--st-ink);
+}
+.st-btn-ink {
+  background: var(--st-ink);
+  color: var(--st-ground);
+  box-shadow: 4px 4px 0 var(--st-red);
+}
+.st-btn-ink:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--st-red);
+}
+.st-btn-ink:active {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 var(--st-red);
+}
+.st-btn-outline {
+  background: transparent;
+  border: 1.5px solid var(--st-ink);
+  color: var(--st-ink);
+  padding: 14px 24px;
+}
+.st-btn-outline:hover {
+  background: var(--st-ink);
+  color: var(--st-ground);
+}
+.kis-students .st-btn-outline:hover {
+  color: var(--st-ground);
+}
+.st-btn-small {
+  font-size: 11.5px;
+  padding: 12px 20px;
+  box-shadow: 3px 3px 0 var(--st-ink);
+}
+.st-btn-small:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--st-ink);
+}
+
+/* Nav tabs */
+.st-nav-tab {
+  font-family: var(--font-space-mono), "Space Mono", ui-monospace, monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.12em;
+  padding: 9px 16px;
+  border: 1px solid var(--st-hair);
+  background: #fff;
+  color: var(--st-muted);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+}
+.st-nav-tab:hover {
+  border-color: var(--st-red);
+}
+.st-nav-tab[data-active="true"] {
+  background: var(--st-ink);
+  border-color: var(--st-ink);
+  color: var(--st-ground);
+}
+.kis-students a.st-nav-tab[data-active="true"]:hover {
+  color: var(--st-ground);
+}
+
+/* Pills */
+.st-pill {
+  font-family: var(--font-space-mono), "Space Mono", ui-monospace, monospace;
+  font-size: 11.5px;
+  padding: 8px 12px;
+  border: 1px solid var(--st-hair);
+  background: #fff;
+  color: var(--st-muted);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.st-pill:hover {
+  border-color: var(--st-red);
+}
+.st-pill:active {
+  transform: scale(0.95);
+}
+.st-pill[data-on="true"] {
+  background: var(--st-ink);
+  border-color: var(--st-ink);
+  color: var(--st-ground);
+}
+.st-pill[data-err="true"] {
+  border-color: var(--st-red);
+}
+.st-pill-grade {
+  font-size: 12px;
+  padding: 8px 14px;
+}
+
+/* Kind tiles */
+.st-kind-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+.st-kind-tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--st-hair);
+  background: #fff;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s;
+  text-align: left;
+}
+.st-kind-tile:hover {
+  border-color: var(--st-red);
+}
+.st-kind-tile:active {
+  transform: scale(0.97);
+}
+.st-kind-tile[data-on="true"] {
+  background: var(--st-ground);
+  border-color: var(--st-ink);
+}
+
+/* Colour swatch chips */
+.st-swatch-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px 7px 8px;
+  border: 1.5px solid var(--st-hair);
+  background: #fff;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s;
+}
+.st-swatch-chip:hover {
+  border-color: var(--st-red);
+}
+.st-swatch-chip:active {
+  transform: scale(0.95);
+}
+.st-swatch-chip[data-on="true"] {
+  border-color: var(--st-ink);
+}
+.st-diamond {
+  width: 20px;
+  height: 20px;
+  border: 1px solid rgba(42, 33, 28, 0.25);
+  transform: rotate(45deg) scale(0.8);
+  flex: none;
+}
+
+/* Stepper */
+.st-step-btn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--st-hair);
+  background: #fff;
+  color: var(--st-ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.12s;
+  font-family: inherit;
+}
+.st-step-btn:active:not(:disabled) {
+  transform: scale(0.92);
+}
+.st-step-btn:disabled {
+  color: #d9cdbb;
+  cursor: default;
+}
+
+/* How-it-works cards */
+.st-step-card {
+  border: 1px solid var(--st-hair);
+  background: #fff;
+  padding: 22px 22px 20px;
+  transition: all 0.2s;
+  animation: st-fadeup 0.5s ease both;
+}
+.st-step-card:hover {
+  border-color: var(--st-red);
+  transform: translateY(-3px);
+}
+
+/* Recent request rows */
+.st-recent-row {
+  border: 1px solid var(--st-hair);
+  background: #fff;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  width: 100%;
+  text-align: left;
+}
+.st-recent-row:hover {
+  border-color: var(--st-red);
+}
+
+.st-link-red {
+  font-family: var(--font-space-mono), "Space Mono", ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  color: var(--st-red) !important;
+  cursor: pointer;
+  user-select: none;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+.st-link-red:hover {
+  text-decoration: underline;
+}
+
+/* Grids that reflow */
+.st-grid-hero {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 32px;
+  align-items: center;
+}
+.st-grid-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+}
+.st-grid-rules {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  align-items: center;
+}
+.st-grid-request {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 24px;
+  align-items: start;
+}
+.st-grid-track {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+  align-items: start;
+}
+.st-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 18px;
+}
+.st-span-2 {
+  grid-column: 1 / -1;
+}
+.st-vinyl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px 18px;
+}
+.st-cut-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Hero motif group */
+.st-hero-motifs {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: clamp(8px, 2vw, 28px);
+  min-height: 300px;
+  padding: 10px 0;
+}
+.st-hero-tree {
+  --cell: 11px;
+}
+.st-hero-printer {
+  --cell: 12px;
+}
+.st-hero-bird {
+  --cell: 10px;
+}
+
+/* Tracker */
+.st-tracker {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin-top: 14px;
+}
+.st-tracker-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+.st-tracker-line {
+  height: 2px;
+  width: 100%;
+  position: absolute;
+  top: 9px;
+  left: 0;
+}
+.st-tracker-glyph {
+  font-family: var(--font-space-mono), "Space Mono", ui-monospace, monospace;
+  font-size: 16px;
+  line-height: 20px;
+  background: #fff;
+  padding: 0 6px;
+  position: relative;
+}
+.st-tracker-glyph[data-current="true"] {
+  animation:
+    st-stitch 0.6s ease both,
+    st-sway 2.4s ease-in-out 0.6s infinite;
+}
+.st-tracker-label {
+  font-family: var(--font-space-mono), "Space Mono", ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+
+.st-cancel {
+  cursor: pointer;
+  color: var(--st-faint);
+  font-size: 18px;
+  user-select: none;
+  padding: 0 4px;
+  line-height: 1;
+  background: none;
+  border: 0;
+}
+.st-cancel:hover {
+  color: var(--st-red);
+}
+
+/* Toast */
+.st-toast {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 26px;
+  z-index: 120;
+  color: var(--st-ground);
+  padding: 12px 20px;
+  box-shadow: 0 12px 32px rgba(42, 33, 28, 0.28);
+  animation: st-toastin 0.25s ease both;
+  max-width: 84vw;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--font-space-mono), "Space Mono", ui-monospace, monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+/* Diamond rows */
+.st-diamond-row {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  overflow: hidden;
+  padding: 6px 0;
+  opacity: 0.9;
+}
+.st-diamond-row > div {
+  flex: none;
+}
+
+/* ---------- Tablet (700–1023) ---------- */
+@media (max-width: 1023px) {
+  .st-hero-motifs {
+    gap: clamp(8px, 2vw, 28px);
+  }
+  /* The form column is too narrow for three side-by-side tiles: use the
+     compact 3-up grid from the mobile mockups instead of stacking. */
+  .st-kind-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .st-kind-tile {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 6px;
+    padding: 10px 8px;
+  }
+  .st-kind-tile .st-kind-label {
+    font-size: 15px;
+  }
+}
+
+/* ---------- Mobile (< 700) ---------- */
+@media (max-width: 699px) {
+  .st-grid-hero,
+  .st-grid-request,
+  .st-grid-track,
+  .st-grid-rules {
+    grid-template-columns: 1fr;
+  }
+  .st-hero-motifs {
+    min-height: 0;
+    gap: 14px;
+  }
+  .st-hero-tree {
+    --cell: 8px;
+  }
+  .st-hero-printer {
+    --cell: 9px;
+  }
+  .st-hero-bird {
+    --cell: 7px;
+  }
+  .st-kind-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .st-kind-tile {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 6px;
+    padding: 10px 8px;
+  }
+  .st-kind-tile .st-kind-label {
+    font-size: 15px;
+  }
+  .st-vinyl-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .st-cut-pills {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .st-pill,
+  .st-kind-tile,
+  .st-step-btn,
+  .st-cancel,
+  .st-swatch-chip,
+  .st-nav-tab {
+    min-height: 44px;
+  }
+  .st-step-btn {
+    width: 44px;
+    height: 44px;
+  }
+  .st-cancel {
+    min-width: 44px;
+  }
+  .st-submit {
+    width: 100%;
+  }
+  .st-toast {
+    white-space: normal;
+    text-align: center;
+  }
+  .st-tracker-label {
+    font-size: clamp(7.5px, 2.2vw, 9px);
+    letter-spacing: 0.08em;
+  }
+}
+
+@media (max-width: 479px) {
+  .st-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 399px) {
+  .st-kind-hint {
+    display: none;
+  }
+}
+@media (max-width: 359px) {
+  .st-vinyl-grid {
+    grid-template-columns: 1fr;
+  }
+}

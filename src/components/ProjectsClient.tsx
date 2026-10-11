@@ -396,6 +396,10 @@ export function ProjectsClient({
                   className="border border-[#e3e0d8] px-3 py-2.5 text-[15.5px] outline-none focus:border-[#141414]"
                   placeholder="you@kis.edu"
                 />
+                <span className="text-[12.5px] leading-snug text-[#98917f]">
+                  Please use your KIS email address — it keeps all your boards
+                  together.
+                </span>
               </label>
               <label className="mt-3.5 flex flex-col gap-1.5">
                 <span className={fieldLabel}>TEACHER PASSWORD</span>
@@ -630,6 +634,10 @@ export function ProjectsClient({
             >
               Create project · {fWeeks} sprints →
             </button>
+            <p className="mt-3 text-[13px] text-[#98917f]">
+              You&apos;ll land on your board next — you can move sprints and
+              share it from there.
+            </p>
           </div>
         )}
 

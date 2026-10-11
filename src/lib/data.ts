@@ -14,8 +14,12 @@ import type {
   SpaceBooking,
   StudentProject,
   TrainingSession,
+  PrintRequest,
+  WednesdayEntry,
 } from "@/lib/types";
 import { normalizeProject } from "@/lib/projects";
+import { normalizeWednesdayEntry } from "@/lib/wednesdays";
+import { normalizePrintRequest } from "@/lib/prints";
 
 function hasSupabaseEnv() {
   return hasSupabasePublicEnv();
@@ -622,6 +626,89 @@ export async function getStudentProjectById(
   }
   if (!data) return null;
   return normalizeProject(data as Record<string, unknown>);
+}
+
+export async function getWednesdayEntries(
+  from: string,
+  to: string,
+): Promise<WednesdayEntry[]> {
+  if (!hasSupabaseEnv()) return [];
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("wednesday_entries")
+    .select("*")
+    .gte("session_date", from)
+    .lte("session_date", to)
+    .order("session_date", { ascending: true })
+    .order("period", { ascending: true });
+
+  if (error) {
+    console.error("Failed to load wednesday entries:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row) =>
+    normalizeWednesdayEntry(row as Record<string, unknown>),
+  );
+}
+
+/** All print requests for the admin Print requests tab. */
+export async function getAdminPrintRequests(): Promise<PrintRequest[]> {
+  if (!hasSupabaseEnv()) return [];
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("print_requests")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Failed to load print requests:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row) =>
+    normalizePrintRequest(row as Record<string, unknown>),
+  );
+}
+
+/** A student's own jobs, newest first. Email match is case-insensitive. */
+export async function getPrintRequestsByEmail(
+  email: string,
+): Promise<PrintRequest[]> {
+  const needle = email.trim().toLowerCase();
+  if (!hasSupabaseEnv() || !needle) return [];
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("print_requests")
+    .select("*")
+    .ilike("email", needle)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Failed to load student print requests:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row) =>
+    normalizePrintRequest(row as Record<string, unknown>),
+  );
+}
+
+export async function getPrintRequestById(
+  id: string,
+): Promise<PrintRequest | null> {
+  if (!hasSupabaseEnv() || !id) return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("print_requests")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (error || !data) return null;
+  return normalizePrintRequest(data as Record<string, unknown>);
 }
 
 export { hasSupabaseEnv };

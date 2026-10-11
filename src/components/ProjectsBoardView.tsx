@@ -223,6 +223,7 @@ export function ProjectsBoardView({
             <>
               <button
                 type="button"
+                title="View-only — safe to send to students. No password needed."
                 onClick={() => void onShareStudent()}
                 className="min-h-11 bg-[#141414] px-[18px] py-2 text-[13.5px] font-semibold text-white transition-colors hover:bg-[#c8102e]"
               >
@@ -230,6 +231,7 @@ export function ProjectsBoardView({
               </button>
               <button
                 type="button"
+                title="Careful — anyone with this link can move cards and change dates on this board."
                 onClick={() => void onShareTeacher()}
                 disabled={pending}
                 className="min-h-11 border-[1.5px] border-[#141414] px-[18px] py-2 text-[13.5px] font-semibold text-[#141414] transition-colors hover:bg-[#141414] hover:text-white disabled:opacity-60"
@@ -499,6 +501,11 @@ function SprintCard({
   return (
     <div
       draggable={draggableCard}
+      title={
+        draggableCard
+          ? "Drag me to another column — or tap a status button below"
+          : undefined
+      }
       onDragStart={(e) => {
         if (!draggableCard) return;
         e.dataTransfer.setData("text/plain", String(week.n));

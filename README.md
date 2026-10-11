@@ -10,7 +10,9 @@ Next.js site for the KIS school makerspace, matching design handoff v5 (Resource
 | `/schedule` | Request room periods (P1–P8); pending until admin confirms |
 | `/training` | Book coordinator training sessions |
 | `/projects` | Teacher project designer + read-only sprint boards |
-| `/admin` | Tabs: Space · Projects · Items & inventory |
+| `/wednesdays` | Teacher sign-ups for Wednesday design sessions |
+| `/students` | **Student print site** (cross-stitch theme): landing, `/students/print` request form, `/students/requests` job tracker — email only, no password |
+| `/admin` | Tabs: Space · Items & inventory · Projects · Wednesdays · **Print requests** |
 | `/equipment/[qrCode]` | QR landing page |
 
 ## Setup
@@ -22,7 +24,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Run all migrations in `supabase/migrations/` in the Supabase SQL editor (through **017** for student projects).
+Run all migrations in `supabase/migrations/` in the Supabase SQL editor (through **022** for student print requests — it also creates the `print-files` storage bucket).
 
 ### Admin access
 
@@ -39,6 +41,13 @@ values ('<auth-user-uuid>', 'teacher@school.edu');
 ## Env
 
 See `.env.example` for Supabase variables. For the teacher Projects portal, also set `TEACHER_PORTAL_PW` (server-only shared password).
+
+## Student print site
+
+- Students request 3D prints, vinyl posters and die-cut stickers at `/students/print`, identified by email only (`kis-student-email` session key). Files upload from the browser straight into the public-read `print-files` bucket; the `createPrintRequest` server action then checks the extension per kind (`.stl/.3mf/.obj` · `.pdf/.png/.jpg/.svg` · `.svg/.pdf/.png`), the 50 MB cap and inserts the row.
+- Stage lists — 3D: RECEIVED → SLICING → PRINTING → READY · poster/sticker: RECEIVED → PRINTING → CUTTING → READY. `status` is the index into the kind's list.
+- Status changes are admin-only (RLS requires a teacher session; web admin + Flutter admin). Students may cancel only while RECEIVED. There is no email: students check the tracker, which shows READY (with a collect notice) and polls while open.
+- The old public pages (Resources, Calendar, Schedule, Book training, Wednesdays, Projects) are teacher-facing and not linked from the student site; the student site hides the teacher header and uses Cormorant Garamond + Space Mono with the cross-stitch `×` motifs (see `src/components/students/Motif.tsx`).
 
 ## Design notes
 

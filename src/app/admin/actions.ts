@@ -7,8 +7,15 @@ import { generateUniqueItemCode } from "@/lib/qr";
 import { generateUniqueSerialNumber } from "@/lib/serial";
 import { toISODate, startOfDay } from "@/lib/inventory";
 import { normalizeProject } from "@/lib/projects";
+import { normalizeWednesdayEntry } from "@/lib/wednesdays";
+import { normalizePrintRequest } from "@/lib/prints";
 import { dueBackLabel } from "@/lib/reservation-availability";
-import type { Reservation, StudentProject } from "@/lib/types";
+import type {
+  PrintRequest,
+  Reservation,
+  StudentProject,
+  WednesdayEntry,
+} from "@/lib/types";
 
 async function requireTeacher() {
   const supabase = await createClient();
@@ -1272,5 +1279,164 @@ export async function restoreStudentProject(
   return {
     ok: true,
     project: normalizeProject(data as Record<string, unknown>),
+  };
+}
+
+export type WednesdayAdminResult =
+  | { ok: true; entry?: WednesdayEntry; id?: string }
+  | { ok: false; error: string };
+
+function revalidateWednesdaysAdmin() {
+  revalidatePath("/wednesdays");
+  revalidatePath("/calendar");
+  revalidatePath("/admin");
+}
+
+export async function adminDeleteWednesdayEntry(
+  id: string,
+): Promise<WednesdayAdminResult> {
+  const { supabase } = await requireTeacher();
+  if (!id) return { ok: false, error: "Missing sign-up." };
+
+  const { data, error: loadError } = await supabase
+    .from("wednesday_entries")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (loadError) return { ok: false, error: loadError.message };
+  if (!data) return { ok: false, error: "Sign-up not found." };
+
+  const entry = normalizeWednesdayEntry(data as Record<string, unknown>);
+
+  const { error } = await supabase
+    .from("wednesday_entries")
+    .delete()
+    .eq("id", id);
+  if (error) return { ok: false, error: error.message };
+
+  revalidateWednesdaysAdmin();
+  return { ok: true, id, entry };
+}
+
+export async function adminRestoreWednesdayEntry(
+  snapshot: WednesdayEntry,
+): Promise<WednesdayAdminResult> {
+  const { supabase } = await requireTeacher();
+
+  const { data, error } = await supabase
+    .from("wednesday_entries")
+    .insert({
+      session_date: snapshot.session_date,
+      email: snapshot.email,
+      period: snapshot.period,
+      cls: snapshot.cls,
+      text: snapshot.text,
+      resources: snapshot.resources,
+      project_id: snapshot.project_id,
+    })
+    .select("*")
+    .single();
+
+  if (error) return { ok: false, error: error.message };
+  revalidateWednesdaysAdmin();
+  return {
+    ok: true,
+    entry: normalizeWednesdayEntry(data as Record<string, unknown>),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Print requests (student site) — status changes are admin-only.
+
+export type PrintAdminResult =
+  | { ok: true; request?: PrintRequest; id?: string }
+  | { ok: false; error: string };
+
+function revalidatePrintsAdmin() {
+  revalidatePath("/admin");
+  revalidatePath("/students/requests");
+  revalidatePath("/students/print");
+}
+
+export async function adminSetPrintStatus(
+  id: string,
+  status: number,
+): Promise<PrintAdminResult> {
+  const { supabase } = await requireTeacher();
+  if (!id) return { ok: false, error: "Missing request." };
+  if (![0, 1, 2, 3].includes(status)) {
+    return { ok: false, error: "Unknown stage." };
+  }
+
+  const { data, error } = await supabase
+    .from("print_requests")
+    .update({ status })
+    .eq("id", id)
+    .select("*")
+    .single();
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePrintsAdmin();
+  return {
+    ok: true,
+    request: normalizePrintRequest(data as Record<string, unknown>),
+  };
+}
+
+export async function adminDeletePrintRequest(
+  id: string,
+): Promise<PrintAdminResult> {
+  const { supabase } = await requireTeacher();
+  if (!id) return { ok: false, error: "Missing request." };
+
+  const { data, error: loadError } = await supabase
+    .from("print_requests")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (loadError) return { ok: false, error: loadError.message };
+  if (!data) return { ok: false, error: "Request not found." };
+  const request = normalizePrintRequest(data as Record<string, unknown>);
+
+  const { error } = await supabase.from("print_requests").delete().eq("id", id);
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePrintsAdmin();
+  return { ok: true, id, request };
+}
+
+/** Undo for a removal — re-inserts the snapshot (same id, same stage). */
+export async function adminRestorePrintRequest(
+  snapshot: PrintRequest,
+): Promise<PrintAdminResult> {
+  const { supabase } = await requireTeacher();
+  const { data, error } = await supabase
+    .from("print_requests")
+    .insert({
+      id: snapshot.id,
+      kind: snapshot.kind,
+      name: snapshot.name,
+      email: snapshot.email,
+      grade: snapshot.grade,
+      file_name: snapshot.file,
+      file_path: snapshot.file_path,
+      file_size: snapshot.file_size,
+      color: snapshot.color,
+      size: snapshot.size,
+      qty: snapshot.qty,
+      cut: snapshot.cut,
+      due: snapshot.due,
+      notes: snapshot.notes,
+      status: snapshot.status,
+      ready_at: snapshot.ready_at,
+      created_at: new Date(snapshot.at).toISOString(),
+    })
+    .select("*")
+    .single();
+  if (error) return { ok: false, error: error.message };
+  revalidatePrintsAdmin();
+  return {
+    ok: true,
+    request: normalizePrintRequest(data as Record<string, unknown>),
   };
 }

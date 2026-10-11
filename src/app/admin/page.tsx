@@ -5,6 +5,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { LoginForm } from "@/components/admin/LoginForm";
 import {
   getActiveReservations,
+  getAdminPrintRequests,
   getAdminSpaceBookings,
   getAdminTrainingSessions,
   getAreas,
@@ -12,8 +13,10 @@ import {
   getItemRequests,
   getSpaceBlocks,
   getStudentProjects,
+  getWednesdayEntries,
   isTeacher,
 } from "@/lib/data";
+import { wednesdayHorizonIso } from "@/lib/wednesdays";
 
 const ERROR_MESSAGES: Record<string, string> = {
   not_teacher:
@@ -52,6 +55,8 @@ export default async function AdminPage({ searchParams }: PageProps) {
     itemRequests,
     areas,
     studentProjects,
+    wednesdayEntries,
+    printRequests,
   ] = await Promise.all([
     getEquipmentWithUnits(),
     getActiveReservations(),
@@ -61,6 +66,11 @@ export default async function AdminPage({ searchParams }: PageProps) {
     getItemRequests(),
     getAreas(),
     getStudentProjects(),
+    getWednesdayEntries(
+      wednesdayHorizonIso().from,
+      wednesdayHorizonIso().to,
+    ),
+    getAdminPrintRequests(),
   ]);
 
   return (
@@ -74,6 +84,8 @@ export default async function AdminPage({ searchParams }: PageProps) {
         itemRequests={itemRequests}
         areas={areas}
         studentProjects={studentProjects}
+        wednesdayEntries={wednesdayEntries}
+        printRequests={printRequests}
       />
     </AdminShell>
   );
