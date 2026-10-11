@@ -15,8 +15,16 @@
   overflow-x: hidden;
   background: var(--st-ground);
   color: var(--st-ink);
-  font-family: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
-  font-weight: 500;
+  /* Archivo, semi-condensed (wdth 75) — cold and engineered; Cyrillic glyphs
+     fall through to a condensed sans so Ukrainian keeps the same set. */
+  font-family: var(--font-archivo), var(--font-cyr-sans), system-ui, sans-serif;
+  font-stretch: 75%;
+  font-weight: 400;
+  line-height: 1.55;
+}
+.kis-students h1,
+.kis-students h2 {
+  letter-spacing: -0.01em;
 }
 
 .kis-students a {
@@ -28,7 +36,8 @@
 .kis-students input,
 .kis-students textarea {
   font-family: inherit;
-  font-weight: 500;
+  font-stretch: inherit;
+  font-weight: 400;
   color: var(--st-ink);
   background: #fff;
   border-radius: 0;
@@ -40,6 +49,7 @@
 }
 .kis-students :where(button) {
   font-family: inherit;
+  font-stretch: inherit;
   border-radius: 0;
 }
 .kis-students button:active:not(:disabled) {
@@ -545,7 +555,7 @@
 .st-cancel {
   cursor: pointer;
   color: var(--st-faint);
-  font-size: 18px;
+  font-size: 16px;
   user-select: none;
   padding: 0 4px;
   line-height: 1;
@@ -791,7 +801,8 @@
 }
 .kis-students select {
   font-family: inherit;
-  font-weight: 500;
+  font-stretch: inherit;
+  font-weight: 400;
   color: var(--st-ink);
   background: #fff;
   border-radius: 0;
@@ -884,7 +895,7 @@
 .st-star {
   font-family: var(--font-space-mono), var(--font-plex-mono), "Space Mono", ui-monospace, monospace;
   font-weight: 700;
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1;
   cursor: pointer;
   user-select: none;
@@ -915,6 +926,12 @@
 .st-ghost-btn:hover {
   border-color: var(--st-ink);
   color: var(--st-ink);
+}
+a.st-ghost-btn {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  color: var(--st-muted);
 }
 .st-colour-chip {
   display: inline-flex;
@@ -989,4 +1006,89 @@
   .st-cloth {
     --cell: 4px;
   }
+}
+
+/* ---------- v3: Stitch Run (secret) ---------- */
+.st-secret {
+  color: var(--st-hair);
+  cursor: default;
+  user-select: none;
+  background: none;
+  border: 0;
+  padding: 0 2px;
+  font: inherit;
+  transition: color 0.2s;
+}
+.st-secret:hover,
+.st-secret:focus-visible {
+  color: var(--st-red);
+  outline: none;
+}
+.st-game-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(42, 33, 28, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.st-game {
+  background: var(--st-ground);
+  border: 1.5px solid var(--st-ink);
+  box-shadow: 10px 10px 0 var(--st-red);
+  width: 760px;
+  max-width: 100%;
+  animation: st-fadeup 0.3s ease both;
+}
+.st-game-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--st-hair);
+  flex-wrap: wrap;
+}
+.st-game-close {
+  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  border: 1px solid var(--st-ink);
+  background: transparent;
+  color: var(--st-ink);
+  padding: 6px 12px;
+  min-height: 40px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s;
+}
+.st-game-close:hover {
+  background: var(--st-ink);
+  color: var(--st-ground);
+}
+.st-game-stage {
+  padding: 10px 18px 6px;
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+}
+.st-game-stage canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: #fff;
+  border: 1px solid var(--st-hair);
+}
+.st-game-hints {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 18px 14px;
+  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  color: var(--st-faint);
+  flex-wrap: wrap;
 }

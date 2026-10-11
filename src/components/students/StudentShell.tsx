@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { LocaleProvider, useLocale } from "@/components/students/Locale";
 import { DiamondRow, Motif } from "@/components/students/Motif";
+import { StitchRun } from "@/components/students/StitchRun";
 import { StudentToastProvider } from "@/components/students/StudentToast";
 
 export function StudentShell({ children }: { children: ReactNode }) {
@@ -20,6 +21,7 @@ export function StudentShell({ children }: { children: ReactNode }) {
 function ShellInner({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { t, lang, setLang } = useLocale();
+  const [game, setGame] = useState(false);
   const tabs = [
     { href: "/", label: t.nav.home, active: pathname === "/" },
     { href: "/print", label: t.nav.print, active: pathname.startsWith("/print") },
@@ -88,13 +90,26 @@ function ShellInner({ children }: { children: ReactNode }) {
 
       <footer className="mt-auto">
         <DiamondRow className="!py-1" />
-        <div className="st-gutter flex flex-wrap justify-between gap-3 border-t border-[#e9dfd0] py-4 text-[16px] text-[#8c7a68]">
-          <span>{t.footer}</span>
+        <div className="st-gutter flex flex-wrap justify-between gap-3 border-t border-[#e9dfd0] py-4 text-[14px] text-[#8c7a68]">
+          <span>
+            {t.footer}{" "}
+            <button
+              type="button"
+              className="st-secret"
+              title={t.footerSecretTip}
+              aria-label={t.game.title}
+              onClick={() => setGame(true)}
+            >
+              · ×
+            </button>
+          </span>
           <span className="st-mono text-[10.5px] tracking-[0.14em]">
             {t.footerMark}
           </span>
         </div>
       </footer>
+
+      <StitchRun open={game} onOpen={() => setGame(true)} onClose={() => setGame(false)} />
     </>
   );
 }

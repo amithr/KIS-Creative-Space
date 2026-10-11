@@ -12,7 +12,7 @@ import { isValidEmail } from "@/lib/prints";
 import { readStudentEmail, writeStudentEmail } from "@/lib/student-session";
 import type { FilamentColor, PrintRequest } from "@/lib/types";
 
-const label = "st-mono text-[10.5px] tracking-[0.16em] text-[#8c7a68]";
+const label = "st-mono text-[10.5px] tracking-[0.14em] text-[#8c7a68]";
 const RANK_KEY = "kis-last-rank:";
 
 function readLastRank(email: string): number | null {
@@ -157,9 +157,9 @@ export function MyRequestsClient({ colors }: { colors: FilamentColor[] }) {
             value={email}
             onChange={(e) => onEmail(e.target.value)}
             placeholder="olena.k@kis.edu"
-            className="mt-[7px] box-border w-full border border-[#e9dfd0] px-[13px] py-[11px] text-[18px]"
+            className="mt-[7px] box-border w-full border border-[#e9dfd0] px-[13px] py-[11px] text-[16px]"
           />
-          <p className="mt-1.5 text-[15px] leading-[1.45] text-[#8c7a68]">{t.track.help}</p>
+          <p className="mt-1.5 text-[13.5px] leading-[1.45] text-[#8c7a68]">{t.track.help}</p>
           <div className="mt-[18px] border-t border-[#eee5d8] pt-3.5">
             <p className={label}>{t.track.stagesTitle}</p>
             <dl className="mt-2.5 flex flex-col gap-2 text-[16px] leading-[1.4]">
@@ -192,7 +192,7 @@ export function MyRequestsClient({ colors }: { colors: FilamentColor[] }) {
             </span>
           </div>
           {requests.length === 0 && (
-            <p className="mt-3 border border-dashed border-[#d9cdbb] px-6 py-[30px] text-center text-[17px] leading-[1.5] text-[#8c7a68]">
+            <p className="mt-3 border border-dashed border-[#d9cdbb] px-6 py-[30px] text-center text-[15px] leading-[1.5] text-[#8c7a68]">
               {emptyMsg}
             </p>
           )}

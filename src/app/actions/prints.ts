@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { removeStoredFile } from "@/lib/print-files";
+import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import {
   getFilamentColors,
@@ -208,6 +210,13 @@ export async function cancelPrintRequest(
     .eq("id", id)
     .eq("status", 0);
   if (error) return { ok: false, error: error.message };
+
+  // Students can't delete storage objects under RLS; the service role tidies up.
+  const service = createServiceClient();
+  if (service && r.file_path) {
+    const err = await removeStoredFile(service, r.file_path);
+    if (err) console.error("Could not delete cancelled upload", r.file_path, err);
+  }
 
   revalidatePrints();
   return { ok: true, id, request: r };

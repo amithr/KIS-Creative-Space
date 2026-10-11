@@ -29,7 +29,20 @@ export type Strings = {
   brandSub: string;
   footer: string;
   footerMark: string;
+  footerSecretTip: string;
   langLabel: string;
+  game: {
+    eyebrow: string;
+    title: string;
+    tagline: string;
+    best: string;
+    close: string;
+    hintKeys: string;
+    hintSpeed: string;
+    idle: string;
+    snagged: (n: number) => string;
+    rethread: string;
+  };
   landing: {
     eyebrow: string;
     headline: string;
@@ -162,6 +175,19 @@ const en: Strings = {
   brandSub: "FOR STUDENTS · ДЛЯ УЧНІВ",
   footer: "KIS Creativity Space · prints run Tuesday–Thursday · collect within a week",
   footerMark: "ТВОРЧИЙ ПРОСТІР",
+  footerSecretTip: "psst — try typing the word for what we do",
+  game: {
+    eyebrow: "× SECRET ×",
+    title: "Stitch Run",
+    tagline: "The needle must not snag.",
+    best: "BEST",
+    close: "ESC · CLOSE",
+    hintKeys: "SPACE / ↑ / TAP — JUMP · ↓ — DUCK",
+    hintSpeed: "EVERY 100 STITCHES THE THREAD RUNS FASTER",
+    idle: "PRESS SPACE OR TAP TO START STITCHING",
+    snagged: (n) => `SNAGGED · ${n} STITCHES`,
+    rethread: "SPACE OR TAP TO RE-THREAD",
+  },
   langLabel: "Language",
   landing: {
     eyebrow: "× MAKE · BUILD · PRINT ×",
@@ -342,6 +368,19 @@ const uk: Strings = {
   brandSub: "ДЛЯ УЧНІВ · FOR STUDENTS",
   footer: "KIS Creativity Space · друкуємо вівторок–четвер · заберіть протягом тижня",
   footerMark: "CREATIVITY SPACE",
+  footerSecretTip: "псст — спробуй набрати англійське слово для того, що ми робимо",
+  game: {
+    eyebrow: "× СЕКРЕТ ×",
+    title: "Stitch Run",
+    tagline: "Голка не має зачепитися.",
+    best: "РЕКОРД",
+    close: "ESC · ЗАКРИТИ",
+    hintKeys: "ПРОБІЛ / ↑ / ТАП — СТРИБОК · ↓ — ПРИГНУТИСЬ",
+    hintSpeed: "КОЖНІ 100 СТІБКІВ НИТКА БІЖИТЬ ШВИДШЕ",
+    idle: "НАТИСНИ ПРОБІЛ АБО ТАП, ЩОБ ПОЧАТИ ШИТИ",
+    snagged: (n) => `ЗАЧЕПИЛОСЬ · ${n} СТІБКІВ`,
+    rethread: "ПРОБІЛ АБО ТАП — ПРОТЯГНУТИ НИТКУ ЗНОВУ",
+  },
   langLabel: "Мова",
   landing: {
     eyebrow: "× ТВОРИ · БУДУЙ · ДРУКУЙ ×",

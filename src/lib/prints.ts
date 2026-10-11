@@ -8,6 +8,14 @@ import type {
 } from "@/lib/types";
 
 export const PRINT_FILES_BUCKET = "print-files";
+
+/** Public download URL for an upload (the bucket is public-read); `download=` forces an attachment. */
+export function printFileUrl(filePath: string, fileName: string): string | null {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!base) return null;
+  const path = filePath.split("/").map(encodeURIComponent).join("/");
+  return `${base.replace(/\/$/, "")}/storage/v1/object/public/${PRINT_FILES_BUCKET}/${path}?download=${encodeURIComponent(fileName)}`;
+}
 export const MAX_PRINT_FILE_BYTES = 50 * 1024 * 1024;
 export const STUDENT_EMAIL_SESSION_KEY = "kis-student-email";
 

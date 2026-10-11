@@ -55,7 +55,7 @@ export function JobCard({ request: r, colors, index = 0, onCancel }: Props) {
             <span className="st-mono shrink-0 bg-[#2a211c] px-[7px] py-[3px] text-[9px] tracking-[0.12em] text-[#fbf6ee]">
               {t.form.kinds[r.kind].tag}
             </span>
-            <span className="min-w-0 truncate text-[20px] font-semibold">{r.file}</span>
+            <span className="min-w-0 truncate text-[17px] font-semibold">{r.file}</span>
             <span
               className="st-mono shrink-0 border px-[7px] py-[2px] text-[9px] tracking-[0.1em]"
               style={{

@@ -88,6 +88,7 @@ ActivityEvent {
 ```
 
 ## Who writes what
+- **Print files**: `PrintRequest.file_path` points at an object in the public-read `print-files` bucket. It is deleted (and `file_path` set to null) when the job reaches READY and its UNDO window passes, when the job is removed, or when a student cancels at RECEIVED. Both the web admin and the app perform the deletion for their own READY marks; the web admin additionally sweeps jobs READY for over two minutes with a file still attached. Download URL: `<SUPABASE_URL>/storage/v1/object/public/print-files/<file_path>?download=<file_name>`.
 - **Web** is now only the student print site plus the Studio Admin print queue: it reads/writes `PrintRequest` and `FilamentColor` and nothing else. The former web teacher admin (space bookings, blocks, inventory, projects, Wednesdays, QR labels) was removed; those tables are owned by the app alone.
 - **App** transitions item reservation status: check-out (`reserved → out`, sets `outQty`), check-in (`out → returned` when `outQty` hits 0; partial returns decrement `outQty` and keep status `out`). Walk-up check-outs create a Reservation directly with `status: "out"`, `days: [today]`, `periods: "all"`, `source: "app"`. App also confirms/declines space bookings and does full Item CRUD.
 - Both append `ActivityEvent` for item mutations. Both subscribe to realtime on `space_bookings` so confirm/decline syncs instantly.

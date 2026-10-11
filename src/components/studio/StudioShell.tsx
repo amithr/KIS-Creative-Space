@@ -66,10 +66,10 @@ function ShellInner({ authed, children }: { authed: boolean; children: ReactNode
 
       <footer className="mt-auto">
         <DiamondRow className="!py-1" />
-        <div className="st-gutter flex flex-wrap justify-between gap-3 border-t border-[#e9dfd0] py-4 text-[16px] text-[#8c7a68]">
+        <div className="st-gutter flex flex-wrap justify-between gap-3 border-t border-[#e9dfd0] py-4 text-[14px] text-[#8c7a68]">
           <span>
             Stage and rating changes appear on students&apos; boards instantly · marking READY pays
-            their points
+            their points and deletes the upload
           </span>
           <span className="st-mono text-[10.5px] tracking-[0.14em]">ТВОРЧИЙ ПРОСТІР</span>
         </div>

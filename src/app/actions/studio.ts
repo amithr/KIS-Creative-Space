@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { removeStoredFile } from "@/lib/print-files";
 import { createServiceClient } from "@/lib/supabase/admin";
 import {
   checkStudioPassword,
@@ -130,6 +131,30 @@ export async function studioRemove(id: string): Promise<StudioResult<PrintReques
   if (del.error) return { ok: false, error: del.error.message };
   revalidateStudio();
   return { ok: true, value: request };
+}
+
+/**
+ * Once a READY mark has outlived its UNDO window the upload is deleted and the
+ * row forgets its path. A no-op if the job was undone back to an earlier stage.
+ */
+export async function studioPurgeFile(id: string): Promise<StudioResult<PrintRequest>> {
+  const auth = await requireStudio();
+  if (!auth.ok) return auth;
+  const { error, request } = await loadRequest(auth.db, id);
+  if (error || !request) return { ok: false, error: error ?? "Request not found." };
+  if (request.status !== 3 || !request.file_path) return { ok: true, value: request };
+  const err = await removeStoredFile(auth.db, request.file_path);
+  if (err) return { ok: false, error: err };
+  return patchRequest(id, { file_path: null });
+}
+
+/** After a removal settles (no UNDO), the orphaned upload goes too. */
+export async function studioDeleteStoredFile(path: string): Promise<StudioResult> {
+  const auth = await requireStudio();
+  if (!auth.ok) return auth;
+  if (!path) return { ok: true };
+  const err = await removeStoredFile(auth.db, path);
+  return err ? { ok: false, error: err } : { ok: true };
 }
 
 /** Undo for a removal — re-inserts the snapshot (same id, same stage). */

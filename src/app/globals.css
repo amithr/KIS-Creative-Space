@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-cormorant);
+  --font-sans: var(--font-archivo);
   --font-mono: var(--font-space-mono);
 }
 
@@ -11,7 +11,8 @@
     margin: 0;
     background: #fbf6ee;
     color: #2a211c;
-    font-family: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+    font-family: var(--font-archivo), var(--font-cyr-sans), system-ui, sans-serif;
+    font-stretch: 75%;
     -webkit-font-smoothing: antialiased;
   }
 }

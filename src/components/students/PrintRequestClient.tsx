@@ -42,8 +42,8 @@ import type {
 
 type Props = { initialKind: PrintKind; colors: FilamentColor[] };
 
-const label = "st-mono text-[10.5px] tracking-[0.16em] text-[#8c7a68]";
-const input = "mt-[7px] box-border w-full border px-3 py-2.5 text-[18px]";
+const label = "st-mono text-[10.5px] tracking-[0.14em] text-[#8c7a68]";
+const input = "mt-[7px] box-border w-full border px-3 py-2.5 text-[16px]";
 
 export function PrintRequestClient({ initialKind, colors }: Props) {
   const router = useRouter();
@@ -308,7 +308,7 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
                 className={input}
                 style={{ borderColor: tried && !emailOk ? "#b5342c" : "#e9dfd0" }}
               />
-              <p className="mt-1 text-[14px] text-[#8c7a68]">{F.emailHint}</p>
+              <p className="mt-1 text-[12.5px] text-[#8c7a68]">{F.emailHint}</p>
             </div>
 
             {/* wallet strip */}
@@ -323,7 +323,7 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
               <span className="st-mono text-[26px] leading-none font-bold" style={{ color: walletColor }}>
                 {balance}
               </span>
-              <span className="min-w-[180px] flex-1 text-[15.5px] leading-[1.4] text-[#5e5047]">{walletHint}</span>
+              <span className="min-w-[180px] flex-1 text-[14px] leading-[1.4] text-[#5e5047]">{walletHint}</span>
               <span
                 className="st-mono flex-none cursor-help text-[9.5px] tracking-[0.1em] text-[#b5342c]"
                 title={F.pointsRules}
@@ -349,7 +349,7 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
                     >
                       <Motif key={on ? "on" : "off"} name={k.motif} cell={4} color={on ? "#b5342c" : "#c9b9a1"} speed={20} />
                       <span>
-                        <span className="st-kind-label block text-[18px] leading-[1.1] font-semibold text-[#2a211c]">
+                        <span className="st-kind-label block text-[16px] leading-[1.1] font-semibold text-[#2a211c]">
                           {F.kinds[k.v].label}
                         </span>
                         <span
@@ -376,8 +376,8 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
               >
                 <Motif key={file ? "ok" : "none"} name="file" cell={4} color={file ? "#2f7d3f" : "#b5342c"} speed={20} />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[18px] font-semibold">{file ? file.name : K.choose}</span>
-                  <span className="block text-[14.5px] text-[#8c7a68]">
+                  <span className="block truncate text-[16px] font-semibold">{file ? file.name : K.choose}</span>
+                  <span className="block text-[13px] text-[#8c7a68]">
                     {file ? F.attachedSub(formatMb(file.size)) : K.fileSub}
                   </span>
                 </span>
@@ -414,7 +414,7 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
                       +
                     </button>
                   </div>
-                  <p className="mt-1 text-[14px] text-[#8c7a68]">
+                  <p className="mt-1 text-[12.5px] text-[#8c7a68]">
                     {fQty >= 20 ? F.bigBatch : fKind === "poster" ? F.posterCopies : F.identicalStickers}
                   </p>
                 </div>
@@ -436,7 +436,7 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
                       </button>
                     ))}
                   </div>
-                  <p className="mt-1.5 text-[14px] text-[#8c7a68]">{cutMeta.hint}</p>
+                  <p className="mt-1.5 text-[12.5px] text-[#8c7a68]">{cutMeta.hint}</p>
                 </div>
               </div>
             )}
@@ -500,8 +500,8 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
                       <span className="st-mono text-[9.5px] tracking-[0.08em]" style={{ color: on ? "#b5342c" : "#c9b9a1" }}>
                         {O.pts}
                       </span>
-                      <span className="text-[17px] leading-[1.15] font-semibold text-[#2a211c]">{O.label}</span>
-                      <span className="text-[14px] leading-[1.3] text-[#8c7a68]">{O.hint}</span>
+                      <span className="text-[15px] leading-[1.15] font-semibold text-[#2a211c]">{O.label}</span>
+                      <span className="text-[12.5px] leading-[1.3] text-[#8c7a68]">{O.hint}</span>
                     </button>
                   );
                 })}
@@ -520,7 +520,7 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
                       const tt = teacherById(v);
                       if (tt) toast(F.teacherToast(tt.name));
                     }}
-                    className="mt-[7px] box-border w-full border px-3 py-2.5 text-[17px]"
+                    className="mt-[7px] box-border w-full border px-3 py-2.5 text-[15px]"
                     style={{ borderColor: tried && isSchool && !teacherById(fTeacher) ? "#b5342c" : "#e9dfd0" }}
                   >
                     <option value="">{F.teacherPlaceholder}</option>
@@ -530,7 +530,7 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
                       </option>
                     ))}
                   </select>
-                  <p className="mt-1.5 text-[14px] text-[#8c7a68]">{F.teacherNote}</p>
+                  <p className="mt-1.5 text-[12.5px] text-[#8c7a68]">{F.teacherNote}</p>
                 </div>
               )}
             </div>
@@ -546,7 +546,7 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
             aria-live="polite"
           >
             <span className="st-mono text-[14px]">×</span>
-            <p className="text-[16.5px] leading-[1.4]">{summary}</p>
+            <p className="text-[14.5px] leading-[1.4]">{summary}</p>
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-3.5">
@@ -571,7 +571,7 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
                       : F.submitPaid
                     : F.finishSteps}
             </button>
-            <p className="text-[15px] text-[#8c7a68]">{F.afterSubmit}</p>
+            <p className="text-[13.5px] text-[#8c7a68]">{F.afterSubmit}</p>
           </div>
         </form>
 
@@ -583,7 +583,7 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
             </Link>
           </div>
           {recent.length === 0 && (
-            <p className="mt-3 border border-dashed border-[#d9cdbb] px-6 py-[30px] text-center text-[17px] leading-[1.5] text-[#8c7a68]">
+            <p className="mt-3 border border-dashed border-[#d9cdbb] px-6 py-[30px] text-center text-[15px] leading-[1.5] text-[#8c7a68]">
               {emptyMsg}
             </p>
           )}
@@ -593,7 +593,7 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
                 <span className="st-mono shrink-0 bg-[#2a211c] px-[7px] py-[3px] text-[9px] tracking-[0.12em] text-[#fbf6ee]">
                   {F.kinds[r.kind].tag}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-[18px] font-semibold">{r.file}</span>
+                <span className="min-w-0 flex-1 truncate text-[16px] font-semibold">{r.file}</span>
                 <span
                   className="st-mono shrink-0 text-[9.5px] tracking-[0.1em]"
                   style={{ color: r.status === 3 ? "#2f7d3f" : "#b5342c" }}

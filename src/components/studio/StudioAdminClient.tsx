@@ -1,10 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition, type KeyboardEvent } from "react";
+import { useRef, useState, useTransition, type KeyboardEvent } from "react";
 import {
   studioAddColor,
   studioAdjust,
+  studioDeleteStoredFile,
+  studioPurgeFile,
   studioRemove,
   studioRemoveColor,
   studioRestore,
@@ -22,6 +24,7 @@ import { earnOf, ledgerFor, originRule, rankFor } from "@/lib/ledger";
 import {
   colorLabel,
   filterPrints,
+  printFileUrl,
   sortAdminPrints,
   stagesFor,
   swatchOf,
@@ -74,7 +77,7 @@ export function StudioGate({ openCount, configured }: { openCount: number; confi
             <Motif name="smallPrinter" cell={7} speed={14} />
           </div>
         </div>
-        <label className={`${mono} mt-[18px] block text-[10.5px] tracking-[0.16em] text-[#8c7a68]`} htmlFor="st-pw">
+        <label className={`${mono} mt-[18px] block text-[10.5px] tracking-[0.14em] text-[#8c7a68]`} htmlFor="st-pw">
           ADMIN PASSWORD
         </label>
         <input
@@ -90,11 +93,11 @@ export function StudioGate({ openCount, configured }: { openCount: number; confi
           }}
           placeholder="Password"
           autoComplete="current-password"
-          className="mt-1.5 box-border w-full border px-[13px] py-[11px] text-[18px] tracking-[0.12em]"
+          className="mt-1.5 box-border w-full border px-[13px] py-[11px] text-[16px] tracking-[0.12em]"
           style={{ borderColor: error ? "#b5342c" : "#e9dfd0" }}
         />
         {error && (
-          <p className="mt-2 text-[15px] text-[#b5342c]">That&apos;s not it — try again, or ask the coordinator.</p>
+          <p className="mt-2 text-[13.5px] text-[#b5342c]">That&apos;s not it — try again, or ask the coordinator.</p>
         )}
         {!configured && (
           <p className="mt-2 text-[14px] text-[#8c7a68]">STUDIO_ADMIN_PW is not set on the server yet.</p>
@@ -129,6 +132,25 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
   const [newName, setNewName] = useState("");
   const [newHex, setNewHex] = useState("#888888");
   const [, startTransition] = useTransition();
+  // Side effects that must wait for the UNDO window to pass (file deletions).
+  const settleTimers = useRef(new Map<string, number>());
+  const SETTLE_MS = 5200;
+
+  function scheduleSettle(id: string, fn: () => Promise<void>) {
+    cancelSettle(id);
+    const h = window.setTimeout(() => {
+      settleTimers.current.delete(id);
+      void fn();
+    }, SETTLE_MS);
+    settleTimers.current.set(id, h);
+  }
+  function cancelSettle(id: string) {
+    const h = settleTimers.current.get(id);
+    if (h !== undefined) {
+      window.clearTimeout(h);
+      settleTimers.current.delete(id);
+    }
+  }
 
   if (seenRows !== requests) {
     setSeenRows(requests);
@@ -164,6 +186,7 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
     msg: string,
     undo: () => Promise<{ ok: true; value?: PrintRequest } | { ok: false; error: string }>,
     undoMsg: string,
+    settle?: () => Promise<void>,
   ) {
     const prev = r;
     replace({ ...r, ...optimistic });
@@ -176,8 +199,10 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
         return;
       }
       if (res.value) replace(res.value);
+      if (settle) scheduleSettle(r.id, settle);
       toast(msg, {
         undo: async () => {
+          cancelSettle(r.id);
           replace(prev);
           const back = await undo();
           if (!back.ok) {
@@ -311,7 +336,7 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
       <section className="st-fadeup-45 mx-[5vw] mt-[18px] border border-[#e9dfd0] bg-white px-[22px] py-[18px]" style={{ animationDelay: ".08s" }}>
         <div className="flex flex-wrap items-baseline gap-3">
           <h2 className="text-[22px] font-semibold">Filament colours on offer</h2>
-          <p className="text-[15px] text-[#8c7a68]">
+          <p className="text-[13.5px] text-[#8c7a68]">
             Students only see colours that are switched on. Turn one off when a spool runs out.
           </p>
           <span className="flex-1" />
@@ -384,7 +409,7 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
 
       {/* jobs */}
       {visible.length === 0 && (
-        <p className="mx-[5vw] mt-[18px] border border-dashed border-[#d9cdbb] px-6 py-9 text-center text-[17px] leading-[1.5] text-[#8c7a68]">
+        <p className="mx-[5vw] mt-[18px] border border-dashed border-[#d9cdbb] px-6 py-9 text-center text-[15px] leading-[1.5] text-[#8c7a68]">
           {rows.length === 0 ? "No print requests yet — students send them from the student site." : "Nothing in this view."}
         </p>
       )}
@@ -422,10 +447,29 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
                 </span>
                 <span className="st-diamond" style={{ background: swatchOf(r.color, cols) }} aria-hidden />
                 <div className="min-w-[220px] flex-1">
-                  <p className="text-[21px] leading-[1.15] font-semibold">{r.file}</p>
+                  <p className="text-[18px] leading-[1.15] font-semibold">{r.file}</p>
                   <p className={`${mono} mt-1 text-[9.5px] leading-[1.6] tracking-[0.08em] text-[#8c7a68]`}>{meta}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2.5">
+                  {r.file_path ? (
+                    <a
+                      className="st-ghost-btn"
+                      href={printFileUrl(r.file_path, r.file) ?? "#"}
+                      download={r.file}
+                      target="_blank"
+                      rel="noopener"
+                      title={`Download ${r.file} for printing`}
+                    >
+                      ↓ DOWNLOAD
+                    </a>
+                  ) : r.status === 3 ? (
+                    <span
+                      className={`${mono} text-[9.5px] tracking-[0.08em] text-[#c9b9a1]`}
+                      title="Uploads are deleted once a print is READY"
+                    >
+                      UPLOAD DELETED
+                    </span>
+                  ) : null}
                   <div className="st-seg" title="Who designed it — drives the student's points. Change if a claim looks wrong." role="radiogroup">
                     {ORIGIN_OPTS.map((o) => {
                       const cur = r.origin === o.v;
@@ -510,9 +554,15 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
                               r,
                               { status: i as 0 | 1 | 2 | 3 },
                               () => studioSetStatus(r.id, i),
-                              `${r.file.toUpperCase()} → ${label}${i === 3 && earn ? ` · +${earn} POINTS PAID TO ${r.name.toUpperCase()}` : ""}`,
+                              `${r.file.toUpperCase()} → ${label}${i === 3 && earn ? ` · +${earn} POINTS PAID TO ${r.name.toUpperCase()}` : ""}${i === 3 && r.file_path ? " · UPLOAD DELETED" : ""}`,
                               () => studioSetStatus(r.id, r.status),
                               "STAGE RESTORED ✓",
+                              i === 3 && r.file_path
+                                ? async () => {
+                                    const res = await studioPurgeFile(r.id);
+                                    if (res.ok && res.value) replace(res.value);
+                                  }
+                                : undefined,
                             );
                           }}
                         >
@@ -540,7 +590,7 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
                   </button>
                   <button
                     type="button"
-                    className="st-cancel min-h-[40px] min-w-[40px] !text-[20px] !text-[#c9b9a1]"
+                    className="st-cancel min-h-[40px] min-w-[40px] !text-[17px] !text-[#c9b9a1]"
                     title="Remove request"
                     aria-label={`Remove ${r.file}`}
                     onClick={() =>
@@ -558,8 +608,15 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
                               return;
                             }
                             const snap = res.value ?? r;
+                            if (snap.file_path) {
+                              const path = snap.file_path;
+                              scheduleSettle(r.id, async () => {
+                                await studioDeleteStoredFile(path);
+                              });
+                            }
                             toast("REQUEST REMOVED", {
                               undo: async () => {
+                                cancelSettle(r.id);
                                 const back = await studioRestore(snap);
                                 if (!back.ok) fail(back.error);
                                 else {
@@ -589,7 +646,7 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
           <div className="st-confirm" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
             <p className={`${mono} text-[10px] tracking-[0.18em] text-[#b5342c]`}>× ARE YOU SURE ×</p>
             <h2 className="mt-1.5 text-[26px] leading-[1.15] font-semibold">{confirm.title}</h2>
-            <p className="mt-2 text-[16.5px] leading-[1.5] text-[#5e5047]">{confirm.body}</p>
+            <p className="mt-2 text-[14.5px] leading-[1.5] text-[#5e5047]">{confirm.body}</p>
             <div className="mt-[18px] flex gap-2.5">
               <button
                 type="button"

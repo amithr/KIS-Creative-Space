@@ -24,13 +24,13 @@ export function StudentLanding({ board, showLeaderboard }: Props) {
         <div className="st-fadeup">
           <p className="st-mono text-[11px] tracking-[0.2em] text-[#b5342c]">{L.eyebrow}</p>
           <h1
-            className="mt-3.5 text-[clamp(42px,6vw,76px)] leading-[1.02] font-semibold tracking-[-0.01em]"
+            className="mt-3.5 text-[clamp(42px,6vw,76px)] leading-[1.0] font-semibold tracking-[-0.01em]"
             style={{ textWrap: "balance" }}
           >
             {L.headline}
           </h1>
           <p
-            className="mt-[18px] max-w-[520px] text-[20px] leading-[1.5] text-[#5e5047]"
+            className="mt-[18px] max-w-[520px] text-[17px] leading-[1.55] text-[#5e5047]"
             style={{ textWrap: "pretty" }}
           >
             {L.body}
@@ -77,7 +77,7 @@ export function StudentLanding({ board, showLeaderboard }: Props) {
                 />
               </div>
               <h2 className="mt-2.5 text-[25px] leading-[1.15] font-semibold">{st.title}</h2>
-              <p className="mt-2 text-[16.5px] leading-[1.5] text-[#5e5047]" style={{ textWrap: "pretty" }}>
+              <p className="mt-2 text-[15px] leading-[1.55] text-[#5e5047]" style={{ textWrap: "pretty" }}>
                 {st.body}
               </p>
             </article>
@@ -93,7 +93,7 @@ export function StudentLanding({ board, showLeaderboard }: Props) {
         <div>
           <p className="st-mono text-[11px] tracking-[0.2em] text-[#b5342c]">{L.teaserEyebrow}</p>
           <h2 className="mt-2 text-[30px] leading-[1.15] font-semibold">{L.teaserTitle}</h2>
-          <p className="mt-2 text-[17px] leading-[1.5] text-[#5e5047]" style={{ textWrap: "pretty" }}>
+          <p className="mt-2 text-[15.5px] leading-[1.55] text-[#5e5047]" style={{ textWrap: "pretty" }}>
             {L.teaserBody}
           </p>
         </div>
@@ -140,7 +140,7 @@ export function StudentLanding({ board, showLeaderboard }: Props) {
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[19px] font-semibold">{b.name}</p>
+                    <p className="truncate text-[16.5px] font-semibold">{b.name}</p>
                     <p className="st-mono mt-0.5 text-[9px] tracking-[0.1em] text-[#8c7a68]">
                       {L.boardRow(t.track.ranks[ri].short, b.earned, b.own)}
                     </p>
@@ -164,7 +164,7 @@ export function StudentLanding({ board, showLeaderboard }: Props) {
           <p className="st-mono text-[11px] tracking-[0.2em] text-[#e2b1ab]">{L.rulesEyebrow}</p>
           <h2 className="mt-2 text-[30px] leading-[1.15] font-semibold">{L.rulesTitle}</h2>
         </div>
-        <ul className="flex flex-col gap-2.5 text-[17.5px] leading-[1.45]">
+        <ul className="flex flex-col gap-2.5 text-[15px] leading-[1.45]">
           {L.rules.map((rule) => (
             <li key={rule} className="flex gap-3">
               <span className="st-mono text-[#e2b1ab]">×</span>
