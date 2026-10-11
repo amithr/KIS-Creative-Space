@@ -1354,8 +1354,8 @@ export type PrintAdminResult =
 
 function revalidatePrintsAdmin() {
   revalidatePath("/admin");
-  revalidatePath("/students/requests");
-  revalidatePath("/students/print");
+  revalidatePath("/requests");
+  revalidatePath("/print");
 }
 
 export async function adminSetPrintStatus(

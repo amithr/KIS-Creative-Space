@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Space_Mono } from "next/font/google";
+import { Cormorant_Garamond, Space_Grotesk, Space_Mono } from "next/font/google";
 import { ConfirmProvider } from "@/components/ConfirmDialog";
-import { Header } from "@/components/Header";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -16,10 +15,18 @@ const spaceMono = Space_Mono({
   weight: ["400", "700"],
 });
 
+const cormorant = Cormorant_Garamond({
+  variable: "--font-cormorant",
+  subsets: ["latin", "latin-ext", "cyrillic"],
+  weight: ["500", "600", "700"],
+  style: ["normal", "italic"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "KIS Design Studio",
+  title: "KIS Creativity Space · For students",
   description:
-    "School makerspace resources, room schedule, and inventory for KIS Design Studio.",
+    "Request 3D prints, vinyl posters and die-cut stickers from the KIS Creativity Space and track your jobs.",
 };
 
 export default function RootLayout({
@@ -30,11 +37,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${spaceGrotesk.variable} ${spaceMono.variable} h-full`}
+      className={`${spaceGrotesk.variable} ${spaceMono.variable} ${cormorant.variable} h-full`}
     >
       <body className="min-h-full font-sans">
         <ConfirmProvider>
-          <Header />
           <main>{children}</main>
         </ConfirmProvider>
       </body>

@@ -189,7 +189,7 @@ function AdminDashboardInner({
             АДМІН · ADMIN
           </p>
           <h1 className="font-display text-[38px] font-normal tracking-[-0.02em]">
-            Design Studio admin
+            Creativity Space admin
           </h1>
         </div>
       </section>
@@ -787,7 +787,7 @@ function AdminDashboardInner({
       )}
 
       <div className="no-print">
-        <SiteFooter showAdmin={false} />
+        <SiteFooter />
       </div>
     </div>
   );

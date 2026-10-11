@@ -161,7 +161,7 @@ export function MyRequestsClient() {
             </dl>
           </div>
           <Link
-            href="/students/print"
+            href="/print"
             className="st-btn st-btn-red st-btn-small mt-[18px] !text-[#fbf6ee]"
           >
             + NEW REQUEST

@@ -38,8 +38,8 @@ export type CreatePrintRequestInput = {
 };
 
 function revalidatePrints() {
-  revalidatePath("/students/print");
-  revalidatePath("/students/requests");
+  revalidatePath("/print");
+  revalidatePath("/requests");
   revalidatePath("/admin");
 }
 

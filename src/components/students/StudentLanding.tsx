@@ -66,16 +66,16 @@ export function StudentLanding() {
             we&apos;ll tell you when it&apos;s ready to collect.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
-            <Link href="/students/print?kind=3d" className="st-btn st-btn-red !text-[#fbf6ee]">
+            <Link href="/print?kind=3d" className="st-btn st-btn-red !text-[#fbf6ee]">
               REQUEST A 3D PRINT →
             </Link>
             <Link
-              href="/students/print?kind=sticker"
+              href="/print?kind=sticker"
               className="st-btn st-btn-ink !text-[#fbf6ee]"
             >
               POSTERS &amp; STICKERS →
             </Link>
-            <Link href="/students/requests" className="st-btn st-btn-outline">
+            <Link href="/requests" className="st-btn st-btn-outline">
               CHECK MY PRINTS
             </Link>
           </div>

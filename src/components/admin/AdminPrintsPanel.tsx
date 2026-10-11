@@ -162,7 +162,7 @@ export function AdminPrintsPanel({ requests: initial, onDone }: Props) {
         <p className="mr-2 text-[13.5px] text-[#857e6e]">
           Requests from the{" "}
           <Link
-            href="/students"
+            href="/"
             className="font-semibold text-[#c8102e] hover:underline"
           >
             student site

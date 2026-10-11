@@ -155,7 +155,7 @@ export function PrintRequestClient({ initialKind }: Props) {
     if (fileInput.current) fileInput.current.value = "";
     setFSize(meta.defaultSize);
     toast(meta.pickToast);
-    router.replace(`/students/print?kind=${v}`, { scroll: false });
+    router.replace(`/print?kind=${v}`, { scroll: false });
   }
 
   function onFile(e: ChangeEvent<HTMLInputElement>) {
@@ -580,7 +580,7 @@ export function PrintRequestClient({ initialKind }: Props) {
         <aside className="st-fadeup-45" style={{ animationDelay: ".18s" }}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-[26px] font-semibold">Your recent requests</h2>
-            <Link href="/students/requests" className="st-link-red">
+            <Link href="/requests" className="st-link-red">
               SEE ALL →
             </Link>
           </div>
@@ -591,7 +591,7 @@ export function PrintRequestClient({ initialKind }: Props) {
           )}
           <div className="mt-3 flex flex-col gap-2.5">
             {recent.map((r) => (
-              <Link key={r.id} href="/students/requests" className="st-recent-row">
+              <Link key={r.id} href="/requests" className="st-recent-row">
                 <span className="st-mono shrink-0 bg-[#2a211c] px-[7px] py-[3px] text-[9px] tracking-[0.12em] text-[#fbf6ee]">
                   {kindMeta(r.kind).tag}
                 </span>

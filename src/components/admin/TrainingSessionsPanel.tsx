@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   cancelTrainingSessionAdmin,
@@ -111,11 +110,8 @@ export function TrainingSessionsPanel({
       <div className="px-5 py-1">
         {pendingReqs.length === 0 && upcoming.length === 0 && (
           <p className="py-3 text-[13.5px] text-[#6d6759]">
-            No training requests yet — teacher requests from the{" "}
-            <Link href="/training" className="underline hover:text-[#c8102e]">
-              Training page
-            </Link>{" "}
-            will appear here.
+            No training requests yet — teacher requests from the app will
+            appear here.
           </p>
         )}
 
@@ -326,7 +322,7 @@ export function TrainingSessionsPanel({
 
       <footer className="border-t border-[#eeece5] px-5 py-2.5 text-[12.5px] text-[#857e6e]">
         Training slots follow the space schedule — class bookings and blocked
-        periods are unavailable on the Training page automatically. Confirming
+        periods are unavailable for training automatically. Confirming
         notifies the teacher in the app.
       </footer>
     </section>

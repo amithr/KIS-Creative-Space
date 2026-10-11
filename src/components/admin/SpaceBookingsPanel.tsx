@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   cancelSpaceBooking,
@@ -142,11 +141,8 @@ export function SpaceBookingsPanel({
       <div className="px-5 py-1">
         {pendingReqs.length === 0 && upcoming.length === 0 && (
           <p className="py-3 text-[13.5px] text-[#6d6759]">
-            No space requests yet — teacher requests from the{" "}
-            <Link href="/schedule" className="underline hover:text-[#c8102e]">
-              Schedule page
-            </Link>{" "}
-            will appear here.
+            No space requests yet — teacher requests from the app will appear
+            here.
           </p>
         )}
 
@@ -362,8 +358,8 @@ export function SpaceBookingsPanel({
       </div>
 
       <footer className="border-t border-[#eeece5] px-5 py-2.5 text-[12.5px] text-[#857e6e]">
-        Confirming turns the slot solid on the public Schedule page and notifies
-        the teacher in the app. Declining frees the slot.
+        Confirming turns the slot solid on the schedule in the app and notifies
+        the teacher. Declining frees the slot.
       </footer>
     </section>
   );

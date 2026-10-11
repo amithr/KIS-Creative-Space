@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   adminDeleteWednesdayEntry,
@@ -39,7 +38,7 @@ export function AdminWednesdaysPanel({ entries: initial, onDone }: Props) {
   function remove(entry: WednesdayEntry) {
     askConfirm({
       title: "Remove this sign-up?",
-      body: `P${entry.period} · ${entry.cls} — “${entry.text}”. The teacher will see it disappear from the Wednesdays page.`,
+      body: `P${entry.period} · ${entry.cls} — “${entry.text}”. The teacher will see it disappear in the app.`,
       action: "Remove sign-up",
       fn: () => {
         startTransition(async () => {
@@ -72,15 +71,8 @@ export function AdminWednesdaysPanel({ entries: initial, onDone }: Props) {
         <div>
           <h2 className="text-[22px] font-semibold">Wednesdays</h2>
           <p className="mt-1 text-[13.5px] text-[#857e6e]">
-            Design-session sign-ups from the{" "}
-            <Link
-              href="/wednesdays"
-              className="font-semibold text-[#c8102e] hover:underline"
-            >
-              Wednesdays page
-            </Link>{" "}
-            — resources teachers asked for are highlighted so you can prep the
-            studio.
+            Design-session sign-ups from the app — resources teachers asked
+            for are highlighted so you can prep the studio.
           </p>
         </div>
         {total > 0 && (

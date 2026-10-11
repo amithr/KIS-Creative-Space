@@ -7,16 +7,16 @@ import { DiamondRow, Motif } from "@/components/students/Motif";
 import { StudentToastProvider } from "@/components/students/StudentToast";
 
 const TABS = [
-  { href: "/students", label: "HOME", match: (p: string) => p === "/students" },
+  { href: "/", label: "HOME", match: (p: string) => p === "/" },
   {
-    href: "/students/print",
+    href: "/print",
     label: "PRINT REQUEST",
-    match: (p: string) => p.startsWith("/students/print"),
+    match: (p: string) => p.startsWith("/print"),
   },
   {
-    href: "/students/requests",
+    href: "/requests",
     label: "MY REQUESTS",
-    match: (p: string) => p.startsWith("/students/requests"),
+    match: (p: string) => p.startsWith("/requests"),
   },
 ] as const;
 
@@ -28,7 +28,7 @@ export function StudentShell({ children }: { children: ReactNode }) {
 
       <header className="st-gutter flex flex-wrap items-center justify-between gap-4 border-b border-[#e9dfd0] py-[18px]">
         <Link
-          href="/students"
+          href="/"
           className="flex items-center gap-3.5 select-none hover:!text-[#2a211c]"
         >
           <span className="leading-none">
