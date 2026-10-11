@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Archivo, Fira_Sans_Condensed, IBM_Plex_Mono, Space_Mono } from "next/font/google";
 import "./globals.css";
 import "./(student)/students.css";
@@ -39,6 +39,10 @@ export const metadata: Metadata = {
   title: "KIS Creativity Space · For students",
   description:
     "Request 3D prints, vinyl posters and die-cut stickers from the KIS Creativity Space and track your jobs.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#fbf6ee",
 };
 
 export default function RootLayout({
