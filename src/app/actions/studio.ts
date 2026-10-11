@@ -25,7 +25,7 @@ export type StudioResult<T = undefined> =
 type Service = NonNullable<ReturnType<typeof createServiceClient>>;
 
 function revalidateStudio() {
-  revalidatePath("/studio");
+  revalidatePath("/admin");
   revalidatePath("/");
   revalidatePath("/print");
   revalidatePath("/requests");
@@ -55,13 +55,13 @@ export async function studioSignIn(password: string): Promise<StudioResult> {
   }
   if (!checkStudioPassword(password)) return { ok: false, error: "wrong" };
   await setStudioSession();
-  revalidatePath("/studio");
+  revalidatePath("/admin");
   return { ok: true };
 }
 
 export async function studioSignOut(): Promise<StudioResult> {
   await clearStudioSession();
-  revalidatePath("/studio");
+  revalidatePath("/admin");
   return { ok: true };
 }
 

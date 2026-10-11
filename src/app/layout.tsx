@@ -1,19 +1,7 @@
 import type { Metadata } from "next";
-import {
-  Cormorant_Garamond,
-  IBM_Plex_Mono,
-  Space_Grotesk,
-  Space_Mono,
-} from "next/font/google";
-import { ConfirmProvider } from "@/components/ConfirmDialog";
+import { Cormorant_Garamond, IBM_Plex_Mono, Space_Mono } from "next/font/google";
 import "./globals.css";
 import "./(student)/students.css";
-
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
-  subsets: ["latin", "latin-ext", "vietnamese"],
-  weight: ["300", "400", "500", "600", "700"],
-});
 
 const spaceMono = Space_Mono({
   variable: "--font-space-mono",
@@ -52,12 +40,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${spaceGrotesk.variable} ${spaceMono.variable} ${plexMono.variable} ${cormorant.variable} h-full`}
+      className={`${spaceMono.variable} ${plexMono.variable} ${cormorant.variable} h-full`}
     >
       <body className="min-h-full font-sans">
-        <ConfirmProvider>
-          <main>{children}</main>
-        </ConfirmProvider>
+        <main>{children}</main>
       </body>
     </html>
   );

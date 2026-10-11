@@ -88,7 +88,7 @@ ActivityEvent {
 ```
 
 ## Who writes what
-- **Web** creates/cancels `Reservation` (status `reserved`), manages `Item` stock, and creates `SpaceBooking` requests (`pending`) from the Schedule page. **Web admin** confirms / declines / cancels space bookings, creates/removes `SpaceBlock`s, and can check out / check in by typing an item code (the same alphanumeric `Item.id` from the QR label) — the app resolves it by camera scan, the web by text entry; both produce identical item-reservation transitions.
+- **Web** is now only the student print site plus the Studio Admin print queue: it reads/writes `PrintRequest` and `FilamentColor` and nothing else. The former web teacher admin (space bookings, blocks, inventory, projects, Wednesdays, QR labels) was removed; those tables are owned by the app alone.
 - **App** transitions item reservation status: check-out (`reserved → out`, sets `outQty`), check-in (`out → returned` when `outQty` hits 0; partial returns decrement `outQty` and keep status `out`). Walk-up check-outs create a Reservation directly with `status: "out"`, `days: [today]`, `periods: "all"`, `source: "app"`. App also confirms/declines space bookings and does full Item CRUD.
 - Both append `ActivityEvent` for item mutations. Both subscribe to realtime on `space_bookings` so confirm/decline syncs instantly.
 

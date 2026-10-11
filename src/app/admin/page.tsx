@@ -1,88 +1,16 @@
 export const dynamic = "force-dynamic";
 
-import { AdminDashboard } from "@/components/admin/AdminDashboard";
-import { AdminShell } from "@/components/admin/AdminShell";
-import { LoginForm } from "@/components/admin/LoginForm";
-import {
-  getActiveReservations,
-  getAdminSpaceBookings,
-  getAdminTrainingSessions,
-  getAreas,
-  getEquipmentWithUnits,
-  getItemRequests,
-  getSpaceBlocks,
-  getStudentProjects,
-  getWednesdayEntries,
-  isTeacher,
-} from "@/lib/data";
-import { wednesdayHorizonIso } from "@/lib/wednesdays";
+import { StudioGate, StudioQueue } from "@/components/studio/StudioAdminClient";
+import { getAllPrintRequests, getFilamentColors } from "@/lib/data";
+import { isStudioAdmin, studioConfigured } from "@/lib/studio-session";
 
-const ERROR_MESSAGES: Record<string, string> = {
-  not_teacher:
-    "This account is not registered as a teacher. Ask an administrator to add you to the teachers table.",
-  auth_failed: "Your session expired. Please sign in again.",
-};
-
-type PageProps = {
-  searchParams: Promise<{ error?: string }>;
-};
-
-export default async function AdminPage({ searchParams }: PageProps) {
-  const { error } = await searchParams;
-  const authenticated = await isTeacher();
-
-  if (!authenticated) {
-    const errorMessage = error
-      ? (ERROR_MESSAGES[error] ?? decodeURIComponent(error))
-      : undefined;
-
-    return (
-      <AdminShell authenticated={false}>
-        <div className="page-gutter">
-          <LoginForm errorMessage={errorMessage} />
-        </div>
-      </AdminShell>
-    );
+export default async function StudioPage() {
+  const authed = await isStudioAdmin();
+  if (!authed) {
+    const all = await getAllPrintRequests();
+    const open = all.filter((r) => r.status < 3).length;
+    return <StudioGate openCount={open} configured={studioConfigured()} />;
   }
-
-  const [
-    equipment,
-    reservations,
-    spaceBookings,
-    spaceBlocks,
-    trainingSessions,
-    itemRequests,
-    areas,
-    studentProjects,
-    wednesdayEntries,
-  ] = await Promise.all([
-    getEquipmentWithUnits(),
-    getActiveReservations(),
-    getAdminSpaceBookings(),
-    getSpaceBlocks(),
-    getAdminTrainingSessions(),
-    getItemRequests(),
-    getAreas(),
-    getStudentProjects(),
-    getWednesdayEntries(
-      wednesdayHorizonIso().from,
-      wednesdayHorizonIso().to,
-    ),
-  ]);
-
-  return (
-    <AdminShell authenticated>
-      <AdminDashboard
-        equipment={equipment}
-        reservations={reservations}
-        spaceBookings={spaceBookings}
-        spaceBlocks={spaceBlocks}
-        trainingSessions={trainingSessions}
-        itemRequests={itemRequests}
-        areas={areas}
-        studentProjects={studentProjects}
-        wednesdayEntries={wednesdayEntries}
-      />
-    </AdminShell>
-  );
+  const [requests, colors] = await Promise.all([getAllPrintRequests(), getFilamentColors()]);
+  return <StudioQueue requests={requests} colors={colors} />;
 }

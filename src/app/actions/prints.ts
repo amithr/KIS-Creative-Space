@@ -43,7 +43,7 @@ function revalidatePrints() {
   revalidatePath("/");
   revalidatePath("/print");
   revalidatePath("/requests");
-  revalidatePath("/studio");
+  revalidatePath("/admin");
 }
 
 /** Confirms the browser upload landed in the bucket and is within the cap. */
