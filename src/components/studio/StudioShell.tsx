@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition, type ReactNode } from "react";
 import { studioSignOut } from "@/app/actions/studio";
-import { DiamondRow, Motif } from "@/components/students/Motif";
+import { BrandMark, DiamondRow } from "@/components/students/Motif";
 import { StudentToastProvider, useStudentToast } from "@/components/students/StudentToast";
 
 export function StudioShell({ authed, children }: { authed: boolean; children: ReactNode }) {
@@ -26,11 +26,11 @@ function ShellInner({ authed, children }: { authed: boolean; children: ReactNode
       <header className="st-gutter flex flex-wrap items-center justify-between gap-4 border-b border-[#e9dfd0] py-[18px]">
         <div className="flex items-center gap-3.5">
           <span className="leading-none">
-            <Motif name="cube" cell={4} color="#2a211c" speed={30} />
+            <BrandMark size={42} tone="ink" />
           </span>
           <span>
             <span className="flex items-center gap-2.5">
-              <span className="text-[24px] leading-none font-bold tracking-[0.02em]">KIS Creativity Space</span>
+              <span className="text-[24px] leading-none font-bold tracking-[0.02em]">KIS Design Studio</span>
               <span className="st-mono bg-[#2a211c] px-2 py-[3px] text-[9px] tracking-[0.16em] text-[#fbf6ee]">
                 STUDIO ADMIN
               </span>

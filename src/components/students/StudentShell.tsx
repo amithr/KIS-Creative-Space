@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { LocaleProvider, useLocale } from "@/components/students/Locale";
-import { DiamondRow, Motif } from "@/components/students/Motif";
+import { BrandMark, DiamondRow } from "@/components/students/Motif";
 import { StitchRun } from "@/components/students/StitchRun";
 import { StudentToastProvider } from "@/components/students/StudentToast";
 
@@ -42,11 +42,11 @@ function ShellInner({ children }: { children: ReactNode }) {
           className="flex items-center gap-3.5 select-none hover:!text-[#2a211c]"
         >
           <span className="leading-none">
-            <Motif name="cube" cell={4} color="#b5342c" speed={30} />
+            <BrandMark size={42} tone="ink" />
           </span>
           <span>
             <span className="block text-[24px] leading-none font-bold tracking-[0.02em]">
-              KIS Creativity Space
+              KIS Design Studio
             </span>
             <span className="st-mono mt-1 block text-[10px] tracking-[0.18em] text-[#8c7a68]">
               {t.brandSub}

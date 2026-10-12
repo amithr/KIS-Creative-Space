@@ -1,6 +1,6 @@
-# KIS Creativity Space
+# KIS Design Studio
 
-Next.js site for the KIS school makerspace: the public **student print site** (3D prints, posters, stickers) plus the staff **print-queue admin**. Teacher-facing tools (bookings, training, projects, Wednesdays, inventory) live only in the Flutter companion app, which shares [docs/DATA-CONTRACT.md](docs/DATA-CONTRACT.md) and the same Supabase database.
+Next.js site for the KIS Design Studio (the school makerspace): the public **student print site** (3D prints, posters, stickers) plus the staff **print-queue admin**. Teacher-facing tools (bookings, training, projects, Wednesdays, inventory) live only in the Flutter companion app, which shares [docs/DATA-CONTRACT.md](docs/DATA-CONTRACT.md) and the same Supabase database.
 
 ## Pages
 
@@ -42,3 +42,4 @@ See `.env.example`.
 - The site is bilingual: an EN / УКР switch in the nav (remembered in `localStorage`, defaults to Ukrainian for `uk` browsers). All student copy lives in `src/lib/i18n.ts`; the Studio Admin stays English. The type is **Archivo** on its `wdth` axis at `font-stretch: 75%` (semi-condensed) plus **Space Mono** for labels; neither has Cyrillic, so Fira Sans Condensed and IBM Plex Mono are loaded as per-glyph fallbacks for the Ukrainian copy.
 - Easter egg: typing `stitch` anywhere outside a text field (or clicking the faint `· ×` at the end of the footer) opens **Stitch Run**, a canvas runner drawn entirely with `×` glyphs (`src/components/students/StitchRun.tsx`). Space / ↑ / tap jumps, ↓ ducks, Esc closes; the best score is kept in `localStorage` (`kis-stitch-run-hi`).
 - The student site is the whole public site, and the Studio Admin is the whole admin: the former teacher dashboard (bookings, blocks, inventory, projects, Wednesdays, QR labels) was removed from the web along with its Supabase-Auth login. The chrome everywhere is Archivo (wdth 75) + Space Mono with the cross-stitch `×` motifs (see `src/components/students/Motif.tsx`).
+- **Brand.** The product is **KIS Design Studio**; the hero motto is "Turn your ideas into something real." The logo is a stitched **D** built from the same `×` glyph grid as every motif (`BrandMark` in `Motif.tsx`, 42 px in both navs, one red stitch at the centre of the counter; `tone` picks ink-on-cream, cream-on-ink or cream-on-red). Static SVGs for email, social and print are in `public/brand/` (`kis-design-studio-mark-{ink,cream,on-red}.svg`, `kis-design-studio-lockup.svg`); `src/app/icon.svg`, `favicon.ico` and `apple-icon.png` are the on-red tile. Keep one cell (⅐ of the mark) of clear space, never stretch or recolour it outside those three palettes, and never set it on a gradient.

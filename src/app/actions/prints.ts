@@ -200,7 +200,7 @@ export async function cancelPrintRequest(
   if (r.status !== 0) {
     return {
       ok: false,
-      error: "It's already on the machine — ask at the Creativity Space.",
+      error: "It's already on the machine — ask at the Design Studio.",
     };
   }
 

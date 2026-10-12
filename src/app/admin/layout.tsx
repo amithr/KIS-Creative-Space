@@ -3,7 +3,7 @@ import { StudioShell } from "@/components/studio/StudioShell";
 import { isStudioAdmin } from "@/lib/studio-session";
 
 export const metadata: Metadata = {
-  title: "KIS Creativity Space · Admin",
+  title: "KIS Design Studio · Admin",
   robots: { index: false },
 };
 

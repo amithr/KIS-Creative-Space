@@ -47,6 +47,8 @@ export const MOTIFS = {
     ".xx...xx.", "...xxx...", "......x..",
   ],
   ribbon: ["x.x.x.x.x.x.x.x", ".x.x.x.x.x.x.x.", "x.x.x.x.x.x.x.x"],
+  /** The brand mark: a stitched D (for Design); the centre stitch is red. */
+  logoD: ["xxxxx..", "x....x.", "x.....x", "x..x..x", "x.....x", "x....x.", "xxxxx.."],
 } as const;
 
 export type MotifName = keyof typeof MOTIFS;
@@ -63,6 +65,8 @@ type Props = {
   className?: string;
   style?: CSSProperties;
   title?: string;
+  /** One stitch in a second colour (row/col into the bitmap). */
+  accent?: { row: number; col: number; color: string };
 };
 
 /**
@@ -78,6 +82,7 @@ export function Motif({
   className,
   style,
   title,
+  accent,
 }: Props) {
   const rows = MOTIFS[name];
   let i = 0;
@@ -102,7 +107,10 @@ export function Motif({
             <span
               key={`${y}-${x}`}
               className="x"
-              style={{ animationDelay: `${delay + i++ * speed}ms` }}
+              style={{
+                animationDelay: `${delay + i++ * speed}ms`,
+                ...(accent && accent.row === y && accent.col === x ? { color: accent.color } : {}),
+              }}
             >
               ×
             </span>
@@ -112,6 +120,54 @@ export function Motif({
         ),
       )}
     </div>
+  );
+}
+
+/** The three palettes the mark may be set in (CHANGES-naming-and-logo.md). */
+const MARK_TONES = {
+  /** Ink on cream/white — the default. */
+  ink: { color: "#2a211c", accent: "#b5342c" },
+  /** Cream on ink backgrounds (admin band, dark footers). */
+  cream: { color: "#fbf6ee", accent: "#e2b1ab" },
+  /** Cream on the red tile — app icon / favicon / avatar. */
+  onRed: { color: "#fbf6ee", accent: "#2a211c" },
+} as const;
+
+type BrandMarkProps = {
+  /** Overall size in px (the mark is 7 cells square); nav uses 38–44. */
+  size?: number;
+  tone?: keyof typeof MARK_TONES;
+  delay?: number;
+  speed?: number;
+  className?: string;
+  title?: string;
+};
+
+/**
+ * KIS Design Studio mark: the stitched D rendered as the same glyph grid as
+ * every other motif, so it embroiders itself in on first paint. Static SVG
+ * versions live in /public/brand for favicons, emails and social.
+ */
+export function BrandMark({
+  size = 42,
+  tone = "ink",
+  delay = 0,
+  speed = 30,
+  className,
+  title,
+}: BrandMarkProps) {
+  const t = MARK_TONES[tone];
+  return (
+    <Motif
+      name="logoD"
+      cell={size / 7}
+      color={t.color}
+      accent={{ row: 3, col: 3, color: t.accent }}
+      delay={delay}
+      speed={speed}
+      className={className}
+      title={title}
+    />
   );
 }
 
