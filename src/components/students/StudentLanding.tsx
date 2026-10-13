@@ -22,7 +22,7 @@ export function StudentLanding({ board, showLeaderboard }: Props) {
     <>
       <section className="st-grid-hero st-gutter pt-14 pb-9">
         <div className="st-fadeup">
-          <p className="st-mono text-[11px] tracking-[0.2em] text-[#b5342c]">{L.eyebrow}</p>
+          <p className="st-mono text-[12px] tracking-[0.2em] text-[#b5342c]">{L.eyebrow}</p>
           <h1
             className="mt-3.5 text-[clamp(42px,6vw,76px)] leading-[1.0] font-semibold tracking-[-0.01em]"
             style={{ textWrap: "balance" }}
@@ -30,7 +30,7 @@ export function StudentLanding({ board, showLeaderboard }: Props) {
             {L.headline}
           </h1>
           <p
-            className="mt-[18px] max-w-[520px] text-[17px] leading-[1.55] text-[#5e5047]"
+            className="mt-[18px] max-w-[520px] text-[18.5px] leading-[1.55] text-[#5e5047]"
             style={{ textWrap: "pretty" }}
           >
             {L.body}
@@ -63,12 +63,12 @@ export function StudentLanding({ board, showLeaderboard }: Props) {
       <DiamondRow />
 
       <section className="st-gutter pt-9 pb-5">
-        <p className="st-mono text-[11px] tracking-[0.2em] text-[#8c7a68]">{L.how}</p>
+        <p className="st-mono text-[12px] tracking-[0.2em] text-[#8c7a68]">{L.how}</p>
         <div className="st-grid-steps mt-[18px]">
           {L.steps.map((st, i) => (
             <article key={st.n} className="st-step-card" style={{ animationDelay: `${i * 0.08}s` }}>
               <div className="flex items-center justify-between">
-                <span className="st-mono text-[11px] tracking-[0.14em] text-[#b5342c]">{st.n}</span>
+                <span className="st-mono text-[12px] tracking-[0.14em] text-[#b5342c]">{st.n}</span>
                 <Motif
                   name={STEP_MOTIFS[i].motif}
                   cell={5}
@@ -77,7 +77,7 @@ export function StudentLanding({ board, showLeaderboard }: Props) {
                 />
               </div>
               <h2 className="mt-2.5 text-[25px] leading-[1.15] font-semibold">{st.title}</h2>
-              <p className="mt-2 text-[15px] leading-[1.55] text-[#5e5047]" style={{ textWrap: "pretty" }}>
+              <p className="mt-2 text-[16.5px] leading-[1.55] text-[#5e5047]" style={{ textWrap: "pretty" }}>
                 {st.body}
               </p>
             </article>
@@ -91,9 +91,9 @@ export function StudentLanding({ board, showLeaderboard }: Props) {
         style={{ animationDelay: ".2s", animationDuration: ".5s" }}
       >
         <div>
-          <p className="st-mono text-[11px] tracking-[0.2em] text-[#b5342c]">{L.teaserEyebrow}</p>
+          <p className="st-mono text-[12px] tracking-[0.2em] text-[#b5342c]">{L.teaserEyebrow}</p>
           <h2 className="mt-2 text-[30px] leading-[1.15] font-semibold">{L.teaserTitle}</h2>
-          <p className="mt-2 text-[15.5px] leading-[1.55] text-[#5e5047]" style={{ textWrap: "pretty" }}>
+          <p className="mt-2 text-[17px] leading-[1.55] text-[#5e5047]" style={{ textWrap: "pretty" }}>
             {L.teaserBody}
           </p>
         </div>
@@ -121,8 +121,8 @@ export function StudentLanding({ board, showLeaderboard }: Props) {
           style={{ animationDelay: ".25s", animationDuration: ".5s" }}
         >
           <div className="flex flex-wrap items-baseline justify-between gap-3">
-            <p className="st-mono text-[11px] tracking-[0.2em] text-[#b5342c]">{L.boardEyebrow}</p>
-            <p className="st-mono text-[9.5px] tracking-[0.1em] text-[#8c7a68]">{L.boardMeta(board.length)}</p>
+            <p className="st-mono text-[12px] tracking-[0.2em] text-[#b5342c]">{L.boardEyebrow}</p>
+            <p className="st-mono text-[10.5px] tracking-[0.1em] text-[#8c7a68]">{L.boardMeta(board.length)}</p>
           </div>
           <div className="mt-4 grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
             {board.map((b, i) => {
@@ -140,8 +140,8 @@ export function StudentLanding({ board, showLeaderboard }: Props) {
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[16.5px] font-semibold">{b.name}</p>
-                    <p className="st-mono mt-0.5 text-[9px] tracking-[0.1em] text-[#8c7a68]">
+                    <p className="truncate text-[18px] font-semibold">{b.name}</p>
+                    <p className="st-mono mt-0.5 text-[10px] tracking-[0.1em] text-[#8c7a68]">
                       {L.boardRow(t.track.ranks[ri].short, b.earned, b.own)}
                     </p>
                   </div>
@@ -161,10 +161,10 @@ export function StudentLanding({ board, showLeaderboard }: Props) {
 
       <section className="st-grid-rules mx-[5vw] mt-6 mb-14 bg-[#2a211c] px-[30px] py-7 text-[#fbf6ee]">
         <div>
-          <p className="st-mono text-[11px] tracking-[0.2em] text-[#e2b1ab]">{L.rulesEyebrow}</p>
+          <p className="st-mono text-[12px] tracking-[0.2em] text-[#e2b1ab]">{L.rulesEyebrow}</p>
           <h2 className="mt-2 text-[30px] leading-[1.15] font-semibold">{L.rulesTitle}</h2>
         </div>
-        <ul className="flex flex-col gap-2.5 text-[15px] leading-[1.45]">
+        <ul className="flex flex-col gap-2.5 text-[16.5px] leading-[1.45]">
           {L.rules.map((rule) => (
             <li key={rule} className="flex gap-3">
               <span className="st-mono text-[#e2b1ab]">×</span>

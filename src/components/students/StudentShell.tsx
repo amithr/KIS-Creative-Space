@@ -48,7 +48,7 @@ function ShellInner({ children }: { children: ReactNode }) {
             <span className="block text-[24px] leading-none font-bold tracking-[0.02em]">
               KIS Design Studio
             </span>
-            <span className="st-mono mt-1 block text-[10px] tracking-[0.18em] text-[#8c7a68]">
+            <span className="st-mono mt-1 block text-[11px] tracking-[0.18em] text-[#8c7a68]">
               {t.brandSub}
             </span>
           </span>
@@ -90,7 +90,7 @@ function ShellInner({ children }: { children: ReactNode }) {
 
       <footer className="mt-auto">
         <DiamondRow className="!py-1" />
-        <div className="st-gutter flex flex-wrap justify-between gap-3 border-t border-[#e9dfd0] py-4 text-[14px] text-[#8c7a68]">
+        <div className="st-gutter flex flex-wrap justify-between gap-3 border-t border-[#e9dfd0] py-4 text-[15.5px] text-[#8c7a68]">
           <span>
             {t.footer}{" "}
             <button
@@ -103,7 +103,7 @@ function ShellInner({ children }: { children: ReactNode }) {
               · ×
             </button>
           </span>
-          <span className="st-mono text-[10.5px] tracking-[0.14em]">
+          <span className="st-mono text-[11.5px] tracking-[0.14em]">
             {t.footerMark}
           </span>
         </div>

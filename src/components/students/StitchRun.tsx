@@ -307,12 +307,12 @@ export function StitchRun({ open, onOpen, onClose }: Props) {
       <div className="st-game">
         <div className="st-game-head">
           <div className="flex flex-wrap items-baseline gap-3">
-            <span className="st-mono text-[10px] tracking-[0.2em] text-[#b5342c]">{T.eyebrow}</span>
+            <span className="st-mono text-[11px] tracking-[0.2em] text-[#b5342c]">{T.eyebrow}</span>
             <span className="text-[24px] leading-none font-bold">{T.title}</span>
-            <span className="text-[13.5px] text-[#8c7a68]">{T.tagline}</span>
+            <span className="text-[15px] text-[#8c7a68]">{T.tagline}</span>
           </div>
           <div className="flex items-center gap-3.5">
-            <span className="st-mono text-[10.5px] tracking-[0.12em] text-[#8c7a68]">
+            <span className="st-mono text-[11.5px] tracking-[0.12em] text-[#8c7a68]">
               {T.best} {String(hi).padStart(5, "0")}
             </span>
             <button type="button" className="st-game-close" onClick={onClose}>

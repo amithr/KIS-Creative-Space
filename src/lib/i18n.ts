@@ -10,18 +10,30 @@ export function isLang(v: unknown): v is Lang {
 type KindStrings = {
   label: string;
   tag: string;
+  /** Accepted types, shown as the right-aligned mono hint on step 2. */
   hint: string;
   title: string;
-  fileLabel: string;
-  fileSub: string;
+  /** One short line under the drop-box title. */
+  fileHint: string;
   choose: string;
   pickToast: string;
   wrongFile: string;
   missingFile: string;
 };
 
-type CutStrings = { label: string; tip: string; hint: string };
-type OriginStrings = { label: string; hint: string; pts: string; toast: string; tag: string };
+type CutStrings = { label: string; tip: string };
+type OriginStrings = {
+  /** Full wording — tooltip on the tile. */
+  label: string;
+  hint: string;
+  /** Tile copy: big mono glyph, short label, cost line. */
+  big: string;
+  short: string;
+  cost: string;
+  pts: string;
+  toast: string;
+  tag: string;
+};
 type RankStrings = { name: string; short: string; blurb: string };
 
 export type Strings = {
@@ -64,55 +76,40 @@ export type Strings = {
   };
   form: {
     eyebrow: string;
-    name: string;
-    namePlaceholder: string;
-    email: string;
-    emailHint: string;
-    yourPoints: string;
-    howPointsWork: string;
-    pointsRules: string;
-    walletNoEmail: string;
-    walletSchool: (balance: number) => string;
-    walletBroke: string;
-    walletPending: (pending: number) => string;
-    walletDefault: string;
-    what: string;
+    /** Small mono section labels (one continuous form, no step numbering). */
+    sections: { what: string; file: string; who: string; you: string };
     kinds: Record<PrintKind, KindStrings>;
-    attachedSub: (mb: string) => string;
+    browse: string;
+    swap: string;
+    attachedShort: (mb: string) => string;
     attachedToast: string;
     svgTip: string;
     tooBig: string;
     howMany: string;
-    bigBatch: string;
-    posterCopies: string;
-    identicalStickers: string;
-    cutStyle: string;
+    cut: string;
     cuts: Record<PrintCut, CutStrings>;
     colour: string;
-    inStock: (n: number) => string;
-    originQ: string;
-    earnsTag: string;
-    earnsTip: string;
+    pointsQ: string;
+    pointsTip: string;
     origins: Record<PrintOrigin, OriginStrings>;
-    teacherQ: string;
     teacherPlaceholder: string;
-    teacherNote: string;
     teacherToast: (name: string) => string;
+    points: string;
+    namePlaceholder: string;
+    emailPlaceholder: string;
     missing: { name: string; email: string; origin: string; teacher: string };
     stillNeeded: (list: string) => string;
-    brokeSummary: (balance: number) => string;
-    readyToSend: string;
-    summary3d: (file: string, color: string) => string;
-    summaryVinyl: (qty: number, file: string, kind: string, cut: string) => string;
-    summaryFree: (teacher: string) => string;
-    summaryCost: (left: number) => string;
-    submitPaid: string;
-    submitFree: string;
+    brokeLine: (balance: number) => string;
+    readyLine3d: (file: string, color: string) => string;
+    readyLineVinyl: (qty: number, file: string) => string;
+    readyFor: (teacher: string) => string;
+    readyLeft: (left: number) => string;
+    sendIt: string;
+    sendPaid: string;
+    sendFree: string;
     notEnough: string;
     notEnoughToast: string;
-    finishSteps: string;
     sending: string;
-    afterSubmit: string;
     almost: (list: string) => string;
     sentSchool: (teacher: string) => string;
     sentMine: (lo: number, hi: number) => string;
@@ -219,79 +216,63 @@ const en: Strings = {
   },
   form: {
     eyebrow: "× PRINT REQUEST ×",
-    name: "YOUR NAME",
-    namePlaceholder: "Olena K.",
-    email: "KIS EMAIL",
-    emailHint: "It's how we match your prints to you.",
-    yourPoints: "YOUR POINTS",
-    howPointsWork: "HOW POINTS WORK ?",
-    pointsRules: "Start with 30. Every print costs 10. Found files earn nothing back; your own designs earn 15 + up to 15 for quality — awarded when the studio marks it READY. School-project prints (set by a teacher) are free.",
-    walletNoEmail: "Type your email to see your balance. New makers start with 30.",
-    walletSchool: (b) => `School-project prints are free — your balance stays at ${b}.`,
-    walletBroke: "Not enough for a print (10). Ask the Design Studio team for a top-up, wait for a pending design to be rated — or mark it as a school project if a teacher set it.",
-    walletPending: (p) => `This print costs 10. ${p} points are pending on prints still in progress.`,
-    walletDefault: "This print costs 10. Design your own to earn more back than you spend.",
-    what: "WHAT ARE WE MAKING?",
+    sections: { what: "WHAT ARE YOU MAKING?", file: "YOUR FILE", who: "WHO DESIGNED IT?", you: "ABOUT YOU" },
     kinds: {
       "3d": {
         label: "3D print", tag: "3D", hint: ".STL · .3MF", title: "Tell us about your print",
-        fileLabel: "YOUR 3D FILE · .STL OR .3MF", fileSub: ".STL or .3MF · under 50 MB", choose: "Choose your 3D file",
+        fileHint: ".stl or .3mf file", choose: "Choose your 3D file",
         pickToast: "3D PRINT · ATTACH AN .STL OR .3MF", wrongFile: "THAT ISN'T A 3D FILE — EXPORT AS .STL OR .3MF", missingFile: "a 3D file",
       },
       poster: {
         label: "Poster", tag: "POSTER", hint: "PDF · PNG · SVG", title: "Tell us about your poster",
-        fileLabel: "YOUR ARTWORK · PDF, PNG OR SVG AT FULL SIZE", fileSub: "PDF, PNG or SVG · under 50 MB", choose: "Choose your artwork",
-        pickToast: "POSTER · PRINTED ON ADHESIVE VINYL", wrongFile: "THAT FILE TYPE WON'T PRINT — USE PDF · PNG · SVG", missingFile: "your artwork",
+        fileHint: "Full size, as you want it printed", choose: "Choose your artwork",
+        pickToast: "POSTER · PRINTED ON ADHESIVE VINYL", wrongFile: "THAT FILE TYPE WON'T PRINT — USE PDF · PNG · SVG", missingFile: "your artwork file",
       },
       sticker: {
         label: "Stickers", tag: "STICKERS", hint: "SVG · PNG · CUT TO SHAPE", title: "Tell us about your stickers",
-        fileLabel: "YOUR DESIGN · SVG CUTS BEST, PNG WORKS TOO", fileSub: "SVG, PDF or PNG · we print on adhesive vinyl and cut it out", choose: "Choose your artwork",
-        pickToast: "STICKERS · PRINTED ON VINYL, THEN CUT TO SHAPE", wrongFile: "THAT FILE TYPE WON'T PRINT — USE SVG · PNG", missingFile: "your artwork",
+        fileHint: "SVG cuts the cleanest", choose: "Choose your artwork",
+        pickToast: "STICKERS · PRINTED ON VINYL, THEN CUT TO SHAPE", wrongFile: "THAT FILE TYPE WON'T PRINT — USE SVG · PNG", missingFile: "your artwork file",
       },
     },
-    attachedSub: (mb) => `${mb} MB · tap to swap it`,
+    browse: "BROWSE",
+    swap: "SWAP",
+    attachedShort: (mb) => `${mb} MB · tap to swap`,
     attachedToast: "FILE ATTACHED ✓ · ",
     svgTip: " · TIP: SVG CUTS CLEANER",
     tooBig: "THAT FILE IS OVER 50 MB — EXPORT A SMALLER ONE",
-    howMany: "HOW MANY?",
-    bigBatch: "Big batch — allow an extra day.",
-    posterCopies: "Copies of the poster.",
-    identicalStickers: "Identical stickers.",
-    cutStyle: "CUT STYLE",
+    howMany: "HOW MANY",
+    cut: "CUT",
     cuts: {
-      contour: { label: "CUT AROUND", tip: "Cut tightly around the outline of your design", hint: "Vinyl cutter follows your outline — SVG gives the cleanest edge." },
-      border: { label: "WITH BORDER", tip: "A small white border around the design", hint: "A 3 mm vinyl border around the shape — classic sticker look." },
-      square: { label: "SQUARE", tip: "Simple square or rectangle", hint: "Fast and simple — good for posters and labels." },
+      contour: { label: "CUT AROUND", tip: "Cut tightly around the outline of your design" },
+      border: { label: "WITH BORDER", tip: "A small white border around the design" },
+      square: { label: "SQUARE", tip: "Simple square or rectangle" },
     },
-    colour: "FILAMENT COLOUR",
-    inStock: (n) => `${n} IN STOCK`,
-    originQ: "DID YOU DESIGN IT YOURSELF?",
-    earnsTag: "× EARNS STITCHES",
-    earnsTip: "Every request earns stitches on your rushnyk. Your own designs earn the most.",
+    colour: "COLOUR",
+    pointsQ: "POINTS ?",
+    pointsTip: "Start with 30 points. A print costs 10. Your own design earns 20–30 back when it's ready. School projects are free. Found files earn nothing.",
     origins: {
-      mine: { label: "I designed it", hint: "Modelled or drawn by you, from scratch.", pts: "COSTS 10 · EARNS 15–30", toast: "OWN DESIGN · COSTS 10, EARNS 15–30 BACK WHEN READY", tag: "OWN DESIGN" },
-      school: { label: "It's for a school project", hint: "Set by a teacher — pick who it's for.", pts: "FREE · NO POINTS", toast: "SCHOOL PROJECT · FREE · NOW PICK THE TEACHER", tag: "SCHOOL PROJECT" },
-      found: { label: "I found it", hint: "Downloaded as-is. Costs points, earns none.", pts: "COSTS 10 · EARNS 0", toast: "FOUND · COSTS 10, EARNS NOTHING BACK · THANKS FOR BEING HONEST", tag: "FOUND" },
+      mine: { label: "I designed it", hint: "Modelled or drawn by you, from scratch.", big: "×××", short: "I made it", cost: "−10 · EARN 20–30", pts: "COSTS 10 · EARNS 15–30", toast: "OWN DESIGN · COSTS 10, EARNS 15–30 BACK WHEN READY", tag: "OWN DESIGN" },
+      school: { label: "It's for a school project", hint: "Set by a teacher — pick who it's for.", big: "★", short: "For a teacher", cost: "FREE", pts: "FREE · NO POINTS", toast: "SCHOOL PROJECT · FREE · NOW PICK THE TEACHER", tag: "SCHOOL PROJECT" },
+      found: { label: "I found it", hint: "Downloaded as-is. Costs points, earns none.", big: "↓", short: "I found it", cost: "−10", pts: "COSTS 10 · EARNS 0", toast: "FOUND · COSTS 10, EARNS NOTHING BACK · THANKS FOR BEING HONEST", tag: "FOUND" },
     },
-    teacherQ: "WHICH TEACHER IS IT FOR?",
-    teacherPlaceholder: "Choose a teacher…",
-    teacherNote: "School-project prints are free — no points spent, none earned. We'll let the teacher know it's coming.",
+    teacherPlaceholder: "Which teacher is it for?",
     teacherToast: (name) => `FOR ${name.toUpperCase()} · FREE PRINT · WE'LL LET THEM KNOW`,
-    missing: { name: "your name", email: "your email", origin: "whether you designed it", teacher: "the teacher it's for" },
-    stillNeeded: (list) => `Still needed — add ${list}.`,
-    brokeSummary: (b) => `You have ${b} points — a print costs 10. Ask the Design Studio team for a top-up, or mark it as a school project.`,
-    readyToSend: "Ready to send ✓ · ",
-    summary3d: (file, color) => `${file} in ${color}`,
-    summaryVinyl: (qty, file, kind, cut) => `${qty} × ${file} · ${kind} · ${cut}`,
-    summaryFree: (teacher) => ` · for ${teacher} · free`,
-    summaryCost: (left) => ` · costs 10, leaves you ${left}`,
-    submitPaid: "SEND MY PRINT REQUEST · −10 →",
-    submitFree: "SEND MY PRINT REQUEST · FREE →",
+    points: "POINTS",
+    namePlaceholder: "Your name",
+    emailPlaceholder: "Your KIS email",
+    missing: { name: "your name", email: "your email", origin: "who designed it", teacher: "the teacher it's for" },
+    stillNeeded: (list) => `Still needed: ${list}.`,
+    brokeLine: (b) => `Only ${b} points — ask the studio for a top-up, or pick “For a teacher”.`,
+    readyLine3d: (file, color) => `✓ ${file} in ${color}`,
+    readyLineVinyl: (qty, file) => `✓ ${qty} × ${file}`,
+    readyFor: (teacher) => ` · for ${teacher}`,
+    readyLeft: (left) => ` · you'll have ${left} points left`,
+    sendIt: "SEND IT →",
+    sendPaid: "SEND IT · −10 →",
+    sendFree: "SEND IT · FREE →",
     notEnough: "NOT ENOUGH POINTS",
     notEnoughToast: "NOT ENOUGH POINTS · ASK THE STUDIO TEAM FOR A TOP-UP",
-    finishSteps: "FINISH THE STEPS ABOVE",
     sending: "SENDING…",
-    afterSubmit: "You'll see it appear in your list straight away.",
     almost: (list) => `ALMOST — ADD ${list}`,
     sentSchool: (teacher) => `REQUEST SENT ✓ · FREE SCHOOL PRINT · ${teacher.toUpperCase()} WILL BE TOLD`,
     sentMine: (lo, hi) => `REQUEST SENT ✓ · −10 POINTS · EARN ${lo}–${hi} BACK WHEN IT'S READY`,
@@ -412,84 +393,68 @@ const uk: Strings = {
   },
   form: {
     eyebrow: "× ЗАМОВЛЕННЯ ДРУКУ ×",
-    name: "ВАШЕ ІМ'Я",
-    namePlaceholder: "Олена К.",
-    email: "KIS-ПОШТА",
-    emailHint: "Так ми знаємо, чиї це відбитки.",
-    yourPoints: "ВАШІ БАЛИ",
-    howPointsWork: "ЯК ПРАЦЮЮТЬ БАЛИ ?",
-    pointsRules: "Починаєте з 30. Кожен друк коштує 10. Знайдені файли нічого не повертають; власні дизайни заробляють 15 + до 15 за якість — нараховується, коли студія позначає ГОТОВО. Друк для шкільного проєкту (від учителя) безкоштовний.",
-    walletNoEmail: "Введіть пошту, щоб побачити баланс. Новачки починають із 30.",
-    walletSchool: (b) => `Друк для шкільного проєкту безкоштовний — ваш баланс лишається ${b}.`,
-    walletBroke: "Не вистачає на друк (10). Попросіть команду Дизайн-студії про поповнення, зачекайте оцінки дизайну в роботі — або позначте як шкільний проєкт, якщо його задав учитель.",
-    walletPending: (p) => `Цей друк коштує 10. ${p} балів очікують за відбитки, що ще в роботі.`,
-    walletDefault: "Цей друк коштує 10. Створюйте власні дизайни, щоб заробляти більше, ніж витрачаєте.",
-    what: "ЩО ВИГОТОВЛЯЄМО?",
+    sections: { what: "ЩО ВИ РОБИТЕ?", file: "ВАШ ФАЙЛ", who: "ХТО ЦЕ СТВОРИВ?", you: "ПРО ВАС" },
     kinds: {
       "3d": {
         label: "3D-друк", tag: "3D", hint: ".STL · .3MF", title: "Розкажіть про свій 3D-друк",
-        fileLabel: "ВАШ 3D-ФАЙЛ · .STL АБО .3MF", fileSub: ".STL або .3MF · до 50 МБ", choose: "Оберіть 3D-файл",
-        pickToast: "3D-ДРУК · ДОДАЙТЕ .STL АБО .3MF", wrongFile: "ЦЕ НЕ 3D-ФАЙЛ — ЕКСПОРТУЙТЕ ЯК .STL АБО .3MF", missingFile: "3D-файл",
+        fileHint: "файл .stl або .3mf", choose: "Оберіть 3D-файл",
+        pickToast: "3D-ДРУК · ДОДАЙТЕ .STL АБО .3MF", wrongFile: "ЦЕ НЕ 3D-ФАЙЛ — ЕКСПОРТУЙТЕ ЯК .STL АБО .3MF", missingFile: "ваш 3D-файл",
       },
       poster: {
         label: "Постер", tag: "ПОСТЕР", hint: "PDF · PNG · SVG", title: "Розкажіть про свій постер",
-        fileLabel: "ВАШ МАКЕТ · PDF, PNG АБО SVG У ПОВНОМУ РОЗМІРІ", fileSub: "PDF, PNG або SVG · до 50 МБ", choose: "Оберіть макет",
+        fileHint: "У повному розмірі, як має бути надруковано", choose: "Оберіть макет",
         pickToast: "ПОСТЕР · ДРУК НА САМОКЛЕЙНОМУ ВІНІЛІ", wrongFile: "ТАКИЙ ФАЙЛ НЕ НАДРУКУЄТЬСЯ — ВИКОРИСТАЙТЕ PDF · PNG · SVG", missingFile: "ваш макет",
       },
       sticker: {
         label: "Наліпки", tag: "НАЛІПКИ", hint: "SVG · PNG · ЗА КОНТУРОМ", title: "Розкажіть про свої наліпки",
-        fileLabel: "ВАШ ДИЗАЙН · SVG РІЖЕТЬСЯ НАЙКРАЩЕ, PNG ТЕЖ ПІДХОДИТЬ", fileSub: "SVG, PDF або PNG · друкуємо на самоклейному вінілі та вирізаємо", choose: "Оберіть макет",
+        fileHint: "SVG ріжеться найчистіше", choose: "Оберіть макет",
         pickToast: "НАЛІПКИ · ДРУК НА ВІНІЛІ, ПОТІМ РІЗАННЯ ЗА КОНТУРОМ", wrongFile: "ТАКИЙ ФАЙЛ НЕ НАДРУКУЄТЬСЯ — ВИКОРИСТАЙТЕ SVG · PNG", missingFile: "ваш макет",
       },
     },
-    attachedSub: (mb) => `${mb} МБ · торкніться, щоб замінити`,
+    browse: "ОБРАТИ",
+    swap: "ЗАМІНИТИ",
+    attachedShort: (mb) => `${mb} МБ · торкніться, щоб замінити`,
     attachedToast: "ФАЙЛ ДОДАНО ✓ · ",
     svgTip: " · ПОРАДА: SVG РІЖЕТЬСЯ ЧИСТІШЕ",
     tooBig: "ФАЙЛ БІЛЬШИЙ ЗА 50 МБ — ЕКСПОРТУЙТЕ МЕНШИЙ",
-    howMany: "СКІЛЬКИ?",
-    bigBatch: "Велика партія — додайте ще день.",
-    posterCopies: "Копій постера.",
-    identicalStickers: "Однакових наліпок.",
-    cutStyle: "ТИП РІЗАННЯ",
+    howMany: "СКІЛЬКИ",
+    cut: "РІЗАННЯ",
     cuts: {
-      contour: { label: "ЗА КОНТУРОМ", tip: "Вирізаємо впритул до контуру дизайну", hint: "Плотер іде по вашому контуру — SVG дає найчистіший край." },
-      border: { label: "З РАМКОЮ", tip: "Невелика біла рамка навколо дизайну", hint: "Вінілова рамка 3 мм навколо форми — класичний вигляд наліпки." },
-      square: { label: "КВАДРАТ", tip: "Простий квадрат або прямокутник", hint: "Швидко й просто — добре для постерів і етикеток." },
+      contour: { label: "ЗА КОНТУРОМ", tip: "Вирізаємо впритул до контуру дизайну" },
+      border: { label: "З РАМКОЮ", tip: "Невелика біла рамка навколо дизайну" },
+      square: { label: "КВАДРАТ", tip: "Простий квадрат або прямокутник" },
     },
-    colour: "КОЛІР ФІЛАМЕНТУ",
-    inStock: (n) => `${n} В НАЯВНОСТІ`,
-    originQ: "ВИ САМІ ЦЕ СПРОЄКТУВАЛИ?",
-    earnsTag: "× ЗАРОБЛЯЄ СТІБКИ",
-    earnsTip: "Кожне замовлення заробляє стібки на вашому рушнику. Власні дизайни — найбільше.",
+    colour: "КОЛІР",
+    pointsQ: "БАЛИ ?",
+    pointsTip: "Починаєте з 30 балів. Друк коштує 10. Власний дизайн повертає 20–30, коли готово. Шкільні проєкти безкоштовні. Знайдені файли нічого не заробляють.",
     origins: {
-      mine: { label: "Я створив(ла) сам(а)", hint: "Змодельовано чи намальовано вами з нуля.", pts: "КОШТУЄ 10 · ЗАРОБЛЯЄ 15–30", toast: "ВЛАСНИЙ ДИЗАЙН · КОШТУЄ 10, ПОВЕРТАЄ 15–30, КОЛИ ГОТОВО", tag: "ВЛАСНИЙ ДИЗАЙН" },
-      school: { label: "Це для шкільного проєкту", hint: "Задав учитель — оберіть, для кого це.", pts: "БЕЗКОШТОВНО · БЕЗ БАЛІВ", toast: "ШКІЛЬНИЙ ПРОЄКТ · БЕЗКОШТОВНО · ТЕПЕР ОБЕРІТЬ УЧИТЕЛЯ", tag: "ШКІЛЬНИЙ ПРОЄКТ" },
-      found: { label: "Я знайшов(ла) це", hint: "Завантажено як є. Коштує бали, нічого не заробляє.", pts: "КОШТУЄ 10 · ЗАРОБЛЯЄ 0", toast: "ЗНАЙДЕНО · КОШТУЄ 10, НІЧОГО НЕ ПОВЕРТАЄ · ДЯКУЄМО ЗА ЧЕСНІСТЬ", tag: "ЗНАЙДЕНО" },
+      mine: { label: "Я створив(ла) сам(а)", hint: "Змодельовано чи намальовано вами з нуля.", big: "×××", short: "Я зробив(ла)", cost: "−10 · ЗАРОБИ 20–30", pts: "КОШТУЄ 10 · ЗАРОБЛЯЄ 15–30", toast: "ВЛАСНИЙ ДИЗАЙН · КОШТУЄ 10, ПОВЕРТАЄ 15–30, КОЛИ ГОТОВО", tag: "ВЛАСНИЙ ДИЗАЙН" },
+      school: { label: "Це для шкільного проєкту", hint: "Задав учитель — оберіть, для кого це.", big: "★", short: "Для вчителя", cost: "БЕЗКОШТОВНО", pts: "БЕЗКОШТОВНО · БЕЗ БАЛІВ", toast: "ШКІЛЬНИЙ ПРОЄКТ · БЕЗКОШТОВНО · ТЕПЕР ОБЕРІТЬ УЧИТЕЛЯ", tag: "ШКІЛЬНИЙ ПРОЄКТ" },
+      found: { label: "Я знайшов(ла) це", hint: "Завантажено як є. Коштує бали, нічого не заробляє.", big: "↓", short: "Я знайшов(ла)", cost: "−10", pts: "КОШТУЄ 10 · ЗАРОБЛЯЄ 0", toast: "ЗНАЙДЕНО · КОШТУЄ 10, НІЧОГО НЕ ПОВЕРТАЄ · ДЯКУЄМО ЗА ЧЕСНІСТЬ", tag: "ЗНАЙДЕНО" },
     },
-    teacherQ: "ДЛЯ ЯКОГО ВЧИТЕЛЯ?",
-    teacherPlaceholder: "Оберіть учителя…",
-    teacherNote: "Друк для шкільного проєкту безкоштовний — бали не витрачаються й не нараховуються. Ми повідомимо вчителя.",
+    teacherPlaceholder: "Для якого вчителя?",
     teacherToast: (name) => `ДЛЯ ${name.toUpperCase()} · БЕЗКОШТОВНИЙ ДРУК · МИ ПОВІДОМИМО`,
-    missing: { name: "ваше ім'я", email: "вашу пошту", origin: "чи ви самі це створили", teacher: "учителя, для якого це" },
-    stillNeeded: (list) => `Ще потрібно — додайте ${list}.`,
-    brokeSummary: (b) => `У вас ${b} балів — друк коштує 10. Попросіть команду Дизайн-студії про поповнення або позначте як шкільний проєкт.`,
-    readyToSend: "Готово до надсилання ✓ · ",
-    summary3d: (file, color) => `${file}, колір ${color}`,
-    summaryVinyl: (qty, file, kind, cut) => `${qty} × ${file} · ${kind} · ${cut}`,
-    summaryFree: (teacher) => ` · для ${teacher} · безкоштовно`,
-    summaryCost: (left) => ` · коштує 10, залишиться ${left}`,
-    submitPaid: "НАДІСЛАТИ ЗАМОВЛЕННЯ · −10 →",
-    submitFree: "НАДІСЛАТИ ЗАМОВЛЕННЯ · БЕЗКОШТОВНО →",
+    points: "БАЛИ",
+    namePlaceholder: "Ваше ім'я",
+    emailPlaceholder: "Ваша KIS-пошта",
+    missing: { name: "ваше ім'я", email: "вашу пошту", origin: "хто це створив", teacher: "учителя, для якого це" },
+    stillNeeded: (list) => `Ще потрібно: ${list}.`,
+    brokeLine: (b) => `Лише ${b} балів — попросіть студію про поповнення або оберіть «Для вчителя».`,
+    readyLine3d: (file, color) => `✓ ${file}, колір ${color}`,
+    readyLineVinyl: (qty, file) => `✓ ${qty} × ${file}`,
+    readyFor: (teacher) => ` · для ${teacher}`,
+    readyLeft: (left) => ` · залишиться ${left} балів`,
+    sendIt: "НАДІСЛАТИ →",
+    sendPaid: "НАДІСЛАТИ · −10 →",
+    sendFree: "НАДІСЛАТИ · БЕЗКОШТОВНО →",
     notEnough: "НЕ ВИСТАЧАЄ БАЛІВ",
     notEnoughToast: "НЕ ВИСТАЧАЄ БАЛІВ · ПОПРОСІТЬ КОМАНДУ СТУДІЇ ПРО ПОПОВНЕННЯ",
-    finishSteps: "ЗАВЕРШІТЬ КРОКИ ВИЩЕ",
     sending: "НАДСИЛАЄМО…",
-    afterSubmit: "Воно одразу з'явиться у вашому списку.",
     almost: (list) => `МАЙЖЕ — ДОДАЙТЕ ${list}`,
     sentSchool: (teacher) => `ЗАМОВЛЕННЯ НАДІСЛАНО ✓ · БЕЗКОШТОВНИЙ ШКІЛЬНИЙ ДРУК · ${teacher.toUpperCase()} ДІЗНАЄТЬСЯ`,
     sentMine: (lo, hi) => `ЗАМОВЛЕННЯ НАДІСЛАНО ✓ · −10 БАЛІВ · ПОВЕРНЕТЬСЯ ${lo}–${hi}, КОЛИ ГОТОВО`,
     sentFound: (left) => `ЗАМОВЛЕННЯ НАДІСЛАНО ✓ · −10 БАЛІВ · ЗАЛИШИЛОСЯ ${left}`,
-    dbError: "БАЗА ДАНИХ НЕ НАЛАШТОВАНА — ЗВЕРНІТЬСЯ ДО ТВОРЧОГО ПРОСТОРУ",
+    dbError: "БАЗА ДАНИХ НЕ НАЛАШТОВАНА — ЗВЕРНІТЬСЯ ДО ДИЗАЙН-СТУДІЇ",
     uploadFailed: "НЕ ВДАЛОСЯ ЗАВАНТАЖИТИ — ",
     recent: "Ваші останні замовлення",
     seeAll: "УСІ →",

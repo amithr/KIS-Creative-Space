@@ -12,7 +12,7 @@ import { isValidEmail } from "@/lib/prints";
 import { readStudentEmail, writeStudentEmail } from "@/lib/student-session";
 import type { FilamentColor, PrintRequest } from "@/lib/types";
 
-const label = "st-mono text-[10.5px] tracking-[0.14em] text-[#8c7a68]";
+const label = "st-mono text-[11.5px] tracking-[0.14em] text-[#8c7a68]";
 const RANK_KEY = "kis-last-rank:";
 
 function readLastRank(email: string): number | null {
@@ -134,7 +134,7 @@ export function MyRequestsClient({ colors }: { colors: FilamentColor[] }) {
     <>
       <section className="st-fadeup-4 st-gutter flex flex-wrap items-end justify-between gap-5 pt-10 pb-2.5">
         <div>
-          <p className="st-mono text-[11px] tracking-[0.2em] text-[#b5342c]">{t.track.eyebrow}</p>
+          <p className="st-mono text-[12px] tracking-[0.2em] text-[#b5342c]">{t.track.eyebrow}</p>
           <h1 className="mt-2.5 text-[clamp(34px,4.5vw,52px)] leading-[1.05] font-semibold">{t.track.title}</h1>
         </div>
         <div className="st-sway">
@@ -157,16 +157,16 @@ export function MyRequestsClient({ colors }: { colors: FilamentColor[] }) {
             value={email}
             onChange={(e) => onEmail(e.target.value)}
             placeholder="olena.k@kis.edu"
-            className="mt-[7px] box-border w-full border border-[#e9dfd0] px-[13px] py-[11px] text-[16px]"
+            className="mt-[7px] box-border w-full border border-[#e9dfd0] px-[13px] py-[11px] text-[17.5px]"
           />
-          <p className="mt-1.5 text-[13.5px] leading-[1.45] text-[#8c7a68]">{t.track.help}</p>
+          <p className="mt-1.5 text-[15px] leading-[1.45] text-[#8c7a68]">{t.track.help}</p>
           <div className="mt-[18px] border-t border-[#eee5d8] pt-3.5">
             <p className={label}>{t.track.stagesTitle}</p>
-            <dl className="mt-2.5 flex flex-col gap-2 text-[16px] leading-[1.4]">
+            <dl className="mt-2.5 flex flex-col gap-2 text-[17.5px] leading-[1.4]">
               {t.track.glossary.map((g) => (
                 <div key={g.term}>
                   <dt
-                    className="st-mono inline text-[10px] tracking-[0.1em]"
+                    className="st-mono inline text-[11px] tracking-[0.1em]"
                     style={{ color: g.ready ? "#2f7d3f" : "#b5342c" }}
                   >
                     {g.term}
@@ -187,12 +187,12 @@ export function MyRequestsClient({ colors }: { colors: FilamentColor[] }) {
           )}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-[26px] font-semibold">{t.track.yourPrints}</h2>
-            <span className="st-mono text-[10.5px] tracking-[0.12em] text-[#8c7a68]">
+            <span className="st-mono text-[11.5px] tracking-[0.12em] text-[#8c7a68]">
               {sess ? sess.toUpperCase() : t.track.typeAbove}
             </span>
           </div>
           {requests.length === 0 && (
-            <p className="mt-3 border border-dashed border-[#d9cdbb] px-6 py-[30px] text-center text-[15px] leading-[1.5] text-[#8c7a68]">
+            <p className="mt-3 border border-dashed border-[#d9cdbb] px-6 py-[30px] text-center text-[16.5px] leading-[1.5] text-[#8c7a68]">
               {emptyMsg}
             </p>
           )}

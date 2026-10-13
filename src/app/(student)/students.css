@@ -171,7 +171,7 @@
   align-items: center;
   justify-content: center;
   font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
-  font-size: 12.5px;
+  font-size: 14px;
   letter-spacing: 0.12em;
   padding: 15px 26px;
   cursor: pointer;
@@ -220,7 +220,7 @@
   color: var(--st-ground);
 }
 .st-btn-small {
-  font-size: 11.5px;
+  font-size: 12.5px;
   padding: 12px 20px;
   box-shadow: 3px 3px 0 var(--st-ink);
 }
@@ -237,7 +237,7 @@
 }
 .st-lang button {
   font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
-  font-size: 10.5px;
+  font-size: 11.5px;
   letter-spacing: 0.12em;
   padding: 9px 12px;
   min-height: 38px;
@@ -258,7 +258,7 @@
 /* Nav tabs */
 .st-nav-tab {
   font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
-  font-size: 11.5px;
+  font-size: 12.5px;
   letter-spacing: 0.12em;
   padding: 9px 16px;
   border: 1px solid var(--st-hair);
@@ -286,9 +286,9 @@
 /* Pills */
 .st-pill {
   font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
-  font-size: 11.5px;
-  padding: 8px 12px;
-  border: 1px solid var(--st-hair);
+  font-size: 13px;
+  padding: 11px 14px;
+  border: 1.5px solid var(--st-hair);
   background: #fff;
   color: var(--st-muted);
   cursor: pointer;
@@ -317,26 +317,54 @@
   padding: 8px 14px;
 }
 
+/* Request form — one continuous low-text form (handoff Part A §2). */
+.st-form-card {
+  padding: 22px 24px 24px;
+}
+/* Section label rows: small mono label, optional right-aligned hint. */
+.st-section-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.st-section-label {
+  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 12.5px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  color: var(--st-faint);
+  margin: 0;
+}
+.st-mini-label {
+  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 12.5px;
+  letter-spacing: 0.14em;
+  color: var(--st-faint);
+  flex: none;
+}
+
 /* Kind tiles */
 .st-kind-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
 }
 .st-kind-tile {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border: 1.5px solid var(--st-hair);
+  gap: 10px;
+  padding: 18px 10px 14px;
+  border: 2px solid var(--st-hair);
   background: #fff;
   cursor: pointer;
   user-select: none;
   transition: all 0.15s;
-  text-align: left;
+  text-align: center;
 }
 .st-kind-tile:hover {
   border-color: var(--st-red);
+  transform: translateY(-2px);
 }
 .st-kind-tile:active {
   transform: scale(0.97);
@@ -346,26 +374,57 @@
   border-color: var(--st-ink);
 }
 
-/* Colour swatch chips */
-.st-swatch-chip {
+/* File drop box */
+.st-drop {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+  border: 2px dashed var(--st-dis);
+  padding: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.st-drop:hover {
+  border-color: var(--st-red) !important;
+}
+.st-drop-btn {
+  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.12em;
+  border: 1px solid var(--st-ink);
+  padding: 8px 12px;
+  flex: none;
+  color: var(--st-ink);
+}
+
+/* Colour squares (3D) — diamond swatch inside a 44px square */
+.st-swatch-sq {
+  width: 44px;
+  height: 44px;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 12px 7px 8px;
-  border: 1.5px solid var(--st-hair);
+  justify-content: center;
+  border: 2px solid var(--st-hair);
   background: #fff;
   cursor: pointer;
   user-select: none;
   transition: all 0.15s;
+  padding: 0;
 }
-.st-swatch-chip:hover {
+.st-swatch-sq:hover {
   border-color: var(--st-red);
 }
-.st-swatch-chip:active {
-  transform: scale(0.95);
+.st-swatch-sq:active {
+  transform: scale(0.92);
 }
-.st-swatch-chip[data-on="true"] {
+.st-swatch-sq[data-on="true"] {
   border-color: var(--st-ink);
+}
+.st-swatch-sq .st-diamond {
+  width: 22px;
+  height: 22px;
+  transform: rotate(45deg) scale(0.85);
 }
 .st-diamond {
   width: 20px;
@@ -379,7 +438,7 @@
 .st-step-btn {
   width: 40px;
   height: 40px;
-  border: 1px solid var(--st-hair);
+  border: 1.5px solid var(--st-hair);
   background: #fff;
   color: var(--st-ink);
   display: inline-flex;
@@ -431,7 +490,7 @@
 
 .st-link-red {
   font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
-  font-size: 10.5px;
+  font-size: 11.5px;
   letter-spacing: 0.12em;
   color: var(--st-red) !important;
   cursor: pointer;
@@ -474,23 +533,63 @@
   gap: 24px;
   align-items: start;
 }
-.st-form-grid {
+.st-you-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px 18px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
 }
-.st-span-2 {
-  grid-column: 1 / -1;
+.st-input-lg {
+  box-sizing: border-box;
+  width: 100%;
+  font-size: 20px;
+  padding: 14px 16px;
+  border: 2px solid var(--st-hair);
+}
+.st-teacher-select {
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 10px;
+  font-size: 20px;
+  padding: 14px;
+  border: 2px solid var(--st-hair);
+  background: var(--st-ground) !important;
+  animation: st-fadeup 0.3s ease both;
+}
+.st-form-footer {
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--st-hair);
+  padding-top: 18px;
+}
+.st-submit {
+  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 14.5px;
+  letter-spacing: 0.12em;
+  padding: 16px 28px;
+  border: 0;
+  user-select: none;
+  transition: all 0.2s;
+}
+.st-submit:hover {
+  transform: translate(-1px, -1px);
+}
+.st-submit:active {
+  transform: translate(1px, 1px);
+}
+.st-form-line {
+  font-size: 18px;
+  line-height: 1.4;
+  flex: 1;
+  min-width: 180px;
 }
 .st-vinyl-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px 18px;
-}
-.st-cut-pills {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
 }
 
 /* Hero motif group */
@@ -534,7 +633,7 @@
 }
 .st-tracker-glyph {
   font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
-  font-size: 16px;
+  font-size: 17.5px;
   line-height: 20px;
   background: #fff;
   padding: 0 6px;
@@ -547,7 +646,7 @@
 }
 .st-tracker-label {
   font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.1em;
   text-align: center;
 }
@@ -555,7 +654,7 @@
 .st-cancel {
   cursor: pointer;
   color: var(--st-faint);
-  font-size: 16px;
+  font-size: 17.5px;
   user-select: none;
   padding: 0 4px;
   line-height: 1;
@@ -582,7 +681,7 @@
   align-items: center;
   gap: 14px;
   font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
-  font-size: 11.5px;
+  font-size: 12.5px;
   letter-spacing: 0.1em;
   white-space: nowrap;
 }
@@ -604,22 +703,6 @@
 @media (max-width: 1023px) {
   .st-hero-motifs {
     gap: clamp(8px, 2vw, 28px);
-  }
-  /* The form column is too narrow for three side-by-side tiles: use the
-     compact 3-up grid from the mobile mockups instead of stacking. */
-  .st-kind-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-  }
-  .st-kind-tile {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 6px;
-    padding: 10px 8px;
-  }
-  .st-kind-tile .st-kind-label {
-    font-size: 15px;
   }
 }
 
@@ -644,33 +727,24 @@
   .st-hero-bird {
     --cell: 7px;
   }
-  .st-kind-grid {
-    grid-template-columns: repeat(3, 1fr);
+  .st-kind-grid,
+  .st-origin-grid {
     gap: 6px;
   }
-  .st-kind-tile {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 6px;
-    padding: 10px 8px;
-  }
-  .st-kind-tile .st-kind-label {
-    font-size: 15px;
+  .st-kind-tile,
+  .st-origin-tile {
+    padding: 14px 6px 12px;
   }
   .st-vinyl-grid {
     grid-template-columns: 1fr 1fr;
     gap: 12px;
   }
-  .st-cut-pills {
-    flex-direction: column;
-    align-items: stretch;
-  }
   .st-pill,
   .st-kind-tile,
+  .st-origin-tile,
   .st-step-btn,
   .st-cancel,
-  .st-swatch-chip,
+  .st-swatch-sq,
   .st-nav-tab {
     min-height: 44px;
   }
@@ -689,23 +763,14 @@
     text-align: center;
   }
   .st-tracker-label {
-    font-size: clamp(7.5px, 2.2vw, 9px);
+    font-size: clamp(8.5px, 2.4vw, 10px);
     letter-spacing: 0.08em;
   }
 }
 
-@media (max-width: 479px) {
-  .st-form-grid {
-    grid-template-columns: 1fr;
-  }
-}
-@media (max-width: 399px) {
-  .st-kind-hint {
-    display: none;
-  }
-}
 @media (max-width: 359px) {
-  .st-vinyl-grid {
+  .st-vinyl-grid,
+  .st-origin-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -714,7 +779,7 @@
 .st-toast-undo {
   font: inherit;
   letter-spacing: 0.12em;
-  font-size: 11px;
+  font-size: 12px;
   text-decoration: underline;
   color: inherit;
   background: none;
@@ -771,23 +836,32 @@
 /* Origin tiles */
 .st-origin-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
 }
 .st-origin-tile {
-  padding: 11px 14px;
-  border: 1.5px solid var(--st-hair);
+  padding: 14px 12px;
+  border: 2px solid var(--st-hair);
   background: #fff;
   cursor: pointer;
   user-select: none;
   transition: all 0.15s;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  text-align: left;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
 }
 .st-origin-tile:hover {
   border-color: var(--st-red);
+  transform: translateY(-2px);
+}
+.st-origin-big {
+  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1;
+  transition: color 0.15s;
 }
 .st-origin-tile:active {
   transform: scale(0.97);
@@ -996,9 +1070,6 @@ a.st-ghost-btn {
 }
 
 @media (max-width: 699px) {
-  .st-origin-grid {
-    grid-template-columns: 1fr;
-  }
   .st-rushnyk {
     grid-template-columns: 72px 1fr;
     gap: 14px;
@@ -1053,7 +1124,7 @@ a.st-ghost-btn {
 }
 .st-game-close {
   font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
-  font-size: 10.5px;
+  font-size: 11.5px;
   letter-spacing: 0.12em;
   border: 1px solid var(--st-ink);
   background: transparent;
@@ -1087,7 +1158,7 @@ a.st-ghost-btn {
   gap: 12px;
   padding: 0 18px 14px;
   font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
-  font-size: 9.5px;
+  font-size: 10.5px;
   letter-spacing: 0.12em;
   color: var(--st-faint);
   flex-wrap: wrap;

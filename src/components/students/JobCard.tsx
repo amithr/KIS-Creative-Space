@@ -52,12 +52,12 @@ export function JobCard({ request: r, colors, index = 0, onCancel }: Props) {
         />
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <span className="st-mono shrink-0 bg-[#2a211c] px-[7px] py-[3px] text-[9px] tracking-[0.12em] text-[#fbf6ee]">
+            <span className="st-mono shrink-0 bg-[#2a211c] px-[7px] py-[3px] text-[10px] tracking-[0.12em] text-[#fbf6ee]">
               {t.form.kinds[r.kind].tag}
             </span>
-            <span className="min-w-0 truncate text-[17px] font-semibold">{r.file}</span>
+            <span className="min-w-0 truncate text-[18.5px] font-semibold">{r.file}</span>
             <span
-              className="st-mono shrink-0 border px-[7px] py-[2px] text-[9px] tracking-[0.1em]"
+              className="st-mono shrink-0 border px-[7px] py-[2px] text-[10px] tracking-[0.1em]"
               style={{
                 color: own ? "#b5342c" : "#8c7a68",
                 borderColor: own ? "#e7b6b1" : "#e9dfd0",
@@ -67,7 +67,7 @@ export function JobCard({ request: r, colors, index = 0, onCancel }: Props) {
               {chip}
             </span>
           </div>
-          <p className="st-mono mt-[3px] text-[10px] tracking-[0.1em] text-[#8c7a68]">
+          <p className="st-mono mt-[3px] text-[11px] tracking-[0.1em] text-[#8c7a68]">
             {localizedMetaLine(r, t, colorLabel(r.color, colors))}
           </p>
         </div>
@@ -107,7 +107,7 @@ export function JobCard({ request: r, colors, index = 0, onCancel }: Props) {
       </div>
 
       {r.status === 3 && (
-        <p className="mt-3 border border-[#e9dfd0] bg-[#fbf6ee] px-3.5 py-2.5 text-[16px]">
+        <p className="mt-3 border border-[#e9dfd0] bg-[#fbf6ee] px-3.5 py-2.5 text-[17.5px]">
           {t.track.readyNotice}
         </p>
       )}

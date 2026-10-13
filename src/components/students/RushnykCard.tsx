@@ -78,35 +78,35 @@ export function RushnykCard({ ledger, celebrate, walletColor }: Props) {
       </div>
 
       <div className="min-w-0">
-        <p className="st-mono text-[10px] tracking-[0.18em] text-[#8c7a68]">{T.rushnyk}</p>
+        <p className="st-mono text-[11px] tracking-[0.18em] text-[#8c7a68]">{T.rushnyk}</p>
         <div className="mt-1 flex flex-wrap items-baseline gap-2.5">
           <span className="text-[30px] leading-none font-bold">{T.ranks[lvl].name}</span>
-          <span className="st-mono text-[10px] tracking-[0.12em] text-[#b5342c]">{T.level(lvl)}</span>
+          <span className="st-mono text-[11px] tracking-[0.12em] text-[#b5342c]">{T.level(lvl)}</span>
         </div>
-        <p className="mt-1.5 text-[14px] leading-[1.45] text-[#5e5047]">{T.ranks[lvl].blurb}</p>
+        <p className="mt-1.5 text-[15.5px] leading-[1.45] text-[#5e5047]">{T.ranks[lvl].blurb}</p>
         <div className="mt-3 flex flex-wrap items-baseline gap-[18px]">
           <div>
-            <p className="st-mono text-[9px] tracking-[0.14em] text-[#8c7a68]">{T.pointsToSpend}</p>
+            <p className="st-mono text-[10px] tracking-[0.14em] text-[#8c7a68]">{T.pointsToSpend}</p>
             <p className="st-mono text-[24px] leading-[1.1] font-bold" style={{ color: walletColor }}>
               {ledger.balance}
             </p>
           </div>
           <div>
-            <p className="st-mono text-[9px] tracking-[0.14em] text-[#8c7a68]">{T.pending}</p>
+            <p className="st-mono text-[10px] tracking-[0.14em] text-[#8c7a68]">{T.pending}</p>
             <p className="st-mono text-[24px] leading-[1.1] font-bold text-[#c9b9a1]" title={T.pendingTip}>
               +{ledger.pending}
             </p>
           </div>
-          <p className="min-w-[160px] flex-1 text-[13px] leading-[1.4] text-[#8c7a68]">{T.explainer}</p>
+          <p className="min-w-[160px] flex-1 text-[14.5px] leading-[1.4] text-[#8c7a68]">{T.explainer}</p>
         </div>
-        <div className="st-mono mt-3 flex justify-between text-[9.5px] tracking-[0.1em] text-[#8c7a68]">
+        <div className="st-mono mt-3 flex justify-between text-[10.5px] tracking-[0.1em] text-[#8c7a68]">
           <span>{T.stitches(pts)}</span>
           <span>{next ? T.toNext(next.min - pts, T.ranks[lvl + 1].name) : T.topRank}</span>
         </div>
         <div className="st-rank-bar">
           <span style={{ width: `${pct}%` }} />
         </div>
-        <div className="st-mono mt-2.5 flex flex-wrap gap-3.5 text-[9.5px] tracking-[0.08em] text-[#8c7a68]">
+        <div className="st-mono mt-2.5 flex flex-wrap gap-3.5 text-[10.5px] tracking-[0.08em] text-[#8c7a68]">
           <span>
             <span className="text-[#2a211c]">{ledger.own}</span> {T.ownDesigns}
           </span>
