@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { toLiveJobs, type LiveJob } from "@/lib/board";
 import { hasSupabasePublicEnv } from "@/lib/supabase/env";
 import type { FilamentColor, PrintRequest } from "@/lib/types";
 import {
@@ -29,6 +30,12 @@ export async function getAllPrintRequests(): Promise<PrintRequest[]> {
   return (data ?? []).map((row) =>
     normalizePrintRequest(row as Record<string, unknown>),
   );
+}
+
+/** ON THE PRINTERS: names-only live rows plus the server clock they were cut at. */
+export async function getLiveBoard(): Promise<{ jobs: LiveJob[]; now: number }> {
+  const now = Date.now();
+  return { jobs: toLiveJobs(await getAllPrintRequests(), now), now };
 }
 
 /** A student's own jobs, newest first. Email match is case-insensitive. */

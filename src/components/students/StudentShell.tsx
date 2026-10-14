@@ -30,6 +30,12 @@ function ShellInner({ children }: { children: ReactNode }) {
       label: t.nav.track,
       active: pathname.startsWith("/requests"),
     },
+    {
+      href: "/board",
+      label: t.nav.board,
+      active: pathname.startsWith("/board"),
+      live: true,
+    },
   ];
 
   return (
@@ -62,6 +68,7 @@ function ShellInner({ children }: { children: ReactNode }) {
               data-active={tab.active}
               aria-current={tab.active ? "page" : undefined}
             >
+              {tab.live && <span className="st-live-dot" aria-hidden />}
               {tab.label}
             </Link>
           ))}

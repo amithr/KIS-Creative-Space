@@ -12,9 +12,14 @@ const STEP_MOTIFS: { motif: MotifName; delay: number; speed: number }[] = [
   { motif: "check", delay: 900, speed: 40 },
 ];
 
-type Props = { board: LeaderRow[]; showLeaderboard: boolean };
+type Props = {
+  board: LeaderRow[];
+  showLeaderboard: boolean;
+  /** Counts for the hero live line (ON THE PRINTERS). */
+  live: { printing: number; queued: number };
+};
 
-export function StudentLanding({ board, showLeaderboard }: Props) {
+export function StudentLanding({ board, showLeaderboard, live }: Props) {
   const { t } = useLocale();
   const L = t.landing;
   const showBoard = showLeaderboard && board.length >= 3;
@@ -46,6 +51,14 @@ export function StudentLanding({ board, showLeaderboard }: Props) {
               {L.btnTrack}
             </Link>
           </div>
+          <Link href="/board" className="st-live-line">
+            <span className="st-live-dot" aria-hidden />
+            {live.printing
+              ? L.liveNow(live.printing)
+              : live.queued
+                ? L.liveQueue(live.queued)
+                : L.liveSee}
+          </Link>
         </div>
         <div className="st-hero-motifs">
           <div className="st-sway">

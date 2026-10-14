@@ -30,6 +30,7 @@ function revalidateStudio() {
   revalidatePath("/");
   revalidatePath("/print");
   revalidatePath("/requests");
+  revalidatePath("/board");
 }
 
 /** Studio session + service-role client, or a user-facing error. */

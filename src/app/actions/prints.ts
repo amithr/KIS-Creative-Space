@@ -5,10 +5,12 @@ import { removeStoredFile } from "@/lib/print-files";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import {
+  getAllPrintRequests,
   getFilamentColors,
   getPrintRequestsByEmail,
   hasSupabaseEnv,
 } from "@/lib/data";
+import { toLiveJobs, type LiveJob } from "@/lib/board";
 import { canAfford, ledgerFor } from "@/lib/ledger";
 import {
   MAX_PRINT_FILE_BYTES,
@@ -45,6 +47,7 @@ function revalidatePrints() {
   revalidatePath("/");
   revalidatePath("/print");
   revalidatePath("/requests");
+  revalidatePath("/board");
   revalidatePath("/admin");
 }
 
@@ -229,4 +232,9 @@ export async function listPrintRequests(email: string): Promise<PrintRequest[]> 
 
 export async function listFilamentColors(): Promise<FilamentColor[]> {
   return getFilamentColors();
+}
+
+/** ON THE PRINTERS poll: open jobs + recent READY ones, names only, no emails. */
+export async function listLiveBoard(): Promise<LiveJob[]> {
+  return toLiveJobs(await getAllPrintRequests());
 }

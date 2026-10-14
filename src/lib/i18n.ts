@@ -37,7 +37,7 @@ type OriginStrings = {
 type RankStrings = { name: string; short: string; blurb: string };
 
 export type Strings = {
-  nav: { home: string; print: string; track: string };
+  nav: { home: string; print: string; track: string; board: string };
   brandSub: string;
   footer: string;
   footerMark: string;
@@ -73,6 +73,33 @@ export type Strings = {
     rulesEyebrow: string;
     rulesTitle: string;
     rules: string[];
+    /** Mono live line under the hero buttons, linking to the board. */
+    liveNow: (n: number) => string;
+    liveQueue: (n: number) => string;
+    liveSee: string;
+  };
+  /** ON THE PRINTERS — public live board (names only). */
+  board: {
+    eyebrow: string;
+    headlinePrinting: (n: number) => string;
+    headlineOne: string;
+    headlineQueue: (n: number) => string;
+    headlineReady: string;
+    headlineQuiet: string;
+    lede: string;
+    counters: { queued: string; printing: string; ready: string };
+    groups: Record<"ready" | "machines" | "prepared" | "queue", string>;
+    jobs: (n: number) => string;
+    kindTag: Record<PrintKind, string>;
+    by: (name: string) => string;
+    someone: string;
+    ago: Record<"min" | "h" | "d", (n: number) => string>;
+    emptyPre: string;
+    emptyLink: string;
+    emptyPost: string;
+    footer: string;
+    footerLink: string;
+    openToast: (n: number) => string;
   };
   form: {
     eyebrow: string;
@@ -168,7 +195,7 @@ export type Strings = {
 };
 
 const en: Strings = {
-  nav: { home: "HOME", print: "PRINT REQUEST", track: "MY REQUESTS" },
+  nav: { home: "HOME", print: "PRINT REQUEST", track: "MY REQUESTS", board: "ON THE PRINTERS" },
   brandSub: "FOR STUDENTS · ДЛЯ УЧНІВ",
   footer: "KIS Design Studio · prints run Tuesday–Thursday · collect within a week",
   footerMark: "ТВОРЧИЙ ПРОСТІР",
@@ -213,6 +240,40 @@ const en: Strings = {
       "Posters & stickers: a PDF, PNG or SVG at full size — SVG with a clean outline cuts best.",
       "Give us at least a week — big prints take a whole night.",
     ],
+    liveNow: (n) => `LIVE · ${n} ON THE PRINTERS RIGHT NOW →`,
+    liveQueue: (n) => `LIVE · ${n} IN THE QUEUE →`,
+    liveSee: "SEE WHAT'S ON THE PRINTERS →",
+  },
+  board: {
+    eyebrow: "× LIVE FROM THE STUDIO ×",
+    headlinePrinting: (n) => `${n} things are being made right now`,
+    headlineOne: "One thing is being made right now",
+    headlineQueue: (n) => `Warming up — ${n} in the queue`,
+    headlineReady: "All done — come and collect",
+    headlineQuiet: "The printers are quiet",
+    lede: "Everything on the printers and cutters right now. Names only — no emails.",
+    counters: { queued: "QUEUED", printing: "PRINTING", ready: "READY" },
+    groups: {
+      ready: "READY TO COLLECT",
+      machines: "ON THE MACHINES",
+      prepared: "BEING PREPARED",
+      queue: "IN THE QUEUE",
+    },
+    jobs: (n) => (n === 1 ? "1 JOB" : `${n} JOBS`),
+    kindTag: { "3d": "3D", poster: "POSTER", sticker: "STKR" },
+    by: (name) => `BY ${name.toUpperCase()}`,
+    someone: "Someone",
+    ago: {
+      min: (n) => `${n} MIN AGO`,
+      h: (n) => `${n} H AGO`,
+      d: (n) => `${n} D AGO`,
+    },
+    emptyPre: "The printers are quiet — ",
+    emptyLink: "send the first print",
+    emptyPost: " and it'll show up here.",
+    footer: "Updates on its own as the studio team moves jobs along. Looking for yours?",
+    footerLink: "My requests →",
+    openToast: (n) => `LIVE · ${n} JOBS ON THE GO`,
   },
   form: {
     eyebrow: "× PRINT REQUEST ×",
@@ -344,8 +405,19 @@ const en: Strings = {
   },
 };
 
+/** Ukrainian plural forms: 1 → one, 2–4 → few, else many (12–14 are many). */
+function ukPlural(n: number, one: string, few: string, many: string) {
+  const m10 = n % 10;
+  const m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return one;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
+  return many;
+}
+const ukThings = (n: number) => ukPlural(n, "річ", "речі", "речей");
+const ukJobs = (n: number) => ukPlural(n, "РОБОТА", "РОБОТИ", "РОБІТ");
+
 const uk: Strings = {
-  nav: { home: "ГОЛОВНА", print: "ЗАМОВИТИ ДРУК", track: "МОЇ ЗАМОВЛЕННЯ" },
+  nav: { home: "ГОЛОВНА", print: "ЗАМОВИТИ ДРУК", track: "МОЇ ЗАМОВЛЕННЯ", board: "НА ПРИНТЕРАХ" },
   brandSub: "ДЛЯ УЧНІВ · FOR STUDENTS",
   footer: "KIS Design Studio · друкуємо вівторок–четвер · заберіть протягом тижня",
   footerMark: "DESIGN STUDIO",
@@ -390,6 +462,40 @@ const uk: Strings = {
       "Постери й наліпки: PDF, PNG або SVG у повному розмірі — SVG з чистим контуром ріжеться найкраще.",
       "Дайте нам щонайменше тиждень — великі відбитки друкуються цілу ніч.",
     ],
+    liveNow: (n) => `НАЖИВО · ${n} НА ПРИНТЕРАХ ПРОСТО ЗАРАЗ →`,
+    liveQueue: (n) => `НАЖИВО · ${n} У ЧЕРЗІ →`,
+    liveSee: "ЩО ЗАРАЗ НА ПРИНТЕРАХ →",
+  },
+  board: {
+    eyebrow: "× НАЖИВО ЗІ СТУДІЇ ×",
+    headlinePrinting: (n) => `Зараз виготовляється ${n} ${ukThings(n)}`,
+    headlineOne: "Зараз виготовляється одна річ",
+    headlineQueue: (n) => `Розігріваємось — ${n} у черзі`,
+    headlineReady: "Усе готово — приходьте забирати",
+    headlineQuiet: "Принтери мовчать",
+    lede: "Усе, що зараз на принтерах і різаках. Лише імена — без електронних адрес.",
+    counters: { queued: "У ЧЕРЗІ", printing: "ДРУК", ready: "ГОТОВО" },
+    groups: {
+      ready: "ГОТОВО ДО ВИДАЧІ",
+      machines: "НА МАШИНАХ",
+      prepared: "ГОТУЄТЬСЯ",
+      queue: "У ЧЕРЗІ",
+    },
+    jobs: (n) => `${n} ${ukJobs(n)}`,
+    kindTag: { "3d": "3D", poster: "ПОСТЕР", sticker: "НАЛІП" },
+    by: (name) => `ВІД ${name.toUpperCase()}`,
+    someone: "Хтось",
+    ago: {
+      min: (n) => `${n} ХВ ТОМУ`,
+      h: (n) => `${n} ГОД ТОМУ`,
+      d: (n) => `${n} ДН ТОМУ`,
+    },
+    emptyPre: "Принтери мовчать — ",
+    emptyLink: "надішліть перший друк",
+    emptyPost: ", і він з'явиться тут.",
+    footer: "Оновлюється сама, коли команда студії просуває роботи. Шукаєте свою?",
+    footerLink: "Мої замовлення →",
+    openToast: (n) => `НАЖИВО · ${n} ${ukJobs(n)} У РОБОТІ`,
   },
   form: {
     eyebrow: "× ЗАМОВЛЕННЯ ДРУКУ ×",

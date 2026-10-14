@@ -1163,3 +1163,237 @@ a.st-ghost-btn {
   color: var(--st-faint);
   flex-wrap: wrap;
 }
+
+/* ---------- v4: ON THE PRINTERS (public live board) ---------- */
+@keyframes st-threadrun {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 24px 0;
+  }
+}
+@keyframes st-needlebob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-35deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(-30deg);
+  }
+}
+@keyframes st-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+@keyframes st-slidein {
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes st-readypulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.18);
+  }
+}
+@keyframes st-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(181, 52, 44, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(181, 52, 44, 0.18);
+  }
+}
+
+/* 7px red blinking dot — nav tab and the landing live line. */
+.st-live-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--st-red);
+  border-radius: 50%;
+  flex: none;
+  animation: st-blink 1.6s ease-in-out infinite;
+}
+.st-nav-tab {
+  gap: 8px;
+}
+.st-live-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 22px;
+  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.14em;
+  color: var(--st-muted) !important;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s;
+}
+.st-live-line:hover {
+  color: var(--st-red) !important;
+}
+
+/* Group header: diamond dot, label, count, then a rule (dashed thread when active). */
+.st-group-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.st-group-dot {
+  width: 10px;
+  height: 10px;
+  transform: rotate(45deg);
+  flex: none;
+}
+.st-group-dot[data-active="true"] {
+  animation: st-blink 1.4s ease-in-out infinite;
+}
+.st-thread-rule {
+  flex: 1;
+  height: 1px;
+  background-size: 24px 1px;
+}
+.st-thread-rule[data-active="true"] {
+  animation: st-threadrun 1.2s linear infinite;
+}
+
+/* Rows: tile | text | stage, sliding in from the left. */
+.st-board-row {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--st-hair);
+  padding: 12px 16px;
+  animation: st-slidein 0.4s ease both;
+  transition: border-color 0.2s;
+}
+.st-board-row[data-ready="true"] {
+  border-color: #bfe3c6;
+}
+.st-board-row:hover {
+  border-color: var(--st-red);
+}
+.st-board-tile {
+  width: 54px;
+  height: 54px;
+  border: 1px solid var(--st-hair);
+  background: var(--st-ground);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.st-board-swatch {
+  width: 20px;
+  height: 20px;
+  border: 1px solid rgba(42, 33, 28, 0.25);
+  transform: rotate(45deg);
+}
+.st-board-tag {
+  position: absolute;
+  left: -1px;
+  top: -1px;
+  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  background: var(--st-ink);
+  color: var(--st-ground);
+  padding: 2px 5px;
+}
+.st-board-right {
+  text-align: right;
+  flex: none;
+}
+.st-readypulse {
+  animation: st-readypulse 1.4s ease-in-out infinite;
+}
+
+/* Thread tracker under the filename: × per stage, lines between, a needle on top. */
+.st-thread {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-top: 8px;
+  position: relative;
+  height: 22px;
+}
+.st-thread-step {
+  display: flex;
+  align-items: center;
+  flex: 1 1 0;
+  min-width: 0;
+}
+.st-thread-step[data-last="true"] {
+  flex: 0 0 auto;
+}
+.st-thread-x {
+  display: block;
+  flex: none;
+  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1;
+}
+.st-thread-line {
+  flex: 1;
+  height: 2px;
+  margin: 0 6px;
+  background-size: 12px 2px;
+}
+.st-needle {
+  position: absolute;
+  top: -14px;
+  width: 2px;
+  height: 20px;
+  background: var(--st-ink);
+  transform-origin: bottom;
+  animation: st-needlebob 1.1s ease-in-out infinite;
+  pointer-events: none;
+  transition: left 0.6s ease;
+}
+.st-needle > span {
+  position: absolute;
+  top: 0;
+  left: -2px;
+  width: 6px;
+  height: 6px;
+  border: 1.5px solid var(--st-ink);
+  background: var(--st-ground);
+  border-radius: 50%;
+}
+
+@media (max-width: 359px) {
+  .st-board-row {
+    grid-template-columns: 54px minmax(0, 1fr);
+    gap: 12px 14px;
+  }
+  .st-board-right {
+    grid-column: 1 / -1;
+    text-align: left;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .st-board-right > span {
+    margin-top: 0 !important;
+  }
+}
