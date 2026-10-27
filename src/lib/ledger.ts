@@ -14,11 +14,20 @@ export type OriginRule = {
   free?: boolean;
 };
 
+/**
+ * Own designs are free and pay a flat 20 on READY (no quality bonus); school
+ * projects are free and pay nothing; found files cost 10 and pay nothing.
+ */
 export const ORG: Record<PrintOrigin, OriginRule> = {
-  mine: { base: 15, bonus: [0, 5, 10, 15] },
+  mine: { base: 20, bonus: [0, 0, 0, 0], free: true },
   school: { base: 0, bonus: [0, 0, 0, 0], free: true },
   found: { base: 0, bonus: [0, 0, 0, 0] },
 };
+
+/** Whether the admin's quality rating changes what this origin earns. */
+export function isRated(origin: PrintOrigin | string | null | undefined) {
+  return originRule(origin).bonus.some((b) => b > 0);
+}
 
 export type RankBand = "ribbon" | "diamond" | "star" | "tree" | "bird";
 

@@ -20,7 +20,7 @@ import {
 import { Motif } from "@/components/students/Motif";
 import { useStudentToast } from "@/components/students/StudentToast";
 import { STRINGS } from "@/lib/i18n";
-import { earnOf, ledgerFor, originRule, rankFor } from "@/lib/ledger";
+import { earnOf, isRated, ledgerFor, originRule, rankFor } from "@/lib/ledger";
 import {
   colorLabel,
   filterPrints,
@@ -419,6 +419,7 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
           const led = ledgerFor(rows, r.email);
           const rule = originRule(r.origin);
           const earn = earnOf(r);
+          const rated = isRated(r.origin);
           const rankShort = EN.track.ranks[rankFor(led.earned)].short;
           const spec =
             r.kind === "3d"
@@ -487,7 +488,7 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
                               r,
                               { origin: o.v },
                               () => studioSetOrigin(r.id, o.v),
-                              `${r.file.toUpperCase()} · ORIGIN → ${o.label}${o.v === "school" ? " · 10 POINTS REFUNDED" : ` · NOW EARNS +${nextEarn}`}`,
+                              `${r.file.toUpperCase()} · ORIGIN → ${o.label}${originRule(o.v).free && !rule.free ? " · 10 POINTS REFUNDED" : ""}${nextEarn !== earn ? ` · NOW EARNS +${nextEarn}` : ""}`,
                               () => studioSetOrigin(r.id, r.origin),
                               "ORIGIN RESTORED ✓",
                             );
@@ -501,9 +502,13 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
                   {r.origin === "mine" && (
                     <div
                       className="flex flex-none items-center gap-[3px]"
-                      title="Quality rating — sets how many points the student earns back (paid when READY)"
+                      title={
+                        rated
+                          ? "Quality rating — sets how many points the student earns back (paid when READY)"
+                          : "Own design — earns a flat 20 points when READY"
+                      }
                     >
-                      {[1, 2, 3].map((q) => (
+                      {(rated ? [1, 2, 3] : []).map((q) => (
                         <button
                           key={q}
                           type="button"

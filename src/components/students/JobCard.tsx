@@ -3,7 +3,7 @@
 import { useLocale } from "@/components/students/Locale";
 import { Motif } from "@/components/students/Motif";
 import { localizedMetaLine, stageNames } from "@/lib/i18n";
-import { earnOf, originRule } from "@/lib/ledger";
+import { earnOf, isRated, originRule } from "@/lib/ledger";
 import { colorLabel, swatchOf } from "@/lib/prints";
 import { teacherName } from "@/lib/teachers";
 import type { FilamentColor, PrintRequest } from "@/lib/types";
@@ -21,22 +21,25 @@ export function JobCard({ request: r, colors, index = 0, onCancel }: Props) {
   const stages = stageNames(t, r.kind);
   const rule = originRule(r.origin);
   const earn = earnOf(r);
-  const chip = rule.free
-    ? t.track.chipSchool(teacherName(r.teacher))
-    : `${r.origin === "mine" ? t.track.chipOwn : t.track.chipFound} · ${
-        r.status === 3
-          ? `+${earn}${rule.base ? ` · ${"★".repeat(r.quality)}` : ""}`
-          : rule.base
-            ? t.track.chipPending
-            : "−10"
-      }`;
-  const chipTip = rule.free
-    ? t.track.tipSchool
-    : r.status === 3
-      ? rule.base
-        ? t.track.tipPaidRated
-        : t.track.tipPaid
-      : t.track.tipPending;
+  const rated = isRated(r.origin);
+  const chip =
+    r.origin === "school"
+      ? t.track.chipSchool(teacherName(r.teacher))
+      : `${r.origin === "mine" ? t.track.chipOwn : t.track.chipFound} · ${
+          r.status === 3
+            ? `+${earn}${rated ? ` · ${"★".repeat(r.quality)}` : ""}`
+            : rule.base
+              ? t.track.chipPending
+              : `−${rule.free ? 0 : 10}`
+        }`;
+  const chipTip =
+    r.origin === "school"
+      ? t.track.tipSchool
+      : r.status === 3
+        ? rated
+          ? t.track.tipPaidRated
+          : t.track.tipPaid
+        : t.track.tipPending;
   const own = r.origin === "mine";
 
   return (

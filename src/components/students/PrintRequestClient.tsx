@@ -8,7 +8,7 @@ import { useLocale } from "@/components/students/Locale";
 import { Motif } from "@/components/students/Motif";
 import { useStudentToast } from "@/components/students/StudentToast";
 import { stageNames } from "@/lib/i18n";
-import { PRINT_COST, START_POINTS, canAfford, earnRange, ledgerFor } from "@/lib/ledger";
+import { PRINT_COST, START_POINTS, canAfford, earnOf, ledgerFor, originRule } from "@/lib/ledger";
 import {
   MAX_PRINT_FILE_BYTES,
   PRINT_CUTS,
@@ -126,7 +126,8 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
   const emailOk = isValidEmail(who);
   const ledger = ledgerFor(mine, who);
   const balance = emailOk ? ledger.balance : START_POINTS;
-  const broke = emailOk && !canAfford(balance, isSchool ? "school" : "found");
+  const isFree = !!fOrigin && originRule(fOrigin).free;
+  const broke = emailOk && !canAfford(balance, fOrigin || "found");
   const teacher = teacherById(fTeacher);
 
   // "Still needed: …" lists everything missing, in form order.
@@ -146,7 +147,11 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
       ? (is3d
           ? F.readyLine3d(file.name, (colorMeta?.label ?? color).toLowerCase())
           : F.readyLineVinyl(fQty, file.name)) +
-        (isSchool ? F.readyFor(teacher?.name ?? "") : F.readyLeft(balance - PRINT_COST))
+        (isSchool
+          ? F.readyFor(teacher?.name ?? "")
+          : fOrigin === "mine"
+            ? F.readyMine(earnOf({ origin: "mine", quality: 1 }))
+            : F.readyLeft(balance - PRINT_COST))
       : F.stillNeeded(missing.join(", "));
   const lineColor = broke ? RED : ready ? OK : FAINT;
   const walletColor = broke ? RED : balance <= 10 ? "#9a6e06" : OK;
@@ -221,12 +226,11 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
       setFOrigin("");
       setFTeacher("");
       setTried(false);
-      const [lo, hi] = earnRange(origin);
       toast(
         origin === "school"
           ? F.sentSchool(snapTeacher?.name ?? "")
           : origin === "mine"
-            ? F.sentMine(lo, hi)
+            ? F.sentMine(earnOf({ origin, quality: 1 }))
             : F.sentFound(balance - PRINT_COST),
       );
     } catch (e) {
@@ -493,7 +497,7 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
                 : broke
                   ? F.notEnough
                   : ready
-                    ? isSchool
+                    ? isFree
                       ? F.sendFree
                       : F.sendPaid
                     : F.sendIt}

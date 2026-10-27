@@ -131,6 +131,7 @@ export type Strings = {
     readyLineVinyl: (qty: number, file: string) => string;
     readyFor: (teacher: string) => string;
     readyLeft: (left: number) => string;
+    readyMine: (earn: number) => string;
     sendIt: string;
     sendPaid: string;
     sendFree: string;
@@ -139,7 +140,7 @@ export type Strings = {
     sending: string;
     almost: (list: string) => string;
     sentSchool: (teacher: string) => string;
-    sentMine: (lo: number, hi: number) => string;
+    sentMine: (earn: number) => string;
     sentFound: (left: number) => string;
     dbError: string;
     uploadFailed: string;
@@ -229,7 +230,7 @@ const en: Strings = {
     ],
     teaserEyebrow: "× YOUR RUSHNYK · РУШНИК ×",
     teaserTitle: "Every print stitches a band onto your rushnyk",
-    teaserBody: "You start with 30 points and every print costs 10. Found files earn nothing back. Design your own and earn up to 30 — the better the print, the more you get. Prints for a school project are free. Points earned stitch bands onto your rushnyk, from Thread to Master Embroiderer.",
+    teaserBody: "You start with 30 points and every print costs 10. Found files earn nothing back. Design your own and it costs nothing — you earn 20 when it's ready. Prints for a school project are free too. Points earned stitch bands onto your rushnyk, from Thread to Master Embroiderer.",
     boardEyebrow: "× MASTER EMBROIDERERS · THIS YEAR ×",
     boardMeta: (n) => `${n} MAKERS · RANKED BY STITCHES EARNED`,
     boardRow: (rank, stitches, own) => `${rank} · ${stitches} STITCHES · ${own} OWN DESIGNS`,
@@ -310,9 +311,9 @@ const en: Strings = {
     },
     colour: "COLOUR",
     pointsQ: "POINTS ?",
-    pointsTip: "Start with 30 points. A print costs 10. Your own design earns 20–30 back when it's ready. School projects are free. Found files earn nothing.",
+    pointsTip: "Start with 30 points. Your own design is free and earns 20 when it's ready. School projects are free. Found files cost 10 and earn nothing.",
     origins: {
-      mine: { label: "I designed it", hint: "Modelled or drawn by you, from scratch.", big: "×××", short: "I made it", cost: "−10 · EARN 20–30", pts: "COSTS 10 · EARNS 15–30", toast: "OWN DESIGN · COSTS 10, EARNS 15–30 BACK WHEN READY", tag: "OWN DESIGN" },
+      mine: { label: "I designed it", hint: "Modelled or drawn by you, from scratch.", big: "×××", short: "I made it", cost: "FREE · EARN 20", pts: "FREE · EARNS 20", toast: "OWN DESIGN · FREE · EARNS 20 WHEN IT'S READY", tag: "OWN DESIGN" },
       school: { label: "It's for a school project", hint: "Set by a teacher — pick who it's for.", big: "★", short: "For a teacher", cost: "FREE", pts: "FREE · NO POINTS", toast: "SCHOOL PROJECT · FREE · NOW PICK THE TEACHER", tag: "SCHOOL PROJECT" },
       found: { label: "I found it", hint: "Downloaded as-is. Costs points, earns none.", big: "↓", short: "I found it", cost: "−10", pts: "COSTS 10 · EARNS 0", toast: "FOUND · COSTS 10, EARNS NOTHING BACK · THANKS FOR BEING HONEST", tag: "FOUND" },
     },
@@ -328,6 +329,7 @@ const en: Strings = {
     readyLineVinyl: (qty, file) => `✓ ${qty} × ${file}`,
     readyFor: (teacher) => ` · for ${teacher}`,
     readyLeft: (left) => ` · you'll have ${left} points left`,
+    readyMine: (earn) => ` · free · you'll earn ${earn} when it's ready`,
     sendIt: "SEND IT →",
     sendPaid: "SEND IT · −10 →",
     sendFree: "SEND IT · FREE →",
@@ -336,7 +338,7 @@ const en: Strings = {
     sending: "SENDING…",
     almost: (list) => `ALMOST — ADD ${list}`,
     sentSchool: (teacher) => `REQUEST SENT ✓ · FREE SCHOOL PRINT · ${teacher.toUpperCase()} WILL BE TOLD`,
-    sentMine: (lo, hi) => `REQUEST SENT ✓ · −10 POINTS · EARN ${lo}–${hi} BACK WHEN IT'S READY`,
+    sentMine: (earn) => `REQUEST SENT ✓ · FREE · EARN ${earn} WHEN IT'S READY`,
     sentFound: (left) => `REQUEST SENT ✓ · −10 POINTS · ${left} POINTS LEFT`,
     dbError: "DATABASE NOT CONFIGURED — ASK THE DESIGN STUDIO",
     uploadFailed: "UPLOAD FAILED — ",
@@ -372,7 +374,7 @@ const en: Strings = {
     pointsToSpend: "POINTS TO SPEND",
     pending: "PENDING",
     pendingTip: "Points you'll receive when the studio marks these prints READY and rates them",
-    explainer: "Each print costs 10. Design your own to earn more back than you spend.",
+    explainer: "Own designs are free and earn 20. Found files cost 10.",
     stitches: (n) => `${n} ${n === 1 ? "STITCH" : "STITCHES"}`,
     toNext: (n, rank) => `${n} TO ${rank.toUpperCase()}`,
     topRank: "TOP RANK ✓",
@@ -383,7 +385,7 @@ const en: Strings = {
     bandLocked: (rank, min) => `${rank} band · unlocks at ${min} stitches`,
     ranks: [
       { name: "Thread", short: "THREAD", blurb: "Everyone starts with a single thread. Design and print something to begin your rushnyk." },
-      { name: "Needle", short: "NEEDLE", blurb: "Your first band is stitched. Keep designing — quality earns bonus stitches." },
+      { name: "Needle", short: "NEEDLE", blurb: "Your first band is stitched. Keep designing — every own design earns 20 more." },
       { name: "Stitcher", short: "STITCHER", blurb: "Two bands down. You're a regular at the Design Studio now." },
       { name: "Weaver", short: "WEAVER", blurb: "Patterns on patterns. Teachers notice weavers — ask about mentoring younger makers." },
       { name: "Master Embroiderer", short: "MASTER", blurb: "The whole rushnyk is yours. Your name goes on the wall by the printers." },
@@ -396,7 +398,7 @@ const en: Strings = {
     tipSchool: "Free print for a school project — no points spent or earned.",
     tipPaid: "Points earned back for this print",
     tipPaidRated: "Points earned back for this print · quality rated by the studio",
-    tipPending: "Points come back when the studio marks it READY and rates the quality.",
+    tipPending: "Points arrive when the studio marks it READY.",
     levelUp: (rank) => `LEVEL UP ✓ · YOU'RE A ${rank.toUpperCase()} · NEW BAND STITCHED`,
   },
   stages: {
@@ -451,7 +453,7 @@ const uk: Strings = {
     ],
     teaserEyebrow: "× ВАШ РУШНИК · YOUR RUSHNYK ×",
     teaserTitle: "Кожен відбиток вишиває смугу на вашому рушнику",
-    teaserBody: "Ви починаєте з 30 балів, кожен друк коштує 10. Знайдені файли нічого не повертають. Створіть власний дизайн і заробіть до 30 — що кращий відбиток, то більше балів. Друк для шкільного проєкту безкоштовний. Зароблені бали вишивають смуги на вашому рушнику — від Нитки до Майстра вишивки.",
+    teaserBody: "Ви починаєте з 30 балів, кожен друк коштує 10. Знайдені файли нічого не повертають. Власний дизайн нічого не коштує — ви заробляєте 20, коли він готовий. Друк для шкільного проєкту теж безкоштовний. Зароблені бали вишивають смуги на вашому рушнику — від Нитки до Майстра вишивки.",
     boardEyebrow: "× МАЙСТРИ ВИШИВКИ · ЦЬОГО РОКУ ×",
     boardMeta: (n) => `${n} МАЙСТРІВ · ЗА ЗАРОБЛЕНИМИ СТІБКАМИ`,
     boardRow: (rank, stitches, own) => `${rank} · ${stitches} СТІБКІВ · ${own} ВЛАСНИХ ДИЗАЙНІВ`,
@@ -532,9 +534,9 @@ const uk: Strings = {
     },
     colour: "КОЛІР",
     pointsQ: "БАЛИ ?",
-    pointsTip: "Починаєте з 30 балів. Друк коштує 10. Власний дизайн повертає 20–30, коли готово. Шкільні проєкти безкоштовні. Знайдені файли нічого не заробляють.",
+    pointsTip: "Починаєте з 30 балів. Власний дизайн безкоштовний і приносить 20, коли готово. Шкільні проєкти безкоштовні. Знайдені файли коштують 10 і нічого не заробляють.",
     origins: {
-      mine: { label: "Я створив(ла) сам(а)", hint: "Змодельовано чи намальовано вами з нуля.", big: "×××", short: "Я зробив(ла)", cost: "−10 · ЗАРОБИ 20–30", pts: "КОШТУЄ 10 · ЗАРОБЛЯЄ 15–30", toast: "ВЛАСНИЙ ДИЗАЙН · КОШТУЄ 10, ПОВЕРТАЄ 15–30, КОЛИ ГОТОВО", tag: "ВЛАСНИЙ ДИЗАЙН" },
+      mine: { label: "Я створив(ла) сам(а)", hint: "Змодельовано чи намальовано вами з нуля.", big: "×××", short: "Я зробив(ла)", cost: "БЕЗКОШТОВНО · ЗАРОБИ 20", pts: "БЕЗКОШТОВНО · ЗАРОБЛЯЄ 20", toast: "ВЛАСНИЙ ДИЗАЙН · БЕЗКОШТОВНО · ПРИНОСИТЬ 20, КОЛИ ГОТОВО", tag: "ВЛАСНИЙ ДИЗАЙН" },
       school: { label: "Це для шкільного проєкту", hint: "Задав учитель — оберіть, для кого це.", big: "★", short: "Для вчителя", cost: "БЕЗКОШТОВНО", pts: "БЕЗКОШТОВНО · БЕЗ БАЛІВ", toast: "ШКІЛЬНИЙ ПРОЄКТ · БЕЗКОШТОВНО · ТЕПЕР ОБЕРІТЬ УЧИТЕЛЯ", tag: "ШКІЛЬНИЙ ПРОЄКТ" },
       found: { label: "Я знайшов(ла) це", hint: "Завантажено як є. Коштує бали, нічого не заробляє.", big: "↓", short: "Я знайшов(ла)", cost: "−10", pts: "КОШТУЄ 10 · ЗАРОБЛЯЄ 0", toast: "ЗНАЙДЕНО · КОШТУЄ 10, НІЧОГО НЕ ПОВЕРТАЄ · ДЯКУЄМО ЗА ЧЕСНІСТЬ", tag: "ЗНАЙДЕНО" },
     },
@@ -550,6 +552,7 @@ const uk: Strings = {
     readyLineVinyl: (qty, file) => `✓ ${qty} × ${file}`,
     readyFor: (teacher) => ` · для ${teacher}`,
     readyLeft: (left) => ` · залишиться ${left} балів`,
+    readyMine: (earn) => ` · безкоштовно · отримаєте ${earn}, коли буде готово`,
     sendIt: "НАДІСЛАТИ →",
     sendPaid: "НАДІСЛАТИ · −10 →",
     sendFree: "НАДІСЛАТИ · БЕЗКОШТОВНО →",
@@ -558,7 +561,7 @@ const uk: Strings = {
     sending: "НАДСИЛАЄМО…",
     almost: (list) => `МАЙЖЕ — ДОДАЙТЕ ${list}`,
     sentSchool: (teacher) => `ЗАМОВЛЕННЯ НАДІСЛАНО ✓ · БЕЗКОШТОВНИЙ ШКІЛЬНИЙ ДРУК · ${teacher.toUpperCase()} ДІЗНАЄТЬСЯ`,
-    sentMine: (lo, hi) => `ЗАМОВЛЕННЯ НАДІСЛАНО ✓ · −10 БАЛІВ · ПОВЕРНЕТЬСЯ ${lo}–${hi}, КОЛИ ГОТОВО`,
+    sentMine: (earn) => `ЗАМОВЛЕННЯ НАДІСЛАНО ✓ · БЕЗКОШТОВНО · ОТРИМАЄТЕ ${earn}, КОЛИ ГОТОВО`,
     sentFound: (left) => `ЗАМОВЛЕННЯ НАДІСЛАНО ✓ · −10 БАЛІВ · ЗАЛИШИЛОСЯ ${left}`,
     dbError: "БАЗА ДАНИХ НЕ НАЛАШТОВАНА — ЗВЕРНІТЬСЯ ДО ДИЗАЙН-СТУДІЇ",
     uploadFailed: "НЕ ВДАЛОСЯ ЗАВАНТАЖИТИ — ",
@@ -594,7 +597,7 @@ const uk: Strings = {
     pointsToSpend: "БАЛИ ДЛЯ ВИТРАТ",
     pending: "ОЧІКУЮТЬ",
     pendingTip: "Бали, які ви отримаєте, коли студія позначить ці відбитки ГОТОВО та оцінить їх",
-    explainer: "Кожен друк коштує 10. Створюйте власні дизайни, щоб заробляти більше, ніж витрачаєте.",
+    explainer: "Власні дизайни безкоштовні й приносять 20. Знайдені файли коштують 10.",
     stitches: (n) => `${n} СТІБКІВ`,
     toNext: (n, rank) => `${n} ДО РІВНЯ ${rank.toUpperCase()}`,
     topRank: "НАЙВИЩИЙ РІВЕНЬ ✓",
@@ -605,7 +608,7 @@ const uk: Strings = {
     bandLocked: (rank, min) => `Смуга «${rank}» · відкриється на ${min} стібках`,
     ranks: [
       { name: "Нитка", short: "НИТКА", blurb: "Усі починають з однієї нитки. Створіть і надрукуйте щось, щоб почати свій рушник." },
-      { name: "Голка", short: "ГОЛКА", blurb: "Першу смугу вишито. Продовжуйте створювати — якість дає бонусні стібки." },
+      { name: "Голка", short: "ГОЛКА", blurb: "Першу смугу вишито. Продовжуйте створювати — кожен власний дизайн приносить ще 20." },
       { name: "Вишивальник", short: "ВИШИВАЛЬНИК", blurb: "Дві смуги позаду. Ви вже постійний гість Дизайн-студії." },
       { name: "Ткач", short: "ТКАЧ", blurb: "Візерунок на візерунку. Учителі помічають ткачів — запитайте про менторство молодших." },
       { name: "Майстер вишивки", short: "МАЙСТЕР", blurb: "Увесь рушник ваш. Ваше ім'я — на стіні біля принтерів." },
@@ -618,7 +621,7 @@ const uk: Strings = {
     tipSchool: "Безкоштовний друк для шкільного проєкту — бали не витрачено й не зароблено.",
     tipPaid: "Бали, повернуті за цей відбиток",
     tipPaidRated: "Бали, повернуті за цей відбиток · якість оцінила студія",
-    tipPending: "Бали повернуться, коли студія позначить ГОТОВО та оцінить якість.",
+    tipPending: "Бали надійдуть, коли студія позначить ГОТОВО.",
     levelUp: (rank) => `НОВИЙ РІВЕНЬ ✓ · ВИ — ${rank.toUpperCase()} · НОВУ СМУГУ ВИШИТО`,
   },
   stages: {

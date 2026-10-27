@@ -131,8 +131,8 @@ Stages — 3d: RECEIVED → SLICING → PRINTING → READY
        — poster/sticker: RECEIVED → PRINTING → CUTTING → READY
 ```
 Points (compute identically on every client — web `src/lib/ledger.ts`, Flutter `lib/data/ledger.dart`):
-- start 30; each print costs 10 unless `origin = school` (free); cancelling while RECEIVED refunds (row deleted).
-- `ORG = { mine: {base 15, bonus [0,5,10,15]}, school: {base 0}, found: {base 0} }`; `earn = base + bonus[quality]`, paid only at READY.
+- start 30; a print costs 10 only when `origin = found` — `mine` and `school` are free; cancelling while RECEIVED refunds (row deleted).
+- `ORG = { mine: {base 20, bonus [0,0,0,0], free}, school: {base 0, free}, found: {base 0} }`; `earn = base + bonus[quality]`, paid only at READY — so own designs pay a flat 20 and `quality` no longer affects points (kept on the row; admins hide the stars when the origin's bonus is all zero).
 - `balance = 30 − 10 × non-free prints + Σ earn(READY) + Σ adjust`; `stitches = Σ earn(READY)`.
 - Ranks by stitches: Thread 0 · Needle 15 · Stitcher 40 · Weaver 80 · Master Embroiderer 150.
 No email is sent at READY; students follow the tracker page.
