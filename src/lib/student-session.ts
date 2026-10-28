@@ -1,43 +1,24 @@
-import { STUDENT_EMAIL_SESSION_KEY } from "@/lib/prints";
+import { STUDENT_NAME_SESSION_KEY } from "@/lib/prints";
 
-const IDENTITY_KEY = "kis-student-identity";
-
-export type StudentIdentity = { name: string; email: string; grade: string };
-
-/** Email remembered for the tab session (prototype: `kis-student-email`). */
-export function readStudentEmail(): string {
+/**
+ * The student's name, remembered for the tab session so the form is prefilled
+ * for a second request. sessionStorage on purpose: shared school laptops
+ * must not carry one student's name over to the next.
+ */
+export function readStudentName(): string {
   try {
-    return sessionStorage.getItem(STUDENT_EMAIL_SESSION_KEY) ?? "";
+    return sessionStorage.getItem(STUDENT_NAME_SESSION_KEY) ?? "";
   } catch {
     return "";
   }
 }
 
-export function writeStudentEmail(email: string) {
+export function writeStudentName(name: string) {
   try {
-    const v = email.trim();
-    if (v) sessionStorage.setItem(STUDENT_EMAIL_SESSION_KEY, v);
-    else sessionStorage.removeItem(STUDENT_EMAIL_SESSION_KEY);
+    const v = name.trim();
+    if (v) sessionStorage.setItem(STUDENT_NAME_SESSION_KEY, v);
+    else sessionStorage.removeItem(STUDENT_NAME_SESSION_KEY);
   } catch {
     // Private mode / blocked storage — the page still works.
-  }
-}
-
-export function readStudentIdentity(): Partial<StudentIdentity> {
-  try {
-    const raw = sessionStorage.getItem(IDENTITY_KEY);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw) as Partial<StudentIdentity>;
-    return parsed && typeof parsed === "object" ? parsed : {};
-  } catch {
-    return {};
-  }
-}
-
-export function writeStudentIdentity(id: StudentIdentity) {
-  try {
-    sessionStorage.setItem(IDENTITY_KEY, JSON.stringify(id));
-  } catch {
-    // ignore
   }
 }

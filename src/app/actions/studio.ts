@@ -11,7 +11,6 @@ import {
   studioConfigured,
 } from "@/lib/studio-session";
 import {
-  isPrintOrigin,
   normalizeFilamentColor,
   normalizePrintRequest,
   printRequestInsertRow,
@@ -29,7 +28,6 @@ function revalidateStudio() {
   revalidatePath("/admin");
   revalidatePath("/");
   revalidatePath("/print");
-  revalidatePath("/requests");
   revalidatePath("/board");
 }
 
@@ -99,28 +97,6 @@ async function patchRequest(
 export async function studioSetStatus(id: string, status: number) {
   if (![0, 1, 2, 3].includes(status)) return { ok: false, error: "Unknown stage." } as const;
   return patchRequest(id, { status });
-}
-
-export async function studioSetOrigin(id: string, origin: string) {
-  if (!isPrintOrigin(origin)) return { ok: false, error: "Unknown origin." } as const;
-  return patchRequest(id, { origin });
-}
-
-export async function studioSetQuality(id: string, quality: number) {
-  if (![1, 2, 3].includes(quality)) return { ok: false, error: "Rating is 1–3." } as const;
-  return patchRequest(id, { quality });
-}
-
-/** Adds `delta` to the request's adjust (+10 top-up; −10 reverses it). */
-export async function studioAdjust(
-  id: string,
-  delta: number,
-): Promise<StudioResult<PrintRequest>> {
-  const auth = await requireStudio();
-  if (!auth.ok) return auth;
-  const { error, request } = await loadRequest(auth.db, id);
-  if (error || !request) return { ok: false, error: error ?? "Request not found." };
-  return patchRequest(id, { adjust: request.adjust + Math.round(delta) });
 }
 
 export async function studioRemove(id: string): Promise<StudioResult<PrintRequest>> {

@@ -1,6 +1,6 @@
 import { StudentShell } from "@/components/students/StudentShell";
 
-/** The public site: landing, print request form, job tracker. */
+/** The public site: landing, print request form, live board. */
 export default function StudentLayout({
   children,
 }: {

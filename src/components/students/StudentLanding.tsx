@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useLocale } from "@/components/students/Locale";
 import { DiamondRow, Motif, type MotifName } from "@/components/students/Motif";
-import { RANKS, rankFor, type LeaderRow } from "@/lib/ledger";
 
 const STEP_MOTIFS: { motif: MotifName; delay: number; speed: number }[] = [
   { motif: "cube", delay: 0, speed: 25 },
@@ -13,16 +12,13 @@ const STEP_MOTIFS: { motif: MotifName; delay: number; speed: number }[] = [
 ];
 
 type Props = {
-  board: LeaderRow[];
-  showLeaderboard: boolean;
   /** Counts for the hero live line (ON THE PRINTERS). */
   live: { printing: number; queued: number };
 };
 
-export function StudentLanding({ board, showLeaderboard, live }: Props) {
+export function StudentLanding({ live }: Props) {
   const { t } = useLocale();
   const L = t.landing;
-  const showBoard = showLeaderboard && board.length >= 3;
   return (
     <>
       <section className="st-grid-hero st-gutter pt-14 pb-9">
@@ -46,9 +42,6 @@ export function StudentLanding({ board, showLeaderboard, live }: Props) {
             </Link>
             <Link href="/print?kind=sticker" className="st-btn st-btn-ink !text-[#fbf6ee]">
               {L.btnVinyl}
-            </Link>
-            <Link href="/requests" className="st-btn st-btn-outline">
-              {L.btnTrack}
             </Link>
           </div>
           <Link href="/board" className="st-live-line">
@@ -97,80 +90,6 @@ export function StudentLanding({ board, showLeaderboard, live }: Props) {
           ))}
         </div>
       </section>
-
-      {/* rushnyk teaser */}
-      <section
-        className="st-grid-rules st-fadeup mx-[5vw] mt-6 border border-[#e9dfd0] bg-white px-7 py-6"
-        style={{ animationDelay: ".2s", animationDuration: ".5s" }}
-      >
-        <div>
-          <p className="st-mono text-[12px] tracking-[0.2em] text-[#b5342c]">{L.teaserEyebrow}</p>
-          <h2 className="mt-2 text-[30px] leading-[1.15] font-semibold">{L.teaserTitle}</h2>
-          <p className="mt-2 text-[17px] leading-[1.55] text-[#5e5047]" style={{ textWrap: "pretty" }}>
-            {L.teaserBody}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-end justify-center gap-[18px]">
-          {RANKS.map((rk, i) => (
-            <div key={rk.key} className="flex flex-col items-center gap-2">
-              <Motif
-                name={rk.band}
-                cell={4}
-                color={i % 2 ? "#2a211c" : "#b5342c"}
-                delay={600 + i * 300}
-                speed={12}
-              />
-              <span className="st-mono text-center text-[8.5px] tracking-[0.1em] text-[#8c7a68]">
-                {t.track.ranks[i].short}
-              </span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {showBoard && (
-        <section
-          className="st-fadeup mx-[5vw] mt-6 border border-[#e9dfd0] bg-white px-7 py-6"
-          style={{ animationDelay: ".25s", animationDuration: ".5s" }}
-        >
-          <div className="flex flex-wrap items-baseline justify-between gap-3">
-            <p className="st-mono text-[12px] tracking-[0.2em] text-[#b5342c]">{L.boardEyebrow}</p>
-            <p className="st-mono text-[10.5px] tracking-[0.1em] text-[#8c7a68]">{L.boardMeta(board.length)}</p>
-          </div>
-          <div className="mt-4 grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-            {board.map((b, i) => {
-              const ri = rankFor(b.earned);
-              return (
-                <div
-                  key={b.email}
-                  className="flex items-center gap-3.5 border border-[#e9dfd0] px-3.5 py-3"
-                  style={{ background: i === 0 ? "#fbf6ee" : "#fff" }}
-                >
-                  <span
-                    className="st-mono min-w-[28px] text-[22px] font-bold"
-                    style={{ color: i === 0 ? "#b5342c" : "#c9b9a1" }}
-                  >
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[18px] font-semibold">{b.name}</p>
-                    <p className="st-mono mt-0.5 text-[10px] tracking-[0.1em] text-[#8c7a68]">
-                      {L.boardRow(t.track.ranks[ri].short, b.earned, b.own)}
-                    </p>
-                  </div>
-                  <Motif
-                    name={RANKS[ri].band}
-                    cell={3}
-                    color={i === 0 ? "#b5342c" : "#c9b9a1"}
-                    delay={i * 150}
-                    speed={10}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
 
       <section className="st-grid-rules mx-[5vw] mt-6 mb-14 bg-[#2a211c] px-[30px] py-7 text-[#fbf6ee]">
         <div>

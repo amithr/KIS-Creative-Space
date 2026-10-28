@@ -88,8 +88,8 @@ ActivityEvent {
 ```
 
 ## Who writes what
-- **Print files**: `PrintRequest.file_path` points at an object in the public-read `print-files` bucket. It is deleted (and `file_path` set to null) when the job reaches READY and its UNDO window passes, when the job is removed, or when a student cancels at RECEIVED. Both the web admin and the app perform the deletion for their own READY marks; the web admin additionally sweeps jobs READY for over two minutes with a file still attached. Download URL: `<SUPABASE_URL>/storage/v1/object/public/print-files/<file_path>?download=<file_name>`.
-- **Live board**: the web's public `/board` page lists every `PrintRequest` with `status < 3` plus READY ones for 3 days after `ready_at` (the DB trigger stamps it), showing first name + last initial only — never emails. The app needs no new fields; any status change it makes shows up on the board within the 12 s poll.
+- **Print files**: `PrintRequest.file_path` points at an object in the public-read `print-files` bucket. It is deleted (and `file_path` set to null) when the job reaches READY and its UNDO window passes, or when the job is removed. Both the web admin and the app perform the deletion for their own READY marks; the web admin additionally sweeps jobs READY for over two minutes with a file still attached. Download URL: `<SUPABASE_URL>/storage/v1/object/public/print-files/<file_path>?download=<file_name>`.
+- **Live board**: the web's public `/board` page lists every `PrintRequest` with `status < 3` plus READY ones for 3 days after `ready_at` (the DB trigger stamps it), showing first name + last initial only. The app needs no new fields; any status change it makes shows up on the board within the 12 s poll.
 - **Web** is now only the student print site plus the Studio Admin print queue: it reads/writes `PrintRequest` and `FilamentColor` and nothing else. The former web teacher admin (space bookings, blocks, inventory, projects, Wednesdays, QR labels) was removed; those tables are owned by the app alone.
 - **App** transitions item reservation status: check-out (`reserved → out`, sets `outQty`), check-in (`out → returned` when `outQty` hits 0; partial returns decrement `outQty` and keep status `out`). Walk-up check-outs create a Reservation directly with `status: "out"`, `days: [today]`, `periods: "all"`, `source: "app"`. App also confirms/declines space bookings and does full Item CRUD.
 - Both append `ActivityEvent` for item mutations. Both subscribe to realtime on `space_bookings` so confirm/decline syncs instantly.
@@ -105,17 +105,13 @@ ActivityEvent {
 - Optimistic writes with a local offline queue on the app; last-write-wins per field via server timestamps.
 - Both clients subscribe to realtime changes on `items`, `reservations`, `space_bookings`, `activity`; a status change on either side must appear on the other within ~1s when online.
 
-### PrintRequest (student print site v2) — table `print_requests`, migrations 022 + 023
-Students are identified by email only. Admin mutations (status, origin, quality, adjust, remove) are admin-only: the web Studio Admin runs them through the service role after a password gate, the Flutter admin through a teacher session (RLS). Students may cancel (delete) only while `status = 0`. Files live in the public-read storage bucket `print-files` under `<token>/<filename>` (50 MB cap).
+### PrintRequest (student print site v3) — table `print_requests`, migrations 022 + 023 + 024 + 025
+Students are identified by **name only** — no email, no login, no points. Admin mutations (status, remove) are admin-only: the web Studio Admin runs them through the service role after a password gate, the Flutter admin through a teacher session (RLS). Students cannot change or delete a row once sent (migration 025 dropped the anonymous cancel policy); they follow it on the public board and ask the studio to withdraw it. Files live in the public-read storage bucket `print-files` under `<token>/<filename>` (50 MB cap).
 ```
 PrintRequest {
   id: string
   kind: "3d" | "poster" | "sticker"
-  origin: "mine" | "school" | "found"     // who designed it (student claims; admin can change)
-  teacher: string | null                   // required when origin = "school" (id from the teacher list)
-  quality: 1 | 2 | 3                       // admin rating, default 1; only meaningful for origin = "mine"
-  adjust: int                              // admin manual point adjustments (+10 top-ups), default 0
-  name: string; email: string
+  name: string                             // the student's name; the board shows first name + last initial
   file_name: string                        // original filename shown everywhere
   file_path: string | null                 // storage object path; null for seeded rows
   file_size: int
@@ -130,9 +126,5 @@ FilamentColor { v: string (slug, pk); label: string (UPPERCASE); hex: string; on
 Stages — 3d: RECEIVED → SLICING → PRINTING → READY
        — poster/sticker: RECEIVED → PRINTING → CUTTING → READY
 ```
-Points (compute identically on every client — web `src/lib/ledger.ts`, Flutter `lib/data/ledger.dart`):
-- start 30; a print costs 10 only when `origin = found` — `mine` and `school` are free; cancelling while RECEIVED refunds (row deleted).
-- `ORG = { mine: {base 20, bonus [0,0,0,0], free}, school: {base 0, free}, found: {base 0} }`; `earn = base + bonus[quality]`, paid only at READY — so own designs pay a flat 20 and `quality` no longer affects points (kept on the row; admins hide the stars when the origin's bonus is all zero).
-- `balance = 30 − 10 × non-free prints + Σ earn(READY) + Σ adjust`; `stitches = Σ earn(READY)`.
-- Ranks by stitches: Thread 0 · Needle 15 · Stitcher 40 · Weaver 80 · Master Embroiderer 150.
-No email is sent at READY; students follow the tracker page.
+Migration 024 dropped the v2 points columns (`origin`, `teacher`, `quality`, `adjust`) and `email`; neither client reads or writes them any more.
+No email is sent at READY; students follow the public live board.

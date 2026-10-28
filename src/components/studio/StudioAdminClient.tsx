@@ -4,15 +4,12 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition, type KeyboardEvent } from "react";
 import {
   studioAddColor,
-  studioAdjust,
   studioDeleteStoredFile,
   studioPurgeFile,
   studioRemove,
   studioRemoveColor,
   studioRestore,
   studioSetColorOn,
-  studioSetOrigin,
-  studioSetQuality,
   studioSetStatus,
   studioSignIn,
   studioUpsertColor,
@@ -20,7 +17,6 @@ import {
 import { Motif } from "@/components/students/Motif";
 import { useStudentToast } from "@/components/students/StudentToast";
 import { STRINGS } from "@/lib/i18n";
-import { earnOf, isRated, ledgerFor, originRule, rankFor } from "@/lib/ledger";
 import {
   colorLabel,
   filterPrints,
@@ -30,8 +26,7 @@ import {
   swatchOf,
   type PrintFilter,
 } from "@/lib/prints";
-import { teacherName } from "@/lib/teachers";
-import type { FilamentColor, PrintOrigin, PrintQuality, PrintRequest } from "@/lib/types";
+import type { FilamentColor, PrintRequest } from "@/lib/types";
 
 const EN = STRINGS.en;
 const mono = "st-mono";
@@ -216,12 +211,6 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
       });
     });
   }
-
-  const ORIGIN_OPTS: { v: PrintOrigin; label: string; bg: string; fg: string }[] = [
-    { v: "mine", label: "OWN", bg: "#fdecea", fg: "#b5342c" },
-    { v: "school", label: "SCHOOL · FREE", bg: "#e6edf4", fg: "#3b6285" },
-    { v: "found", label: "FOUND", bg: "#f1ebe0", fg: "#2a211c" },
-  ];
 
   // ---- colours
   function toggleColor(c: FilamentColor) {
@@ -416,26 +405,11 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
       <section className="mx-[5vw] mt-[18px] mb-14 flex flex-col gap-3">
         {visible.map((r) => {
           const stages = stagesFor(r.kind);
-          const led = ledgerFor(rows, r.email);
-          const rule = originRule(r.origin);
-          const earn = earnOf(r);
-          const rated = isRated(r.origin);
-          const rankShort = EN.track.ranks[rankFor(led.earned)].short;
           const spec =
             r.kind === "3d"
               ? colorLabel(r.color, cols)
               : `${r.qty} × VINYL${r.cut ? ` · ${r.cut.toUpperCase()} CUT` : ""}`;
-          const meta = [
-            r.name.toUpperCase(),
-            r.email.toUpperCase(),
-            r.origin === "school" ? `FOR ${teacherName(r.teacher).toUpperCase()} · FREE` : null,
-            rankShort,
-            `${led.earned} ST`,
-            `BALANCE ${led.balance}`,
-            spec,
-          ]
-            .filter(Boolean)
-            .join(" · ");
+          const meta = [r.name.toUpperCase(), spec].join(" · ");
           return (
             <article
               key={r.id}
@@ -471,72 +445,6 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
                       UPLOAD DELETED
                     </span>
                   ) : null}
-                  <div className="st-seg" title="Who designed it — drives the student's points. Change if a claim looks wrong." role="radiogroup">
-                    {ORIGIN_OPTS.map((o) => {
-                      const cur = r.origin === o.v;
-                      return (
-                        <button
-                          key={o.v}
-                          type="button"
-                          role="radio"
-                          aria-checked={cur}
-                          style={{ background: cur ? o.bg : "#fff", color: cur ? o.fg : "#c9b9a1" }}
-                          onClick={() => {
-                            if (cur) return;
-                            const nextEarn = earnOf({ origin: o.v, quality: r.quality });
-                            change(
-                              r,
-                              { origin: o.v },
-                              () => studioSetOrigin(r.id, o.v),
-                              `${r.file.toUpperCase()} · ORIGIN → ${o.label}${originRule(o.v).free && !rule.free ? " · 10 POINTS REFUNDED" : ""}${nextEarn !== earn ? ` · NOW EARNS +${nextEarn}` : ""}`,
-                              () => studioSetOrigin(r.id, r.origin),
-                              "ORIGIN RESTORED ✓",
-                            );
-                          }}
-                        >
-                          {o.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {r.origin === "mine" && (
-                    <div
-                      className="flex flex-none items-center gap-[3px]"
-                      title={
-                        rated
-                          ? "Quality rating — sets how many points the student earns back (paid when READY)"
-                          : "Own design — earns a flat 20 points when READY"
-                      }
-                    >
-                      {(rated ? [1, 2, 3] : []).map((q) => (
-                        <button
-                          key={q}
-                          type="button"
-                          className="st-star"
-                          aria-label={`Quality ${q}`}
-                          style={{ color: r.quality >= q ? "#b5342c" : "#e9dfd0" }}
-                          onClick={() => {
-                            if (r.quality === q) return;
-                            const nextEarn = earnOf({ origin: r.origin, quality: q as PrintQuality });
-                            change(
-                              r,
-                              { quality: q as 1 | 2 | 3 },
-                              () => studioSetQuality(r.id, q),
-                              `${r.file.toUpperCase()} · QUALITY ${"×".repeat(q)} · EARNS +${nextEarn}`,
-                              () => studioSetQuality(r.id, r.quality),
-                              "RATING RESTORED ✓",
-                            );
-                          }}
-                        >
-                          ×
-                        </button>
-                      ))}
-                      <span className={`${mono} ml-1 text-[9.5px] tracking-[0.06em] text-[#8c7a68]`}>
-                        +{earn}
-                        {r.status === 3 ? " PAID" : " ON READY"}
-                      </span>
-                    </div>
-                  )}
                   <div className="st-seg" role="radiogroup" aria-label={`Stage for ${r.file}`}>
                     {stages.map((label, i) => {
                       const cur = r.status === i;
@@ -559,7 +467,7 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
                               r,
                               { status: i as 0 | 1 | 2 | 3 },
                               () => studioSetStatus(r.id, i),
-                              `${r.file.toUpperCase()} → ${label}${i === 3 && earn ? ` · +${earn} POINTS PAID TO ${r.name.toUpperCase()}` : ""}${i === 3 && r.file_path ? " · UPLOAD DELETED" : ""}`,
+                              `${r.file.toUpperCase()} → ${label}${i === 3 && r.file_path ? " · UPLOAD DELETED" : ""}`,
                               () => studioSetStatus(r.id, r.status),
                               "STAGE RESTORED ✓",
                               i === 3 && r.file_path
@@ -578,30 +486,13 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
                   </div>
                   <button
                     type="button"
-                    className="st-ghost-btn"
-                    title="Give this student +10 points"
-                    onClick={() =>
-                      change(
-                        r,
-                        { adjust: r.adjust + 10 },
-                        () => studioAdjust(r.id, 10),
-                        `${r.name.toUpperCase()} · +10 POINTS · BALANCE NOW ${led.balance + 10}`,
-                        () => studioAdjust(r.id, -10),
-                        "TOP-UP REVERSED ✓",
-                      )
-                    }
-                  >
-                    +10 TOP UP
-                  </button>
-                  <button
-                    type="button"
                     className="st-cancel min-h-[40px] min-w-[40px] !text-[17px] !text-[#c9b9a1]"
                     title="Remove request"
                     aria-label={`Remove ${r.file}`}
                     onClick={() =>
                       setConfirm({
                         title: "Remove this request?",
-                        body: `${r.file} from ${r.name} — the student will no longer see it${rule.free ? "." : ", and their 10 points come back."}`,
+                        body: `${r.file} from ${r.name} — the student will no longer see it.`,
                         action: "REMOVE IT",
                         fn: () => {
                           setRows((list) => list.filter((x) => x.id !== r.id));

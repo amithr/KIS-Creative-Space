@@ -2,31 +2,23 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
-import { createPrintRequest, listPrintRequests } from "@/app/actions/prints";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { createPrintRequest } from "@/app/actions/prints";
 import { useLocale } from "@/components/students/Locale";
 import { Motif } from "@/components/students/Motif";
 import { useStudentToast } from "@/components/students/StudentToast";
-import { stageNames } from "@/lib/i18n";
-import { PRINT_COST, START_POINTS, canAfford, earnOf, ledgerFor, originRule } from "@/lib/ledger";
 import {
   MAX_PRINT_FILE_BYTES,
   PRINT_CUTS,
   PRINT_KINDS,
-  PRINT_ORIGINS,
   formatMb,
-  isValidEmail,
+  isValidName,
   kindMeta,
+  normalizeName,
 } from "@/lib/prints";
 import { uploadPrintFile } from "@/lib/print-upload";
-import {
-  readStudentEmail,
-  readStudentIdentity,
-  writeStudentEmail,
-  writeStudentIdentity,
-} from "@/lib/student-session";
-import { TEACHERS, teacherById } from "@/lib/teachers";
-import type { FilamentColor, PrintCut, PrintKind, PrintOrigin, PrintRequest } from "@/lib/types";
+import { readStudentName, writeStudentName } from "@/lib/student-session";
+import type { FilamentColor, PrintCut, PrintKind } from "@/lib/types";
 
 type Props = { initialKind: PrintKind; colors: FilamentColor[] };
 
@@ -48,50 +40,34 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
   const { t } = useLocale();
   const F = t.form;
   const [fName, setFName] = useState("");
-  const [fEmail, setFEmail] = useState("");
   const [fKind, setFKind] = useState<PrintKind>(initialKind);
   const [file, setFile] = useState<File | null>(null);
   const [fColor, setFColor] = useState("red");
   const [fQty, setFQty] = useState(1);
   const [fCut, setFCut] = useState<PrintCut>("contour");
-  const [fOrigin, setFOrigin] = useState<PrintOrigin | "">("");
-  const [fTeacher, setFTeacher] = useState("");
   const [tried, setTried] = useState(false);
   const [sending, setSending] = useState(false);
-  const [mine, setMine] = useState<PrintRequest[]>([]);
-  const [hydrated, setHydrated] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
-  const seq = useRef(0);
 
   const kind = kindMeta(fKind);
   const K = F.kinds[fKind];
   const is3d = fKind === "3d";
   const isVinyl = !is3d;
-  const isSchool = fOrigin === "school";
 
   // Only colours switched on are offered; fall back to the first if the pick was hidden.
   const onColors = colors.filter((c) => c.on);
   const color = onColors.some((c) => c.v === fColor) ? fColor : (onColors[0]?.v ?? "");
 
   useEffect(() => {
-    const id = readStudentIdentity();
-    const sess = readStudentEmail();
+    const sess = readStudentName();
     let cancelled = false;
     queueMicrotask(() => {
-      if (cancelled) return;
-      if (id.name) setFName(id.name);
-      if (sess || id.email) setFEmail(sess || id.email || "");
-      setHydrated(true);
+      if (!cancelled && sess) setFName(sess);
     });
     return () => {
       cancelled = true;
     };
   }, []);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    writeStudentIdentity({ name: fName, email: fEmail, grade: "" });
-  }, [fName, fEmail, hydrated]);
 
   const [seenKind, setSeenKind] = useState(initialKind);
   if (seenKind !== initialKind) {
@@ -102,59 +78,24 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
     }
   }
 
-  const loadMine = useCallback(async (email: string) => {
-    const my = ++seq.current;
-    if (!isValidEmail(email)) {
-      setMine([]);
-      return;
-    }
-    try {
-      const list = await listPrintRequests(email);
-      if (seq.current === my) setMine(list);
-    } catch {
-      if (seq.current === my) setMine([]);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    const tm = window.setTimeout(() => void loadMine(fEmail), 300);
-    return () => window.clearTimeout(tm);
-  }, [fEmail, hydrated, loadMine]);
-
-  const who = fEmail.trim().toLowerCase();
-  const emailOk = isValidEmail(who);
-  const ledger = ledgerFor(mine, who);
-  const balance = emailOk ? ledger.balance : START_POINTS;
-  const isFree = !!fOrigin && originRule(fOrigin).free;
-  const broke = emailOk && !canAfford(balance, fOrigin || "found");
-  const teacher = teacherById(fTeacher);
+  const who = normalizeName(fName);
+  const nameOk = isValidName(who);
 
   // "Still needed: …" lists everything missing, in form order.
   const missing: string[] = [];
   if (!file) missing.push(K.missingFile);
-  if (!fOrigin) missing.push(F.missing.origin);
-  if (isSchool && !teacher) missing.push(F.missing.teacher);
-  if (!fName.trim()) missing.push(F.missing.name);
-  if (!emailOk) missing.push(F.missing.email);
+  if (!nameOk) missing.push(F.missing.name);
   const ready = missing.length === 0;
-  const canSubmit = ready && !broke;
+  const canSubmit = ready;
 
   const colorMeta = onColors.find((c) => c.v === color);
-  const line = broke
-    ? F.brokeLine(balance)
-    : ready && file
-      ? (is3d
-          ? F.readyLine3d(file.name, (colorMeta?.label ?? color).toLowerCase())
-          : F.readyLineVinyl(fQty, file.name)) +
-        (isSchool
-          ? F.readyFor(teacher?.name ?? "")
-          : fOrigin === "mine"
-            ? F.readyMine(earnOf({ origin: "mine", quality: 1 }))
-            : F.readyLeft(balance - PRINT_COST))
+  const line =
+    ready && file
+      ? is3d
+        ? F.readyLine3d(file.name, (colorMeta?.label ?? color).toLowerCase())
+        : F.readyLineVinyl(fQty, file.name)
       : F.stillNeeded(missing.join(", "));
-  const lineColor = broke ? RED : ready ? OK : FAINT;
-  const walletColor = broke ? RED : balance <= 10 ? "#9a6e06" : OK;
+  const lineColor = ready ? OK : FAINT;
 
   function pickKind(v: PrintKind) {
     if (v === fKind) return;
@@ -188,26 +129,17 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
 
   async function submit() {
     if (sending) return;
-    if (broke) {
-      toast(F.notEnoughToast, "err");
-      return;
-    }
-    if (!ready || !file || !fOrigin) {
+    if (!ready || !file) {
       setTried(true);
       toast(F.almost(missing.join(", ").toUpperCase()), "err");
       return;
     }
     setSending(true);
-    const origin = fOrigin;
-    const snapTeacher = teacher;
     try {
       const filePath = await uploadPrintFile(file);
       const result = await createPrintRequest({
         kind: fKind,
-        origin,
-        teacher: isSchool ? fTeacher : null,
-        name: fName.trim(),
-        email: who,
+        name: who,
         fileName: file.name,
         filePath,
         color: is3d ? color : "vinyl",
@@ -218,21 +150,12 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
         toast(result.error.toUpperCase(), "err");
         return;
       }
-      writeStudentEmail(who);
-      if (result.request) setMine((prev) => [result.request!, ...prev]);
+      writeStudentName(who);
       setFile(null);
       if (fileInput.current) fileInput.current.value = "";
       setFQty(1);
-      setFOrigin("");
-      setFTeacher("");
       setTried(false);
-      toast(
-        origin === "school"
-          ? F.sentSchool(snapTeacher?.name ?? "")
-          : origin === "mine"
-            ? F.sentMine(earnOf({ origin, quality: 1 }))
-            : F.sentFound(balance - PRINT_COST),
-      );
+      toast(F.sent);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Upload failed";
       toast(/env|configured/i.test(msg) ? F.dbError : F.uploadFailed + msg.toUpperCase(), "err");
@@ -240,9 +163,6 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
       setSending(false);
     }
   }
-
-  const recent = mine.slice(0, 3);
-  const emptyMsg = emailOk ? F.emptyUnder(fEmail.trim()) : F.emptyNoEmail;
 
   return (
     <>
@@ -384,99 +304,28 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
             </div>
           )}
 
-          {/* WHO DESIGNED IT? */}
-          <div className="st-section-row mt-[22px]">
-            <h2 className="st-section-label">{F.sections.who}</h2>
-            <span className="st-mono ml-auto cursor-help text-[10.5px] tracking-[0.1em] text-[#b5342c]" title={F.pointsTip}>
-              {F.pointsQ}
-            </span>
-          </div>
-          <div className="st-origin-grid mt-2.5" role="radiogroup" aria-label={F.sections.who}>
-            {PRINT_ORIGINS.map((o) => {
-              const on = fOrigin === o;
-              const O = F.origins[o];
-              return (
-                <button
-                  key={o}
-                  type="button"
-                  role="radio"
-                  aria-checked={on}
-                  className="st-origin-tile"
-                  data-on={on}
-                  data-err={tried && !fOrigin}
-                  title={`${O.label} — ${O.hint}`}
-                  onClick={() => {
-                    setFOrigin(o);
-                    toast(O.toast);
-                  }}
-                >
-                  <span className="st-origin-big" style={{ color: on ? RED : DIS }} aria-hidden>
-                    {O.big}
-                  </span>
-                  <span className="text-[20px] leading-[1.15] font-semibold text-[#2a211c]">{O.short}</span>
-                  <span className="st-mono text-[12px] tracking-[0.1em] text-[#8c7a68]">{O.cost}</span>
-                </button>
-              );
-            })}
-          </div>
-          {isSchool && (
-            <select
-              id="st-teacher"
-              aria-label={F.teacherPlaceholder}
-              value={fTeacher}
-              onChange={(e) => {
-                const v = e.target.value;
-                setFTeacher(v);
-                const tt = teacherById(v);
-                if (tt) toast(F.teacherToast(tt.name));
-              }}
-              className="st-teacher-select"
-              style={{ borderColor: tried && !teacher ? RED : HAIR }}
-            >
-              <option value="">{F.teacherPlaceholder}</option>
-              {TEACHERS.map((tt) => (
-                <option key={tt.v} value={tt.v}>
-                  {tt.name} — {tt.subject}
-                </option>
-              ))}
-            </select>
-          )}
-
-          {/* ABOUT YOU */}
+          {/* YOUR NAME */}
           <div className="st-section-row mt-[22px]">
             <h2 className="st-section-label">{F.sections.you}</h2>
-            <span className="st-mono ml-auto flex items-center gap-2 text-[11px] tracking-[0.12em] text-[#8c7a68]">
-              {F.points}
-              <span className="text-[17.5px] font-bold" style={{ color: walletColor }} aria-live="polite">
-                {balance}
-              </span>
-            </span>
           </div>
           <div className="st-you-grid">
             <input
               id="st-name"
               value={fName}
-              onChange={(e) => setFName(e.target.value)}
+              onChange={(e) => {
+                setFName(e.target.value);
+                writeStudentName(e.target.value);
+              }}
               placeholder={F.namePlaceholder}
-              aria-label={F.namePlaceholder}
+              aria-label={F.sections.you}
+              aria-describedby="st-name-hint"
               autoComplete="name"
               className="st-input-lg"
-              style={{ borderColor: tried && !fName.trim() ? RED : HAIR }}
+              style={{ borderColor: tried && !nameOk ? RED : HAIR }}
             />
-            <input
-              id="st-email"
-              type="email"
-              value={fEmail}
-              onChange={(e) => {
-                setFEmail(e.target.value);
-                writeStudentEmail(e.target.value);
-              }}
-              placeholder={F.emailPlaceholder}
-              aria-label={F.emailPlaceholder}
-              autoComplete="email"
-              className="st-input-lg"
-              style={{ borderColor: tried && !emailOk ? RED : HAIR }}
-            />
+            <p id="st-name-hint" className="st-field-hint">
+              {F.nameHint}
+            </p>
           </div>
 
           {/* go */}
@@ -492,15 +341,7 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
                 boxShadow: canSubmit ? `4px 4px 0 ${INK}` : "none",
               }}
             >
-              {sending
-                ? F.sending
-                : broke
-                  ? F.notEnough
-                  : ready
-                    ? isFree
-                      ? F.sendFree
-                      : F.sendPaid
-                    : F.sendIt}
+              {sending ? F.sending : F.sendIt}
             </button>
             <p className="st-form-line" style={{ color: lineColor }} aria-live="polite">
               {line}
@@ -508,35 +349,31 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
           </div>
         </form>
 
-        <aside className="st-fadeup-45" style={{ animationDelay: ".18s" }}>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-[26px] font-semibold">{F.recent}</h2>
-            <Link href="/requests" className="st-link-red">
-              {F.seeAll}
-            </Link>
-          </div>
-          {recent.length === 0 && (
-            <p className="mt-3 border border-dashed border-[#d9cdbb] px-6 py-[30px] text-center text-[16.5px] leading-[1.5] text-[#8c7a68]">
-              {emptyMsg}
-            </p>
-          )}
-          <div className="mt-3 flex flex-col gap-2.5">
-            {recent.map((r) => (
-              <Link key={r.id} href="/requests" className="st-recent-row">
-                <span className="st-mono shrink-0 bg-[#2a211c] px-[7px] py-[3px] text-[10px] tracking-[0.12em] text-[#fbf6ee]">
-                  {F.kinds[r.kind].tag}
-                </span>
-                <span className="min-w-0 flex-1 truncate text-[17.5px] font-semibold">{r.file}</span>
+        <aside
+          className="st-fadeup-45 border border-[#e9dfd0] bg-white px-[22px] py-5"
+          style={{ animationDelay: ".18s" }}
+        >
+          <p className="st-mono text-[12px] tracking-[0.2em] text-[#b5342c]">{F.next.title}</p>
+          <p className="mt-2.5 text-[17px] leading-[1.5] text-[#5e5047]" style={{ textWrap: "pretty" }}>
+            {F.next.lede}
+          </p>
+          <ul className="mt-4 flex flex-col gap-2 text-[15.5px] leading-[1.45] text-[#5e5047]">
+            {F.next.glossary.map((g) => (
+              <li key={g.term}>
                 <span
-                  className="st-mono shrink-0 text-[10.5px] tracking-[0.1em]"
-                  style={{ color: r.status === 3 ? OK : RED }}
+                  className="st-mono text-[11px] tracking-[0.12em]"
+                  style={{ color: g.ready ? OK : INK }}
                 >
-                  {stageNames(t, r.kind)[r.status]}
-                  {r.status === 3 ? " ✓" : ""}
+                  {g.term}
                 </span>
-              </Link>
+                {g.text}
+              </li>
             ))}
-          </div>
+          </ul>
+          <Link href="/board" className="st-live-line">
+            <span className="st-live-dot" aria-hidden />
+            {F.next.board}
+          </Link>
         </aside>
       </section>
     </>

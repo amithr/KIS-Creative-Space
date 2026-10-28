@@ -1,11 +1,4 @@
-import type {
-  FilamentColor,
-  PrintCut,
-  PrintKind,
-  PrintOrigin,
-  PrintQuality,
-  PrintRequest,
-} from "@/lib/types";
+import type { FilamentColor, PrintCut, PrintKind, PrintRequest } from "@/lib/types";
 
 export const PRINT_FILES_BUCKET = "print-files";
 
@@ -17,7 +10,7 @@ export function printFileUrl(filePath: string, fileName: string): string | null 
   return `${base.replace(/\/$/, "")}/storage/v1/object/public/${PRINT_FILES_BUCKET}/${path}?download=${encodeURIComponent(fileName)}`;
 }
 export const MAX_PRINT_FILE_BYTES = 50 * 1024 * 1024;
-export const STUDENT_EMAIL_SESSION_KEY = "kis-student-email";
+export const STUDENT_NAME_SESSION_KEY = "kis-student-name";
 
 export type PrintKindMeta = {
   v: PrintKind;
@@ -58,12 +51,6 @@ export function kindMeta(kind: string | null | undefined): PrintKindMeta {
 export function isPrintKind(v: unknown): v is PrintKind {
   return v === "3d" || v === "poster" || v === "sticker";
 }
-
-export function isPrintOrigin(v: unknown): v is PrintOrigin {
-  return v === "mine" || v === "school" || v === "found";
-}
-
-export const PRINT_ORIGINS: PrintOrigin[] = ["mine", "school", "found"];
 
 export const STAGES_3D = ["RECEIVED", "SLICING", "PRINTING", "READY"] as const;
 export const STAGES_VINYL = ["RECEIVED", "PRINTING", "CUTTING", "READY"] as const;
@@ -126,8 +113,14 @@ export function normalizeFilamentColor(row: Record<string, unknown>): FilamentCo
   };
 }
 
-export function isValidEmail(email: string) {
-  return /.+@.+\..+/.test(email.trim());
+/** Trimmed, single-spaced name — what the board shows and the admin reads. */
+export function normalizeName(name: string) {
+  return name.trim().replace(/\s+/g, " ");
+}
+
+/** A name needs at least two characters to go on a request. */
+export function isValidName(name: string) {
+  return normalizeName(name).length >= 2;
 }
 
 export function fileMatchesKind(kind: PrintKind, fileName: string) {
@@ -147,21 +140,12 @@ export function normalizePrintRequest(row: Record<string, unknown>): PrintReques
   const status = (Number.isFinite(statusRaw)
     ? Math.min(3, Math.max(0, Math.round(statusRaw)))
     : 0) as 0 | 1 | 2 | 3;
-  const qRaw = Number(row.quality);
-  const quality = (Number.isFinite(qRaw)
-    ? Math.min(3, Math.max(1, Math.round(qRaw)))
-    : 1) as PrintQuality;
   const createdAt = String(row.created_at ?? "");
   const atMs = Date.parse(createdAt);
   return {
     id: String(row.id ?? ""),
     kind,
-    origin: isPrintOrigin(row.origin) ? row.origin : "found",
-    teacher: row.teacher ? String(row.teacher) : null,
-    quality,
-    adjust: Number(row.adjust) || 0,
-    name: String(row.name ?? "").trim(),
-    email: String(row.email ?? "").trim().toLowerCase(),
+    name: normalizeName(String(row.name ?? "")),
     file: String(row.file_name ?? row.file ?? "").trim(),
     file_path: row.file_path ? String(row.file_path) : null,
     file_size: Number(row.file_size) || 0,
@@ -179,12 +163,7 @@ export function printRequestInsertRow(r: PrintRequest) {
   return {
     id: r.id,
     kind: r.kind,
-    origin: r.origin,
-    teacher: r.teacher,
-    quality: r.quality,
-    adjust: r.adjust,
     name: r.name,
-    email: r.email,
     file_name: r.file,
     file_path: r.file_path,
     file_size: r.file_size,

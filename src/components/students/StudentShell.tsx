@@ -26,11 +26,6 @@ function ShellInner({ children }: { children: ReactNode }) {
     { href: "/", label: t.nav.home, active: pathname === "/" },
     { href: "/print", label: t.nav.print, active: pathname.startsWith("/print") },
     {
-      href: "/requests",
-      label: t.nav.track,
-      active: pathname.startsWith("/requests"),
-    },
-    {
       href: "/board",
       label: t.nav.board,
       active: pathname.startsWith("/board"),

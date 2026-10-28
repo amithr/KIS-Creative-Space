@@ -38,7 +38,7 @@ const cyrSans = Fira_Sans_Condensed({
 export const metadata: Metadata = {
   title: "KIS Design Studio · For students",
   description:
-    "Request 3D prints, vinyl posters and die-cut stickers from the KIS Design Studio and track your jobs.",
+    "Request 3D prints, vinyl posters and die-cut stickers from the KIS Design Studio and watch them on the live board.",
 };
 
 export const viewport: Viewport = {

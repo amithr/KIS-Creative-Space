@@ -175,7 +175,7 @@ export function LiveBoardClient({ initial, colors, serverNow }: Props) {
 
       <p className="st-gutter -mt-[30px] mb-14 text-[14px] text-[#8c7a68]">
         {B.footer}{" "}
-        <Link href="/requests" className="font-semibold !text-[#b5342c]">
+        <Link href="/print" className="font-semibold !text-[#b5342c]">
           {B.footerLink}
         </Link>
       </p>

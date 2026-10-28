@@ -12,7 +12,7 @@ function hasSupabaseEnv() {
   return hasSupabasePublicEnv();
 }
 
-/** Every print request — Studio Admin queue, ledgers and the leaderboard. */
+/** Every print request — Studio Admin queue and the live board. */
 export async function getAllPrintRequests(): Promise<PrintRequest[]> {
   if (!hasSupabaseEnv()) return [];
 
@@ -36,30 +36,6 @@ export async function getAllPrintRequests(): Promise<PrintRequest[]> {
 export async function getLiveBoard(): Promise<{ jobs: LiveJob[]; now: number }> {
   const now = Date.now();
   return { jobs: toLiveJobs(await getAllPrintRequests(), now), now };
-}
-
-/** A student's own jobs, newest first. Email match is case-insensitive. */
-export async function getPrintRequestsByEmail(
-  email: string,
-): Promise<PrintRequest[]> {
-  const needle = email.trim().toLowerCase();
-  if (!hasSupabaseEnv() || !needle) return [];
-
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("print_requests")
-    .select("*")
-    .ilike("email", needle)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Failed to load student print requests:", error.message);
-    return [];
-  }
-
-  return (data ?? []).map((row) =>
-    normalizePrintRequest(row as Record<string, unknown>),
-  );
 }
 
 /** Filament colours, admin order. Falls back to the default palette offline. */

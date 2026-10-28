@@ -471,38 +471,6 @@
   transform: translateY(-3px);
 }
 
-/* Recent request rows */
-.st-recent-row {
-  border: 1px solid var(--st-hair);
-  background: #fff;
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  transition: border-color 0.2s;
-  width: 100%;
-  text-align: left;
-}
-.st-recent-row:hover {
-  border-color: var(--st-red);
-}
-
-.st-link-red {
-  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
-  font-size: 11.5px;
-  letter-spacing: 0.12em;
-  color: var(--st-red) !important;
-  cursor: pointer;
-  user-select: none;
-  background: none;
-  border: 0;
-  padding: 0;
-}
-.st-link-red:hover {
-  text-decoration: underline;
-}
-
 /* Grids that reflow */
 .st-grid-hero {
   display: grid;
@@ -527,17 +495,15 @@
   gap: 24px;
   align-items: start;
 }
-.st-grid-track {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 24px;
-  align-items: start;
-}
 .st-you-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 10px;
+  gap: 8px;
   margin-top: 12px;
+}
+.st-field-hint {
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--st-muted);
 }
 .st-input-lg {
   box-sizing: border-box;
@@ -545,16 +511,6 @@
   font-size: 20px;
   padding: 14px 16px;
   border: 2px solid var(--st-hair);
-}
-.st-teacher-select {
-  box-sizing: border-box;
-  width: 100%;
-  margin-top: 10px;
-  font-size: 20px;
-  padding: 14px;
-  border: 2px solid var(--st-hair);
-  background: var(--st-ground) !important;
-  animation: st-fadeup 0.3s ease both;
 }
 .st-form-footer {
   margin-top: 22px;
@@ -609,46 +565,6 @@
 }
 .st-hero-bird {
   --cell: 10px;
-}
-
-/* Tracker */
-.st-tracker {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  margin-top: 14px;
-}
-.st-tracker-col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  position: relative;
-}
-.st-tracker-line {
-  height: 2px;
-  width: 100%;
-  position: absolute;
-  top: 9px;
-  left: 0;
-}
-.st-tracker-glyph {
-  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
-  font-size: 17.5px;
-  line-height: 20px;
-  background: #fff;
-  padding: 0 6px;
-  position: relative;
-}
-.st-tracker-glyph[data-current="true"] {
-  animation:
-    st-stitch 0.6s ease both,
-    st-sway 2.4s ease-in-out 0.6s infinite;
-}
-.st-tracker-label {
-  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-align: center;
 }
 
 .st-cancel {
@@ -710,7 +626,6 @@
 @media (max-width: 699px) {
   .st-grid-hero,
   .st-grid-request,
-  .st-grid-track,
   .st-grid-rules {
     grid-template-columns: 1fr;
   }
@@ -727,12 +642,10 @@
   .st-hero-bird {
     --cell: 7px;
   }
-  .st-kind-grid,
-  .st-origin-grid {
+  .st-kind-grid {
     gap: 6px;
   }
-  .st-kind-tile,
-  .st-origin-tile {
+  .st-kind-tile {
     padding: 14px 6px 12px;
   }
   .st-vinyl-grid {
@@ -741,7 +654,6 @@
   }
   .st-pill,
   .st-kind-tile,
-  .st-origin-tile,
   .st-step-btn,
   .st-cancel,
   .st-swatch-sq,
@@ -762,20 +674,15 @@
     white-space: normal;
     text-align: center;
   }
-  .st-tracker-label {
-    font-size: clamp(8.5px, 2.4vw, 10px);
-    letter-spacing: 0.08em;
-  }
 }
 
 @media (max-width: 359px) {
-  .st-vinyl-grid,
-  .st-origin-grid {
+  .st-vinyl-grid {
     grid-template-columns: 1fr;
   }
 }
 
-/* ---------- v2: points, rushnyk, studio admin ---------- */
+/* ---------- v2: studio admin ---------- */
 .st-toast-undo {
   font: inherit;
   letter-spacing: 0.12em;
@@ -789,19 +696,6 @@
   flex: none;
 }
 
-@keyframes st-burst {
-  0% {
-    opacity: 0;
-    transform: translate(0, 0) scale(0.4);
-  }
-  20% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translate(var(--dx), var(--dy)) scale(1.1) rotate(90deg);
-  }
-}
 @keyframes st-shake {
   0%,
   100% {
@@ -831,111 +725,6 @@
 }
 .st-rowflash {
   animation: st-rowflash 0.9s ease;
-}
-
-/* Origin tiles */
-.st-origin-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-.st-origin-tile {
-  padding: 14px 12px;
-  border: 2px solid var(--st-hair);
-  background: #fff;
-  cursor: pointer;
-  user-select: none;
-  transition: all 0.15s;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  text-align: center;
-}
-.st-origin-tile:hover {
-  border-color: var(--st-red);
-  transform: translateY(-2px);
-}
-.st-origin-big {
-  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
-  font-weight: 700;
-  font-size: 28px;
-  line-height: 1;
-  transition: color 0.15s;
-}
-.st-origin-tile:active {
-  transform: scale(0.97);
-}
-.st-origin-tile[data-on="true"] {
-  background: var(--st-ground);
-  border-color: var(--st-ink);
-}
-.st-origin-tile[data-err="true"] {
-  border-color: var(--st-red);
-}
-.kis-students select {
-  font-family: inherit;
-  font-stretch: inherit;
-  font-weight: 400;
-  color: var(--st-ink);
-  background: #fff;
-  border-radius: 0;
-}
-.kis-students select:focus {
-  outline: none;
-  border-color: var(--st-red) !important;
-}
-
-/* Rushnyk card */
-.st-rushnyk {
-  display: grid;
-  grid-template-columns: 96px 1fr;
-  gap: 20px;
-  align-items: start;
-  position: relative;
-  overflow: hidden;
-}
-.st-cloth {
-  background: var(--st-ground);
-  border: 1px solid var(--st-hair);
-  padding: 10px 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-}
-.st-band {
-  transition: all 0.4s;
-}
-.st-band[data-locked="true"] {
-  opacity: 0.18;
-  filter: grayscale(1);
-}
-.st-rank-bar {
-  height: 10px;
-  background: #f1ebe0;
-  margin-top: 6px;
-  position: relative;
-  overflow: hidden;
-}
-.st-rank-bar > span {
-  display: block;
-  height: 100%;
-  background: repeating-linear-gradient(45deg, #b5342c 0 4px, #d9574e 4px 8px);
-  transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-.st-burst {
-  position: absolute;
-  inset: -20px;
-  pointer-events: none;
-}
-.st-burst > span {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  font-family: var(--font-space-mono), var(--font-plex-mono), "Space Mono", ui-monospace, monospace;
-  font-weight: 700;
-  animation: st-burst 1.4s ease-out both;
 }
 
 /* Studio admin */
@@ -1067,16 +856,6 @@ a.st-ghost-btn {
   max-width: 100%;
   box-shadow: 8px 8px 0 var(--st-red);
   animation: st-fadeup 0.25s ease both;
-}
-
-@media (max-width: 699px) {
-  .st-rushnyk {
-    grid-template-columns: 72px 1fr;
-    gap: 14px;
-  }
-  .st-cloth {
-    --cell: 4px;
-  }
 }
 
 /* ---------- v3: Stitch Run (secret) ---------- */

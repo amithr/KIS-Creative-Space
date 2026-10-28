@@ -1,4 +1,4 @@
-import type { PrintCut, PrintKind, PrintOrigin, PrintRequest } from "@/lib/types";
+import type { PrintCut, PrintKind } from "@/lib/types";
 
 export type Lang = "en" | "uk";
 export const LANG_STORAGE_KEY = "kis-student-lang";
@@ -22,22 +22,9 @@ type KindStrings = {
 };
 
 type CutStrings = { label: string; tip: string };
-type OriginStrings = {
-  /** Full wording — tooltip on the tile. */
-  label: string;
-  hint: string;
-  /** Tile copy: big mono glyph, short label, cost line. */
-  big: string;
-  short: string;
-  cost: string;
-  pts: string;
-  toast: string;
-  tag: string;
-};
-type RankStrings = { name: string; short: string; blurb: string };
 
 export type Strings = {
-  nav: { home: string; print: string; track: string; board: string };
+  nav: { home: string; print: string; board: string };
   brandSub: string;
   footer: string;
   footerMark: string;
@@ -61,15 +48,8 @@ export type Strings = {
     body: string;
     btn3d: string;
     btnVinyl: string;
-    btnTrack: string;
     how: string;
     steps: { n: string; title: string; body: string }[];
-    teaserEyebrow: string;
-    teaserTitle: string;
-    teaserBody: string;
-    boardEyebrow: string;
-    boardMeta: (n: number) => string;
-    boardRow: (rank: string, stitches: number, own: number) => string;
     rulesEyebrow: string;
     rulesTitle: string;
     rules: string[];
@@ -104,7 +84,7 @@ export type Strings = {
   form: {
     eyebrow: string;
     /** Small mono section labels (one continuous form, no step numbering). */
-    sections: { what: string; file: string; who: string; you: string };
+    sections: { what: string; file: string; you: string };
     kinds: Record<PrintKind, KindStrings>;
     browse: string;
     swap: string;
@@ -116,87 +96,32 @@ export type Strings = {
     cut: string;
     cuts: Record<PrintCut, CutStrings>;
     colour: string;
-    pointsQ: string;
-    pointsTip: string;
-    origins: Record<PrintOrigin, OriginStrings>;
-    teacherPlaceholder: string;
-    teacherToast: (name: string) => string;
-    points: string;
     namePlaceholder: string;
-    emailPlaceholder: string;
-    missing: { name: string; email: string; origin: string; teacher: string };
+    /** Short hint under the name field — why we ask. */
+    nameHint: string;
+    missing: { name: string };
     stillNeeded: (list: string) => string;
-    brokeLine: (balance: number) => string;
     readyLine3d: (file: string, color: string) => string;
     readyLineVinyl: (qty: number, file: string) => string;
-    readyFor: (teacher: string) => string;
-    readyLeft: (left: number) => string;
-    readyMine: (earn: number) => string;
     sendIt: string;
-    sendPaid: string;
-    sendFree: string;
-    notEnough: string;
-    notEnoughToast: string;
     sending: string;
     almost: (list: string) => string;
-    sentSchool: (teacher: string) => string;
-    sentMine: (earn: number) => string;
-    sentFound: (left: number) => string;
+    sent: string;
     dbError: string;
     uploadFailed: string;
-    recent: string;
-    seeAll: string;
-    emptyUnder: (email: string) => string;
-    emptyNoEmail: string;
-  };
-  track: {
-    eyebrow: string;
-    title: string;
-    email: string;
-    help: string;
-    stagesTitle: string;
-    glossary: { term: string; text: string; ready?: boolean }[];
-    newRequest: string;
-    yourPrints: string;
-    typeAbove: string;
-    nudge: string;
-    readyNotice: string;
-    cancelled: (file: string) => string;
-    refunded: string;
-    cancelTitle: string;
-    metaVinyl: string;
-    metaCut: (cut: string) => string;
-    rushnyk: string;
-    level: (n: number) => string;
-    pointsToSpend: string;
-    pending: string;
-    pendingTip: string;
-    explainer: string;
-    stitches: (n: number) => string;
-    toNext: (n: number, rank: string) => string;
-    topRank: string;
-    ownDesigns: string;
-    schoolProjects: string;
-    found: string;
-    bandStitched: (rank: string) => string;
-    bandLocked: (rank: string, min: number) => string;
-    ranks: RankStrings[];
-    chipOwn: string;
-    chipFound: string;
-    chipSchool: (teacher: string) => string;
-    chipPending: string;
-    chipFree: string;
-    tipSchool: string;
-    tipPaid: string;
-    tipPaidRated: string;
-    tipPending: string;
-    levelUp: (rank: string) => string;
+    /** Side panel: what happens after sending, and where to watch it. */
+    next: {
+      title: string;
+      lede: string;
+      glossary: { term: string; text: string; ready?: boolean }[];
+      board: string;
+    };
   };
   stages: Record<"3d" | "vinyl", string[]>;
 };
 
 const en: Strings = {
-  nav: { home: "HOME", print: "PRINT REQUEST", track: "MY REQUESTS", board: "ON THE PRINTERS" },
+  nav: { home: "HOME", print: "PRINT REQUEST", board: "ON THE PRINTERS" },
   brandSub: "FOR STUDENTS · ДЛЯ УЧНІВ",
   footer: "KIS Design Studio · prints run Tuesday–Thursday · collect within a week",
   footerMark: "ТВОРЧИЙ ПРОСТІР",
@@ -220,20 +145,13 @@ const en: Strings = {
     body: "The Design Studio prints student work every week — 3D models, posters, and vinyl stickers cut to shape. Send us your file and we'll tell you when it's ready to collect.",
     btn3d: "REQUEST A 3D PRINT →",
     btnVinyl: "POSTERS & STICKERS →",
-    btnTrack: "CHECK MY PRINTS",
     how: "HOW IT WORKS · ЯК ЦЕ ПРАЦЮЄ",
     steps: [
       { n: "01", title: "Design it", body: "A 3D model (.STL/.3MF), or poster and sticker artwork (PDF, PNG, SVG)." },
       { n: "02", title: "Send the file", body: "Fill in the short request form. Pick a colour — or how many stickers." },
-      { n: "03", title: "We make it", body: "3D prints go slicing → printing; vinyl goes printing → cutting. Follow along on your list." },
-      { n: "04", title: "Collect it", body: "My requests shows READY when it's done. Pick up at the Design Studio." },
+      { n: "03", title: "We make it", body: "3D prints go slicing → printing; vinyl goes printing → cutting. Watch it move along on the On the Printers board." },
+      { n: "04", title: "Collect it", body: "The board shows READY when it's done. Pick up at the Design Studio." },
     ],
-    teaserEyebrow: "× YOUR RUSHNYK · РУШНИК ×",
-    teaserTitle: "Every print stitches a band onto your rushnyk",
-    teaserBody: "You start with 30 points and every print costs 10. Found files earn nothing back. Design your own and it costs nothing — you earn 20 when it's ready. Prints for a school project are free too. Points earned stitch bands onto your rushnyk, from Thread to Master Embroiderer.",
-    boardEyebrow: "× MASTER EMBROIDERERS · THIS YEAR ×",
-    boardMeta: (n) => `${n} MAKERS · RANKED BY STITCHES EARNED`,
-    boardRow: (rank, stitches, own) => `${rank} · ${stitches} STITCHES · ${own} OWN DESIGNS`,
     rulesEyebrow: "BEFORE YOU SEND",
     rulesTitle: "Three small things that make prints succeed",
     rules: [
@@ -252,7 +170,7 @@ const en: Strings = {
     headlineQueue: (n) => `Warming up — ${n} in the queue`,
     headlineReady: "All done — come and collect",
     headlineQuiet: "The printers are quiet",
-    lede: "Everything on the printers and cutters right now. Names only — no emails.",
+    lede: "Everything on the printers and cutters right now. First names only.",
     counters: { queued: "QUEUED", printing: "PRINTING", ready: "READY" },
     groups: {
       ready: "READY TO COLLECT",
@@ -272,13 +190,13 @@ const en: Strings = {
     emptyPre: "The printers are quiet — ",
     emptyLink: "send the first print",
     emptyPost: " and it'll show up here.",
-    footer: "Updates on its own as the studio team moves jobs along. Looking for yours?",
-    footerLink: "My requests →",
+    footer: "Updates on its own as the studio team moves jobs along. Yours shows up here the moment you send it.",
+    footerLink: "Send a print →",
     openToast: (n) => `LIVE · ${n} JOBS ON THE GO`,
   },
   form: {
     eyebrow: "× PRINT REQUEST ×",
-    sections: { what: "WHAT ARE YOU MAKING?", file: "YOUR FILE", who: "WHO DESIGNED IT?", you: "ABOUT YOU" },
+    sections: { what: "WHAT ARE YOU MAKING?", file: "YOUR FILE", you: "YOUR NAME" },
     kinds: {
       "3d": {
         label: "3D print", tag: "3D", hint: ".STL · .3MF", title: "Tell us about your print",
@@ -310,96 +228,29 @@ const en: Strings = {
       square: { label: "SQUARE", tip: "Simple square or rectangle" },
     },
     colour: "COLOUR",
-    pointsQ: "POINTS ?",
-    pointsTip: "Start with 30 points. Your own design is free and earns 20 when it's ready. School projects are free. Found files cost 10 and earn nothing.",
-    origins: {
-      mine: { label: "I designed it", hint: "Modelled or drawn by you, from scratch.", big: "×××", short: "I made it", cost: "FREE · EARN 20", pts: "FREE · EARNS 20", toast: "OWN DESIGN · FREE · EARNS 20 WHEN IT'S READY", tag: "OWN DESIGN" },
-      school: { label: "It's for a school project", hint: "Set by a teacher — pick who it's for.", big: "★", short: "For a teacher", cost: "FREE", pts: "FREE · NO POINTS", toast: "SCHOOL PROJECT · FREE · NOW PICK THE TEACHER", tag: "SCHOOL PROJECT" },
-      found: { label: "I found it", hint: "Downloaded as-is. Costs points, earns none.", big: "↓", short: "I found it", cost: "−10", pts: "COSTS 10 · EARNS 0", toast: "FOUND · COSTS 10, EARNS NOTHING BACK · THANKS FOR BEING HONEST", tag: "FOUND" },
-    },
-    teacherPlaceholder: "Which teacher is it for?",
-    teacherToast: (name) => `FOR ${name.toUpperCase()} · FREE PRINT · WE'LL LET THEM KNOW`,
-    points: "POINTS",
-    namePlaceholder: "Your name",
-    emailPlaceholder: "Your KIS email",
-    missing: { name: "your name", email: "your email", origin: "who designed it", teacher: "the teacher it's for" },
+    namePlaceholder: "First name and surname",
+    nameHint: "Shown on the On the Printers board as first name and last initial.",
+    missing: { name: "your name" },
     stillNeeded: (list) => `Still needed: ${list}.`,
-    brokeLine: (b) => `Only ${b} points — ask the studio for a top-up, or pick “For a teacher”.`,
     readyLine3d: (file, color) => `✓ ${file} in ${color}`,
     readyLineVinyl: (qty, file) => `✓ ${qty} × ${file}`,
-    readyFor: (teacher) => ` · for ${teacher}`,
-    readyLeft: (left) => ` · you'll have ${left} points left`,
-    readyMine: (earn) => ` · free · you'll earn ${earn} when it's ready`,
     sendIt: "SEND IT →",
-    sendPaid: "SEND IT · −10 →",
-    sendFree: "SEND IT · FREE →",
-    notEnough: "NOT ENOUGH POINTS",
-    notEnoughToast: "NOT ENOUGH POINTS · ASK THE STUDIO TEAM FOR A TOP-UP",
     sending: "SENDING…",
     almost: (list) => `ALMOST — ADD ${list}`,
-    sentSchool: (teacher) => `REQUEST SENT ✓ · FREE SCHOOL PRINT · ${teacher.toUpperCase()} WILL BE TOLD`,
-    sentMine: (earn) => `REQUEST SENT ✓ · FREE · EARN ${earn} WHEN IT'S READY`,
-    sentFound: (left) => `REQUEST SENT ✓ · −10 POINTS · ${left} POINTS LEFT`,
+    sent: "REQUEST SENT ✓ · WATCH IT ON THE PRINTERS",
     dbError: "DATABASE NOT CONFIGURED — ASK THE DESIGN STUDIO",
     uploadFailed: "UPLOAD FAILED — ",
-    recent: "Your recent requests",
-    seeAll: "SEE ALL →",
-    emptyUnder: (email) => `Nothing yet under ${email} — your first request will appear here the moment you send it.`,
-    emptyNoEmail: "Enter your KIS email in the form and your prints will show up here.",
-  },
-  track: {
-    eyebrow: "× MY REQUESTS ×",
-    title: "Where are my prints?",
-    email: "YOUR KIS EMAIL",
-    help: "Type the email you used on your request — your list updates as you type. No password needed.",
-    stagesTitle: "WHAT THE STAGES MEAN",
-    glossary: [
-      { term: "RECEIVED", text: " — we've got your file and it's in the queue." },
-      { term: "SLICING / PRINTING", text: " — it's being prepared or is on the machine." },
-      { term: "CUTTING", text: " — stickers and posters are going through the vinyl cutter." },
-      { term: "READY", text: " — come and collect it from the Design Studio.", ready: true },
-    ],
-    newRequest: "+ NEW REQUEST",
-    yourPrints: "Your prints",
-    typeAbove: "TYPE YOUR EMAIL ABOVE",
-    nudge: "TYPE YOUR KIS EMAIL TO SEE YOUR PRINTS",
-    readyNotice: "Ready to collect from the Design Studio — bring your student card.",
-    cancelled: (file) => `REQUEST CANCELLED · ${file}`,
-    refunded: " · 10 POINTS REFUNDED",
-    cancelTitle: "Cancel this request",
-    metaVinyl: "VINYL",
-    metaCut: (cut) => `${cut.toUpperCase()} CUT`,
-    rushnyk: "YOUR RUSHNYK · РУШНИК",
-    level: (n) => `LEVEL ${n}`,
-    pointsToSpend: "POINTS TO SPEND",
-    pending: "PENDING",
-    pendingTip: "Points you'll receive when the studio marks these prints READY and rates them",
-    explainer: "Own designs are free and earn 20. Found files cost 10.",
-    stitches: (n) => `${n} ${n === 1 ? "STITCH" : "STITCHES"}`,
-    toNext: (n, rank) => `${n} TO ${rank.toUpperCase()}`,
-    topRank: "TOP RANK ✓",
-    ownDesigns: "OWN DESIGNS",
-    schoolProjects: "SCHOOL PROJECTS",
-    found: "FOUND",
-    bandStitched: (rank) => `${rank} band · stitched`,
-    bandLocked: (rank, min) => `${rank} band · unlocks at ${min} stitches`,
-    ranks: [
-      { name: "Thread", short: "THREAD", blurb: "Everyone starts with a single thread. Design and print something to begin your rushnyk." },
-      { name: "Needle", short: "NEEDLE", blurb: "Your first band is stitched. Keep designing — every own design earns 20 more." },
-      { name: "Stitcher", short: "STITCHER", blurb: "Two bands down. You're a regular at the Design Studio now." },
-      { name: "Weaver", short: "WEAVER", blurb: "Patterns on patterns. Teachers notice weavers — ask about mentoring younger makers." },
-      { name: "Master Embroiderer", short: "MASTER", blurb: "The whole rushnyk is yours. Your name goes on the wall by the printers." },
-    ],
-    chipOwn: "OWN DESIGN",
-    chipFound: "FOUND",
-    chipSchool: (teacher) => `SCHOOL PROJECT · ${teacher.toUpperCase()} · FREE`,
-    chipPending: "PENDING",
-    chipFree: "FREE",
-    tipSchool: "Free print for a school project — no points spent or earned.",
-    tipPaid: "Points earned back for this print",
-    tipPaidRated: "Points earned back for this print · quality rated by the studio",
-    tipPending: "Points arrive when the studio marks it READY.",
-    levelUp: (rank) => `LEVEL UP ✓ · YOU'RE A ${rank.toUpperCase()} · NEW BAND STITCHED`,
+    next: {
+      title: "WHAT HAPPENS NEXT",
+      lede: "Your request goes straight onto the public On the Printers board — no login, just look for your name. Changed your mind? Ask at the Design Studio.",
+      glossary: [
+        { term: "RECEIVED", text: " — we've got your file and it's in the queue." },
+        { term: "SLICING / PRINTING", text: " — it's being prepared or is on the machine." },
+        { term: "CUTTING", text: " — stickers and posters are going through the vinyl cutter." },
+        { term: "READY", text: " — come and collect it from the Design Studio. Bring your student card.", ready: true },
+      ],
+      board: "SEE WHAT'S ON THE PRINTERS →",
+    },
   },
   stages: {
     "3d": ["RECEIVED", "SLICING", "PRINTING", "READY"],
@@ -419,7 +270,7 @@ const ukThings = (n: number) => ukPlural(n, "річ", "речі", "речей");
 const ukJobs = (n: number) => ukPlural(n, "РОБОТА", "РОБОТИ", "РОБІТ");
 
 const uk: Strings = {
-  nav: { home: "ГОЛОВНА", print: "ЗАМОВИТИ ДРУК", track: "МОЇ ЗАМОВЛЕННЯ", board: "НА ПРИНТЕРАХ" },
+  nav: { home: "ГОЛОВНА", print: "ЗАМОВИТИ ДРУК", board: "НА ПРИНТЕРАХ" },
   brandSub: "ДЛЯ УЧНІВ · FOR STUDENTS",
   footer: "KIS Design Studio · друкуємо вівторок–четвер · заберіть протягом тижня",
   footerMark: "DESIGN STUDIO",
@@ -443,20 +294,13 @@ const uk: Strings = {
     body: "Дизайн-студія щотижня друкує учнівські роботи — 3D-моделі, постери та вінілові наліпки, вирізані за контуром. Надішліть файл, і ми повідомимо, коли його можна забрати.",
     btn3d: "ЗАМОВИТИ 3D-ДРУК →",
     btnVinyl: "ПОСТЕРИ Й НАЛІПКИ →",
-    btnTrack: "МОЇ ВІДБИТКИ",
     how: "ЯК ЦЕ ПРАЦЮЄ · HOW IT WORKS",
     steps: [
       { n: "01", title: "Створіть дизайн", body: "3D-модель (.STL/.3MF) або макет постера чи наліпки (PDF, PNG, SVG)." },
       { n: "02", title: "Надішліть файл", body: "Заповніть коротку форму. Оберіть колір — або кількість наліпок." },
-      { n: "03", title: "Ми виготовляємо", body: "3D-друк: нарізка → друк; вініл: друк → різання. Стежте за статусом у своєму списку." },
-      { n: "04", title: "Заберіть", body: "У «Моїх замовленнях» з'явиться ГОТОВО. Заберіть у Дизайн-студії." },
+      { n: "03", title: "Ми виготовляємо", body: "3D-друк: нарізка → друк; вініл: друк → різання. Стежте за статусом на табло «На принтерах»." },
+      { n: "04", title: "Заберіть", body: "На табло з'явиться ГОТОВО. Заберіть у Дизайн-студії." },
     ],
-    teaserEyebrow: "× ВАШ РУШНИК · YOUR RUSHNYK ×",
-    teaserTitle: "Кожен відбиток вишиває смугу на вашому рушнику",
-    teaserBody: "Ви починаєте з 30 балів, кожен друк коштує 10. Знайдені файли нічого не повертають. Власний дизайн нічого не коштує — ви заробляєте 20, коли він готовий. Друк для шкільного проєкту теж безкоштовний. Зароблені бали вишивають смуги на вашому рушнику — від Нитки до Майстра вишивки.",
-    boardEyebrow: "× МАЙСТРИ ВИШИВКИ · ЦЬОГО РОКУ ×",
-    boardMeta: (n) => `${n} МАЙСТРІВ · ЗА ЗАРОБЛЕНИМИ СТІБКАМИ`,
-    boardRow: (rank, stitches, own) => `${rank} · ${stitches} СТІБКІВ · ${own} ВЛАСНИХ ДИЗАЙНІВ`,
     rulesEyebrow: "ПЕРЕД НАДСИЛАННЯМ",
     rulesTitle: "Три дрібниці, завдяки яким друк вдається",
     rules: [
@@ -475,7 +319,7 @@ const uk: Strings = {
     headlineQueue: (n) => `Розігріваємось — ${n} у черзі`,
     headlineReady: "Усе готово — приходьте забирати",
     headlineQuiet: "Принтери мовчать",
-    lede: "Усе, що зараз на принтерах і різаках. Лише імена — без електронних адрес.",
+    lede: "Усе, що зараз на принтерах і різаках. Лише імена.",
     counters: { queued: "У ЧЕРЗІ", printing: "ДРУК", ready: "ГОТОВО" },
     groups: {
       ready: "ГОТОВО ДО ВИДАЧІ",
@@ -495,13 +339,13 @@ const uk: Strings = {
     emptyPre: "Принтери мовчать — ",
     emptyLink: "надішліть перший друк",
     emptyPost: ", і він з'явиться тут.",
-    footer: "Оновлюється сама, коли команда студії просуває роботи. Шукаєте свою?",
-    footerLink: "Мої замовлення →",
+    footer: "Оновлюється сама, коли команда студії просуває роботи. Ваше замовлення з'явиться тут одразу після надсилання.",
+    footerLink: "Надіслати друк →",
     openToast: (n) => `НАЖИВО · ${n} ${ukJobs(n)} У РОБОТІ`,
   },
   form: {
     eyebrow: "× ЗАМОВЛЕННЯ ДРУКУ ×",
-    sections: { what: "ЩО ВИ РОБИТЕ?", file: "ВАШ ФАЙЛ", who: "ХТО ЦЕ СТВОРИВ?", you: "ПРО ВАС" },
+    sections: { what: "ЩО ВИ РОБИТЕ?", file: "ВАШ ФАЙЛ", you: "ВАШЕ ІМ'Я" },
     kinds: {
       "3d": {
         label: "3D-друк", tag: "3D", hint: ".STL · .3MF", title: "Розкажіть про свій 3D-друк",
@@ -533,111 +377,37 @@ const uk: Strings = {
       square: { label: "КВАДРАТ", tip: "Простий квадрат або прямокутник" },
     },
     colour: "КОЛІР",
-    pointsQ: "БАЛИ ?",
-    pointsTip: "Починаєте з 30 балів. Власний дизайн безкоштовний і приносить 20, коли готово. Шкільні проєкти безкоштовні. Знайдені файли коштують 10 і нічого не заробляють.",
-    origins: {
-      mine: { label: "Я створив(ла) сам(а)", hint: "Змодельовано чи намальовано вами з нуля.", big: "×××", short: "Я зробив(ла)", cost: "БЕЗКОШТОВНО · ЗАРОБИ 20", pts: "БЕЗКОШТОВНО · ЗАРОБЛЯЄ 20", toast: "ВЛАСНИЙ ДИЗАЙН · БЕЗКОШТОВНО · ПРИНОСИТЬ 20, КОЛИ ГОТОВО", tag: "ВЛАСНИЙ ДИЗАЙН" },
-      school: { label: "Це для шкільного проєкту", hint: "Задав учитель — оберіть, для кого це.", big: "★", short: "Для вчителя", cost: "БЕЗКОШТОВНО", pts: "БЕЗКОШТОВНО · БЕЗ БАЛІВ", toast: "ШКІЛЬНИЙ ПРОЄКТ · БЕЗКОШТОВНО · ТЕПЕР ОБЕРІТЬ УЧИТЕЛЯ", tag: "ШКІЛЬНИЙ ПРОЄКТ" },
-      found: { label: "Я знайшов(ла) це", hint: "Завантажено як є. Коштує бали, нічого не заробляє.", big: "↓", short: "Я знайшов(ла)", cost: "−10", pts: "КОШТУЄ 10 · ЗАРОБЛЯЄ 0", toast: "ЗНАЙДЕНО · КОШТУЄ 10, НІЧОГО НЕ ПОВЕРТАЄ · ДЯКУЄМО ЗА ЧЕСНІСТЬ", tag: "ЗНАЙДЕНО" },
-    },
-    teacherPlaceholder: "Для якого вчителя?",
-    teacherToast: (name) => `ДЛЯ ${name.toUpperCase()} · БЕЗКОШТОВНИЙ ДРУК · МИ ПОВІДОМИМО`,
-    points: "БАЛИ",
-    namePlaceholder: "Ваше ім'я",
-    emailPlaceholder: "Ваша KIS-пошта",
-    missing: { name: "ваше ім'я", email: "вашу пошту", origin: "хто це створив", teacher: "учителя, для якого це" },
+    namePlaceholder: "Ім'я та прізвище",
+    nameHint: "На табло «На принтерах» показуємо ім'я та першу літеру прізвища.",
+    missing: { name: "ваше ім'я" },
     stillNeeded: (list) => `Ще потрібно: ${list}.`,
-    brokeLine: (b) => `Лише ${b} балів — попросіть студію про поповнення або оберіть «Для вчителя».`,
     readyLine3d: (file, color) => `✓ ${file}, колір ${color}`,
     readyLineVinyl: (qty, file) => `✓ ${qty} × ${file}`,
-    readyFor: (teacher) => ` · для ${teacher}`,
-    readyLeft: (left) => ` · залишиться ${left} балів`,
-    readyMine: (earn) => ` · безкоштовно · отримаєте ${earn}, коли буде готово`,
     sendIt: "НАДІСЛАТИ →",
-    sendPaid: "НАДІСЛАТИ · −10 →",
-    sendFree: "НАДІСЛАТИ · БЕЗКОШТОВНО →",
-    notEnough: "НЕ ВИСТАЧАЄ БАЛІВ",
-    notEnoughToast: "НЕ ВИСТАЧАЄ БАЛІВ · ПОПРОСІТЬ КОМАНДУ СТУДІЇ ПРО ПОПОВНЕННЯ",
     sending: "НАДСИЛАЄМО…",
     almost: (list) => `МАЙЖЕ — ДОДАЙТЕ ${list}`,
-    sentSchool: (teacher) => `ЗАМОВЛЕННЯ НАДІСЛАНО ✓ · БЕЗКОШТОВНИЙ ШКІЛЬНИЙ ДРУК · ${teacher.toUpperCase()} ДІЗНАЄТЬСЯ`,
-    sentMine: (earn) => `ЗАМОВЛЕННЯ НАДІСЛАНО ✓ · БЕЗКОШТОВНО · ОТРИМАЄТЕ ${earn}, КОЛИ ГОТОВО`,
-    sentFound: (left) => `ЗАМОВЛЕННЯ НАДІСЛАНО ✓ · −10 БАЛІВ · ЗАЛИШИЛОСЯ ${left}`,
+    sent: "ЗАМОВЛЕННЯ НАДІСЛАНО ✓ · СТЕЖТЕ НА ТАБЛО «НА ПРИНТЕРАХ»",
     dbError: "БАЗА ДАНИХ НЕ НАЛАШТОВАНА — ЗВЕРНІТЬСЯ ДО ДИЗАЙН-СТУДІЇ",
     uploadFailed: "НЕ ВДАЛОСЯ ЗАВАНТАЖИТИ — ",
-    recent: "Ваші останні замовлення",
-    seeAll: "УСІ →",
-    emptyUnder: (email) => `Поки нічого для ${email} — перше замовлення з'явиться тут одразу після надсилання.`,
-    emptyNoEmail: "Введіть свою KIS-пошту у формі, і ваші відбитки з'являться тут.",
-  },
-  track: {
-    eyebrow: "× МОЇ ЗАМОВЛЕННЯ ×",
-    title: "Де мої відбитки?",
-    email: "ВАША KIS-ПОШТА",
-    help: "Введіть пошту, яку вказали в замовленні — список оновлюється під час введення. Пароль не потрібен.",
-    stagesTitle: "ЩО ОЗНАЧАЮТЬ ЕТАПИ",
-    glossary: [
-      { term: "ОТРИМАНО", text: " — файл у нас і стоїть у черзі." },
-      { term: "НАРІЗКА / ДРУК", text: " — готується або вже на верстаті." },
-      { term: "РІЗАННЯ", text: " — наліпки й постери проходять через плотер." },
-      { term: "ГОТОВО", text: " — приходьте забрати в Дизайн-студію.", ready: true },
-    ],
-    newRequest: "+ НОВЕ ЗАМОВЛЕННЯ",
-    yourPrints: "Ваші відбитки",
-    typeAbove: "ВВЕДІТЬ ПОШТУ ВИЩЕ",
-    nudge: "ВВЕДІТЬ KIS-ПОШТУ, ЩОБ ПОБАЧИТИ СВОЇ ВІДБИТКИ",
-    readyNotice: "Можна забрати в Дизайн-студії — візьміть учнівський квиток.",
-    cancelled: (file) => `ЗАМОВЛЕННЯ СКАСОВАНО · ${file}`,
-    refunded: " · 10 БАЛІВ ПОВЕРНУТО",
-    cancelTitle: "Скасувати це замовлення",
-    metaVinyl: "ВІНІЛ",
-    metaCut: (cut) => uk.form.cuts[cut as PrintCut]?.label ?? cut.toUpperCase(),
-    rushnyk: "ВАШ РУШНИК · YOUR RUSHNYK",
-    level: (n) => `РІВЕНЬ ${n}`,
-    pointsToSpend: "БАЛИ ДЛЯ ВИТРАТ",
-    pending: "ОЧІКУЮТЬ",
-    pendingTip: "Бали, які ви отримаєте, коли студія позначить ці відбитки ГОТОВО та оцінить їх",
-    explainer: "Власні дизайни безкоштовні й приносять 20. Знайдені файли коштують 10.",
-    stitches: (n) => `${n} СТІБКІВ`,
-    toNext: (n, rank) => `${n} ДО РІВНЯ ${rank.toUpperCase()}`,
-    topRank: "НАЙВИЩИЙ РІВЕНЬ ✓",
-    ownDesigns: "ВЛАСНИХ ДИЗАЙНІВ",
-    schoolProjects: "ШКІЛЬНИХ ПРОЄКТІВ",
-    found: "ЗНАЙДЕНО",
-    bandStitched: (rank) => `Смуга «${rank}» · вишита`,
-    bandLocked: (rank, min) => `Смуга «${rank}» · відкриється на ${min} стібках`,
-    ranks: [
-      { name: "Нитка", short: "НИТКА", blurb: "Усі починають з однієї нитки. Створіть і надрукуйте щось, щоб почати свій рушник." },
-      { name: "Голка", short: "ГОЛКА", blurb: "Першу смугу вишито. Продовжуйте створювати — кожен власний дизайн приносить ще 20." },
-      { name: "Вишивальник", short: "ВИШИВАЛЬНИК", blurb: "Дві смуги позаду. Ви вже постійний гість Дизайн-студії." },
-      { name: "Ткач", short: "ТКАЧ", blurb: "Візерунок на візерунку. Учителі помічають ткачів — запитайте про менторство молодших." },
-      { name: "Майстер вишивки", short: "МАЙСТЕР", blurb: "Увесь рушник ваш. Ваше ім'я — на стіні біля принтерів." },
-    ],
-    chipOwn: "ВЛАСНИЙ ДИЗАЙН",
-    chipFound: "ЗНАЙДЕНО",
-    chipSchool: (teacher) => `ШКІЛЬНИЙ ПРОЄКТ · ${teacher.toUpperCase()} · БЕЗКОШТОВНО`,
-    chipPending: "ОЧІКУЄ",
-    chipFree: "БЕЗКОШТОВНО",
-    tipSchool: "Безкоштовний друк для шкільного проєкту — бали не витрачено й не зароблено.",
-    tipPaid: "Бали, повернуті за цей відбиток",
-    tipPaidRated: "Бали, повернуті за цей відбиток · якість оцінила студія",
-    tipPending: "Бали надійдуть, коли студія позначить ГОТОВО.",
-    levelUp: (rank) => `НОВИЙ РІВЕНЬ ✓ · ВИ — ${rank.toUpperCase()} · НОВУ СМУГУ ВИШИТО`,
+    next: {
+      title: "ЩО ДАЛІ",
+      lede: "Замовлення одразу з'являється на спільному табло «На принтерах» — без входу, просто знайдіть своє ім'я. Передумали? Зверніться до Дизайн-студії.",
+      glossary: [
+        { term: "ОТРИМАНО", text: " — файл у нас і стоїть у черзі." },
+        { term: "НАРІЗКА / ДРУК", text: " — готується або вже на верстаті." },
+        { term: "РІЗАННЯ", text: " — наліпки й постери проходять через плотер." },
+        { term: "ГОТОВО", text: " — приходьте забрати в Дизайн-студію. Візьміть учнівський квиток.", ready: true },
+      ],
+      board: "ЩО ЗАРАЗ НА ПРИНТЕРАХ →",
+    },
   },
   stages: {
     "3d": ["ОТРИМАНО", "НАРІЗКА", "ДРУК", "ГОТОВО"],
     vinyl: ["ОТРИМАНО", "ДРУК", "РІЗАННЯ", "ГОТОВО"],
   },
 };
-
 export const STRINGS: Record<Lang, Strings> = { en, uk };
 
 export function stageNames(t: Strings, kind: PrintKind) {
   return kind === "3d" ? t.stages["3d"] : t.stages.vinyl;
-}
-
-/** Meta line under a job on the tracker: colour | qty × VINYL · cut. */
-export function localizedMetaLine(r: PrintRequest, t: Strings, colorLabel: string) {
-  if (r.kind === "3d") return colorLabel.toUpperCase();
-  return `${r.qty} × ${t.track.metaVinyl}${r.cut ? ` · ${t.track.metaCut(r.cut)}` : ""}`;
 }
