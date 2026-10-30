@@ -221,9 +221,9 @@ const en: Strings = {
         pickToast: "POSTER · PRINTED ON ADHESIVE VINYL", wrongFile: "THAT FILE TYPE WON'T PRINT — USE PDF · PNG · SVG", missingFile: "your artwork file",
       },
       sticker: {
-        label: "Stickers", tag: "STICKERS", hint: "SVG · PNG · CUT TO SHAPE", title: "Tell us about your stickers",
+        label: "Stickers", tag: "STICKERS", hint: "PDF · PNG · JPG · SVG · CUT TO SHAPE", title: "Tell us about your stickers",
         fileHint: "SVG cuts the cleanest", choose: "Choose your artwork",
-        pickToast: "STICKERS · PRINTED ON VINYL, THEN CUT TO SHAPE", wrongFile: "THAT FILE TYPE WON'T PRINT — USE SVG · PNG", missingFile: "your artwork file",
+        pickToast: "STICKERS · PRINTED ON VINYL, THEN CUT TO SHAPE", wrongFile: "THAT FILE TYPE WON'T PRINT — USE PDF · PNG · JPG · SVG", missingFile: "your artwork file",
       },
     },
     browse: "BROWSE",
@@ -378,9 +378,9 @@ const uk: Strings = {
         pickToast: "ПОСТЕР · ДРУК НА САМОКЛЕЙНОМУ ВІНІЛІ", wrongFile: "ТАКИЙ ФАЙЛ НЕ НАДРУКУЄТЬСЯ — ВИКОРИСТАЙТЕ PDF · PNG · SVG", missingFile: "ваш макет",
       },
       sticker: {
-        label: "Наліпки", tag: "НАЛІПКИ", hint: "SVG · PNG · ЗА КОНТУРОМ", title: "Розкажіть про свої наліпки",
+        label: "Наліпки", tag: "НАЛІПКИ", hint: "PDF · PNG · JPG · SVG · ЗА КОНТУРОМ", title: "Розкажіть про свої наліпки",
         fileHint: "SVG ріжеться найчистіше", choose: "Оберіть макет",
-        pickToast: "НАЛІПКИ · ДРУК НА ВІНІЛІ, ПОТІМ РІЗАННЯ ЗА КОНТУРОМ", wrongFile: "ТАКИЙ ФАЙЛ НЕ НАДРУКУЄТЬСЯ — ВИКОРИСТАЙТЕ SVG · PNG", missingFile: "ваш макет",
+        pickToast: "НАЛІПКИ · ДРУК НА ВІНІЛІ, ПОТІМ РІЗАННЯ ЗА КОНТУРОМ", wrongFile: "ТАКИЙ ФАЙЛ НЕ НАДРУКУЄТЬСЯ — ВИКОРИСТАЙТЕ PDF · PNG · JPG · SVG", missingFile: "ваш макет",
       },
     },
     browse: "ОБРАТИ",

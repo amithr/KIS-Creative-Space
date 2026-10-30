@@ -87,7 +87,7 @@ export async function createPrintRequest(
       error:
         kind === "3d"
           ? "That isn't a 3D file — export as .STL or .3MF."
-          : "That file type won't print — use PDF, PNG or SVG.",
+          : "That file type won't print — use PDF, PNG, JPG or SVG.",
     };
   }
 

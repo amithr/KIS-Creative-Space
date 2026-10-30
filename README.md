@@ -32,7 +32,7 @@ See `.env.example`.
 
 ## Student print site
 
-- Students request 3D prints, vinyl posters and die-cut stickers at `/print`, identified by **name only** — no email, no login (`kis-student-name` session key prefills the form for a second request). Files upload from the browser straight into the public-read `print-files` bucket; the `createPrintRequest` server action then checks the extension per kind (`.stl/.3mf/.obj` · `.pdf/.png/.jpg/.svg` · `.svg/.pdf/.png`) and the 50 MB cap, and inserts the row.
+- Students request 3D prints, vinyl posters and die-cut stickers at `/print`, identified by **name only** — no email, no login (`kis-student-name` session key prefills the form for a second request). Files upload from the browser straight into the public-read `print-files` bucket; the `createPrintRequest` server action then checks the extension per kind (`.stl/.3mf/.obj` for 3D; `.pdf/.png/.jpg/.svg` for posters and stickers) and the 50 MB cap, and inserts the row.
 - There is no per-student tracker or cancel: students follow their job on the public **ON THE PRINTERS** board (`/board`), where it appears under first name + last initial the moment it is sent. Changing or withdrawing a request is done by asking the Design Studio, which removes it from Studio Admin.
 - There is no points system: no balances, origins, quality ratings, top-ups, ranks, rushnyk or leaderboard. Every print is simply queued and tracked.
 - Stage lists — 3D: RECEIVED → SLICING → PRINTING → READY · poster/sticker: RECEIVED → PRINTING → CUTTING → READY. `status` is the index into the kind's list.

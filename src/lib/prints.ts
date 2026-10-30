@@ -48,9 +48,9 @@ export const PRINT_KINDS: PrintKindMeta[] = [
   {
     v: "sticker",
     motif: "sticker",
-    accept: ".svg,.pdf,.png,image/svg+xml,application/pdf,image/png",
-    re: /\.(svg|pdf|png)$/i,
-    extensions: ["svg", "pdf", "png"],
+    accept: ".pdf,.png,.jpg,.jpeg,.svg,application/pdf,image/png,image/jpeg,image/svg+xml",
+    re: /\.(pdf|png|jpe?g|svg)$/i,
+    extensions: ["pdf", "png", "jpg", "jpeg", "svg"],
   },
 ];
 
