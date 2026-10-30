@@ -210,7 +210,8 @@ function BoardRow({ job: r, index, colors, now, t, open, onToggle }: RowProps) {
   const stages = stageNames(t, r.kind);
   const cur = r.status;
   const ready = cur === 3;
-  const ago = agoBucket(r.at, now);
+  // Counts from the last stage change, or from submission while still RECEIVED.
+  const ago = agoBucket(r.statusAt, now);
   const stageColor = ready ? GREEN : cur === 0 ? "#8c7a68" : RED;
   const canOpen = !!r.model;
   const ref = useRef<HTMLElement>(null);

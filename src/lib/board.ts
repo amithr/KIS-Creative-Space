@@ -20,6 +20,8 @@ export type LiveJob = {
   color: string;
   status: 0 | 1 | 2 | 3;
   at: number;
+  /** When the current stage began — what "N min ago" counts from. */
+  statusAt: number;
   readyAt: number | null;
   /** Public URL of a 3D upload while it still exists — the board's in-page preview. */
   model: string | null;
@@ -75,6 +77,7 @@ export function toLiveJobs(list: PrintRequest[], now = Date.now()): LiveJob[] {
       color: r.color,
       status: r.status,
       at: r.at,
+      statusAt: r.status_at,
       readyAt: readyAtMs(r),
       model: r.kind === "3d" && r.file_path ? printFileUrl(r.file_path, r.file) : null,
     }));

@@ -12,6 +12,7 @@ import {
   PRINT_CUTS,
   PRINT_KINDS,
   formatMb,
+  isAppleTouchDevice,
   isValidName,
   kindMeta,
   normalizeName,
@@ -47,12 +48,17 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
   const [fCut, setFCut] = useState<PrintCut>("contour");
   const [tried, setTried] = useState(false);
   const [sending, setSending] = useState(false);
+  const [appleTouch, setAppleTouch] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const kind = kindMeta(fKind);
   const K = F.kinds[fKind];
   const is3d = fKind === "3d";
   const isVinyl = !is3d;
+  // iOS/iPadOS has no system type for .stl/.3mf/.obj and greys them out in the
+  // picker when they appear in `accept`; drop the filter there and let onFile
+  // check the extension instead.
+  const accept = is3d && appleTouch ? undefined : kind.accept;
 
   // Only colours switched on are offered; fall back to the first if the pick was hidden.
   const onColors = colors.filter((c) => c.on);
@@ -61,8 +67,11 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
   useEffect(() => {
     const sess = readStudentName();
     let cancelled = false;
+    const apple = isAppleTouchDevice();
     queueMicrotask(() => {
-      if (!cancelled && sess) setFName(sess);
+      if (cancelled) return;
+      if (sess) setFName(sess);
+      if (apple) setAppleTouch(true);
     });
     return () => {
       cancelled = true;
@@ -231,7 +240,7 @@ export function PrintRequestClient({ initialKind, colors }: Props) {
               </span>
             </span>
             <span className="st-drop-btn">{file ? F.swap : F.browse}</span>
-            <input ref={fileInput} type="file" accept={kind.accept} onChange={onFile} className="hidden" />
+            <input ref={fileInput} type="file" accept={accept} onChange={onFile} className="hidden" />
           </label>
 
           {isVinyl && (

@@ -15,6 +15,11 @@ export const STUDENT_NAME_SESSION_KEY = "kis-student-name";
 export type PrintKindMeta = {
   v: PrintKind;
   motif: "cube" | "poster" | "sticker";
+  /**
+   * `accept` for the file input: extensions plus the MIME types browsers map
+   * them to. iOS/iPadOS greys out files whose extension it cannot resolve to
+   * a system type, so 3D kinds drop the filter there (see PrintRequestClient).
+   */
   accept: string;
   re: RegExp;
   extensions: string[];
@@ -24,21 +29,26 @@ export const PRINT_KINDS: PrintKindMeta[] = [
   {
     v: "3d",
     motif: "cube",
-    accept: ".stl,.3mf,.obj",
+    accept: [
+      ".stl,.3mf,.obj",
+      "model/stl,model/x.stl-ascii,model/x.stl-binary,application/sla,application/vnd.ms-pki.stl",
+      "model/3mf,application/vnd.ms-package.3dmanufacturing-3dmodel+xml",
+      "model/obj",
+    ].join(","),
     re: /\.(stl|3mf|obj)$/i,
     extensions: ["stl", "3mf", "obj"],
   },
   {
     v: "poster",
     motif: "poster",
-    accept: ".pdf,.png,.jpg,.jpeg,.svg",
+    accept: ".pdf,.png,.jpg,.jpeg,.svg,application/pdf,image/png,image/jpeg,image/svg+xml",
     re: /\.(pdf|png|jpe?g|svg)$/i,
     extensions: ["pdf", "png", "jpg", "jpeg", "svg"],
   },
   {
     v: "sticker",
     motif: "sticker",
-    accept: ".svg,.pdf,.png",
+    accept: ".svg,.pdf,.png,image/svg+xml,application/pdf,image/png",
     re: /\.(svg|pdf|png)$/i,
     extensions: ["svg", "pdf", "png"],
   },
@@ -123,6 +133,17 @@ export function isValidName(name: string) {
   return normalizeName(name).length >= 2;
 }
 
+/**
+ * iPhone / iPad Safari. iPadOS reports itself as a Mac, so the touch-point
+ * check is what catches it.
+ */
+export function isAppleTouchDevice(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  if (/iPad|iPhone|iPod/.test(ua)) return true;
+  return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+}
+
 export function fileMatchesKind(kind: PrintKind, fileName: string) {
   return kindMeta(kind).re.test(fileName.trim());
 }
@@ -142,6 +163,8 @@ export function normalizePrintRequest(row: Record<string, unknown>): PrintReques
     : 0) as 0 | 1 | 2 | 3;
   const createdAt = String(row.created_at ?? "");
   const atMs = Date.parse(createdAt);
+  const at = Number.isFinite(atMs) ? atMs : Date.now();
+  const statusMs = row.status_at ? Date.parse(String(row.status_at)) : NaN;
   return {
     id: String(row.id ?? ""),
     kind,
@@ -153,7 +176,9 @@ export function normalizePrintRequest(row: Record<string, unknown>): PrintReques
     qty: Math.max(1, Number(row.qty) || 1),
     cut: isPrintCut(row.cut) ? row.cut : null,
     status,
-    at: Number.isFinite(atMs) ? atMs : Date.now(),
+    at,
+    // Rows from before migration 026 have no status_at: count from creation.
+    status_at: Number.isFinite(statusMs) ? Math.max(at, statusMs) : at,
     ready_at: row.ready_at ? String(row.ready_at) : null,
   };
 }
@@ -171,6 +196,7 @@ export function printRequestInsertRow(r: PrintRequest) {
     qty: r.qty,
     cut: r.cut,
     status: r.status,
+    status_at: new Date(r.status_at).toISOString(),
     ready_at: r.ready_at,
     created_at: new Date(r.at).toISOString(),
   };

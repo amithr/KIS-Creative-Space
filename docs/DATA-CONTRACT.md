@@ -105,7 +105,7 @@ ActivityEvent {
 - Optimistic writes with a local offline queue on the app; last-write-wins per field via server timestamps.
 - Both clients subscribe to realtime changes on `items`, `reservations`, `space_bookings`, `activity`; a status change on either side must appear on the other within ~1s when online.
 
-### PrintRequest (student print site v3) — table `print_requests`, migrations 022 + 023 + 024 + 025
+### PrintRequest (student print site v3) — table `print_requests`, migrations 022 + 023 + 024 + 025 + 026
 Students are identified by **name only** — no email, no login, no points. Admin mutations (status, remove) are admin-only: the web Studio Admin runs them through the service role after a password gate, the Flutter admin through a teacher session (RLS). Students cannot change or delete a row once sent (migration 025 dropped the anonymous cancel policy); they follow it on the public board and ask the studio to withdraw it. Files live in the public-read storage bucket `print-files` under `<token>/<filename>` (50 MB cap).
 ```
 PrintRequest {
@@ -119,6 +119,7 @@ PrintRequest {
   qty: int                                 // 1 for 3d; 1–50 for vinyl
   cut: "contour" | "border" | "square" | null   // vinyl only
   status: 0 | 1 | 2 | 3                    // index into the kind's stage list
+  status_at: timestamp                     // when the current stage began; trigger-stamped on every status change (migration 026)
   ready_at?: timestamp
   created_at: timestamp
 }

@@ -20,6 +20,8 @@ export type PrintRequest = {
   status: 0 | 1 | 2 | 3;
   /** Epoch ms of creation. */
   at: number;
+  /** Epoch ms of the last stage change (creation until the first one). */
+  status_at: number;
   ready_at: string | null;
 };
 

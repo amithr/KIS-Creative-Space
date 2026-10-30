@@ -526,7 +526,7 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
                             if (cur) return;
                             change(
                               r,
-                              { status: i as 0 | 1 | 2 | 3 },
+                              { status: i as 0 | 1 | 2 | 3, status_at: Date.now() },
                               () => studioSetStatus(r.id, i),
                               `${r.file.toUpperCase()} → ${label}${i === 3 && r.file_path ? " · UPLOAD DELETED" : ""}`,
                               () => studioSetStatus(r.id, r.status),
