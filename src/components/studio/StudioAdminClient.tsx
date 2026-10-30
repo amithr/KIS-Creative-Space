@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState, useTransition, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, useTransition, type KeyboardEvent, type ReactNode } from "react";
+import { ModelViewer } from "@/components/studio/ModelViewer";
 import {
   studioAddColor,
   studioDeleteStoredFile,
@@ -20,6 +21,7 @@ import { STRINGS } from "@/lib/i18n";
 import {
   colorLabel,
   filterPrints,
+  formatStamp,
   printFileUrl,
   sortAdminPrints,
   stagesFor,
@@ -114,7 +116,21 @@ export function StudioGate({ openCount, configured }: { openCount: number; confi
 
 type Confirm = { title: string; body: string; action: string; fn: () => void };
 
+const noopSubscribe = () => () => {};
+
 export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; colors: FilamentColor[] }) {
+  // false on the server and during hydration, true afterwards.
+  const clientReady = useSyncExternalStore(noopSubscribe, () => true, () => false);
+  // Jobs whose 3D preview is open.
+  const [previews, setPreviews] = useState<Set<string>>(() => new Set());
+  function togglePreview(id: string) {
+    setPreviews((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
   const router = useRouter();
   const toast = useStudentToast();
   const [rows, setRows] = useState(requests);
@@ -410,6 +426,10 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
               ? colorLabel(r.color, cols)
               : `${r.qty} × VINYL${r.cut ? ` · ${r.cut.toUpperCase()} CUT` : ""}`;
           const meta = [r.name.toUpperCase(), spec].join(" · ");
+          const readyMs = r.ready_at ? Date.parse(r.ready_at) : NaN;
+          const fileUrl = r.file_path ? printFileUrl(r.file_path, r.file) : null;
+          const canPreview = r.kind === "3d" && !!fileUrl;
+          const previewOpen = canPreview && previews.has(r.id);
           return (
             <article
               key={r.id}
@@ -424,12 +444,52 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
                 <div className="min-w-[220px] flex-1">
                   <p className="text-[18px] leading-[1.15] font-semibold">{r.file}</p>
                   <p className={`${mono} mt-1 text-[9.5px] leading-[1.6] tracking-[0.08em] text-[#8c7a68]`}>{meta}</p>
+                  {/* Local time is only known in the browser, so stamps render after hydration. */}
+                  <p
+                    className={`${mono} mt-0.5 min-h-[15px] text-[9.5px] leading-[1.6] tracking-[0.08em] text-[#8c7a68]`}
+                  >
+                    {clientReady && (
+                      <>
+                        <time dateTime={new Date(r.at).toISOString()} title={new Date(r.at).toLocaleString()}>
+                          SENT {formatStamp(r.at)}
+                        </time>
+                        {r.status === 3 && Number.isFinite(readyMs) && (
+                          <>
+                            {" · "}
+                            <time
+                              dateTime={new Date(readyMs).toISOString()}
+                              title={new Date(readyMs).toLocaleString()}
+                              className="text-[#2f7d3f]"
+                            >
+                              READY {formatStamp(readyMs)}
+                            </time>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2.5">
+                  {canPreview && (
+                    <button
+                      type="button"
+                      className="st-ghost-btn st-plus"
+                      data-open={previewOpen}
+                      aria-expanded={previewOpen}
+                      aria-controls={`preview-${r.id}`}
+                      title={previewOpen ? "Hide the 3D preview" : "Preview the model in the browser"}
+                      onClick={() => togglePreview(r.id)}
+                    >
+                      <span className="st-plus-glyph" aria-hidden>
+                        +
+                      </span>
+                      {previewOpen ? "CLOSE" : "VIEW"}
+                    </button>
+                  )}
                   {r.file_path ? (
                     <a
                       className="st-ghost-btn"
-                      href={printFileUrl(r.file_path, r.file) ?? "#"}
+                      href={fileUrl ?? "#"}
                       download={r.file}
                       target="_blank"
                       rel="noopener"
@@ -532,6 +592,11 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
                   </button>
                 </div>
               </div>
+              {canPreview && (
+                <Reveal open={previewOpen} id={`preview-${r.id}`}>
+                  <ModelViewer url={fileUrl!} fileName={r.file} color={swatchOf(r.color, cols, true)} />
+                </Reveal>
+              )}
             </article>
           );
         })}
@@ -567,5 +632,30 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
         </div>
       )}
     </>
+  );
+}
+
+/**
+ * Animated disclosure: the row slides from 0fr to 1fr. Children mount when
+ * opened and unmount once the collapse has finished, so a closed preview
+ * holds no WebGL context.
+ */
+function Reveal({ open, id, children }: { open: boolean; id: string; children: ReactNode }) {
+  // `closing` keeps the children mounted while the panel collapses.
+  const [closing, setClosing] = useState(false);
+  const [seenOpen, setSeenOpen] = useState(open);
+  if (seenOpen !== open) {
+    setSeenOpen(open);
+    setClosing(!open);
+  }
+  useEffect(() => {
+    if (!closing) return;
+    const tm = window.setTimeout(() => setClosing(false), 380);
+    return () => window.clearTimeout(tm);
+  }, [closing]);
+  return (
+    <div className="st-reveal" data-open={open} id={id} aria-hidden={!open}>
+      <div className="st-reveal-inner">{(open || closing) && children}</div>
+    </div>
   );
 }

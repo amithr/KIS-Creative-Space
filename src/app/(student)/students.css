@@ -796,6 +796,78 @@ a.st-ghost-btn {
   text-decoration: none;
   color: var(--st-muted);
 }
+/* 3D preview disclosure on admin cards */
+.st-plus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.st-plus-glyph {
+  display: inline-block;
+  font-size: 15px;
+  line-height: 1;
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.st-plus[data-open="true"] .st-plus-glyph {
+  transform: rotate(45deg);
+}
+.st-reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.36s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.st-reveal[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+.st-reveal-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+.st-viewer {
+  position: relative;
+  margin-top: 14px;
+  border: 1px solid var(--st-hair);
+  background: var(--st-ground);
+}
+.st-viewer-canvas {
+  height: clamp(260px, 42vh, 420px);
+  touch-action: none;
+}
+.st-viewer-note,
+.st-viewer-dims {
+  font-family: var(--font-space-mono), var(--font-plex-mono), "Space Mono", ui-monospace, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  color: var(--st-muted);
+}
+.st-viewer-note {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  pointer-events: none;
+}
+.st-viewer-dims {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 7px 12px;
+  border-top: 1px solid var(--st-hair);
+  background: #fff;
+}
+.st-viewer-hint {
+  color: var(--st-faint);
+}
+@media (prefers-reduced-motion: reduce) {
+  .st-reveal,
+  .st-plus-glyph {
+    transition: none;
+  }
+}
+
 .st-colour-chip {
   display: inline-flex;
   align-items: center;

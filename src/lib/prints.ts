@@ -199,6 +199,25 @@ export function filterPrints(list: PrintRequest[], filter: PrintFilter) {
   );
 }
 
+/**
+ * Admin timestamp in the viewer's local time, e.g. "TUE 28 OCT · 14:05".
+ * The year is added only when it isn't the current one.
+ */
+export function formatStamp(ms: number, now = Date.now()) {
+  const d = new Date(ms);
+  const sameYear = d.getFullYear() === new Date(now).getFullYear();
+  const day = d
+    .toLocaleDateString("en-GB", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      ...(sameYear ? {} : { year: "numeric" }),
+    })
+    .replace(/,/g, "");
+  const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  return `${day} · ${time}`.toUpperCase();
+}
+
 export function formatMb(bytes: number) {
   return (bytes / 1024 / 1024).toFixed(1);
 }
