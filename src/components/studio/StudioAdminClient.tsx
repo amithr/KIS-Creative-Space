@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useSyncExternalStore, useTransition, type KeyboardEvent, type ReactNode } from "react";
-import { ModelViewer } from "@/components/studio/ModelViewer";
+import { useRef, useState, useSyncExternalStore, useTransition, type KeyboardEvent } from "react";
+import { ModelViewer } from "@/components/students/ModelViewer";
+import { Reveal } from "@/components/students/Reveal";
 import {
   studioAddColor,
   studioDeleteStoredFile,
@@ -632,30 +633,5 @@ export function StudioQueue({ requests, colors }: { requests: PrintRequest[]; co
         </div>
       )}
     </>
-  );
-}
-
-/**
- * Animated disclosure: the row slides from 0fr to 1fr. Children mount when
- * opened and unmount once the collapse has finished, so a closed preview
- * holds no WebGL context.
- */
-function Reveal({ open, id, children }: { open: boolean; id: string; children: ReactNode }) {
-  // `closing` keeps the children mounted while the panel collapses.
-  const [closing, setClosing] = useState(false);
-  const [seenOpen, setSeenOpen] = useState(open);
-  if (seenOpen !== open) {
-    setSeenOpen(open);
-    setClosing(!open);
-  }
-  useEffect(() => {
-    if (!closing) return;
-    const tm = window.setTimeout(() => setClosing(false), 380);
-    return () => window.clearTimeout(tm);
-  }, [closing]);
-  return (
-    <div className="st-reveal" data-open={open} id={id} aria-hidden={!open}>
-      <div className="st-reveal-inner">{(open || closing) && children}</div>
-    </div>
   );
 }

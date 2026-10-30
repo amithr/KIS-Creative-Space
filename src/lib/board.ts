@@ -1,3 +1,4 @@
+import { printFileUrl } from "@/lib/prints";
 import type { PrintKind, PrintRequest } from "@/lib/types";
 
 /**
@@ -20,6 +21,8 @@ export type LiveJob = {
   status: 0 | 1 | 2 | 3;
   at: number;
   readyAt: number | null;
+  /** Public URL of a 3D upload while it still exists — the board's in-page preview. */
+  model: string | null;
 };
 
 export type BoardCounts = { queued: number; printing: number; ready: number; open: number };
@@ -73,6 +76,7 @@ export function toLiveJobs(list: PrintRequest[], now = Date.now()): LiveJob[] {
       status: r.status,
       at: r.at,
       readyAt: readyAtMs(r),
+      model: r.kind === "3d" && r.file_path ? printFileUrl(r.file_path, r.file) : null,
     }));
 }
 

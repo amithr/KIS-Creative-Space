@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { listLiveBoard } from "@/app/actions/prints";
 import { useLocale } from "@/components/students/Locale";
+import { ModelViewer } from "@/components/students/ModelViewer";
 import { Motif } from "@/components/students/Motif";
+import { Reveal } from "@/components/students/Reveal";
 import { useStudentToast } from "@/components/students/StudentToast";
 import {
   agoBucket,
@@ -36,6 +38,8 @@ export function LiveBoardClient({ initial, colors, serverNow }: Props) {
   const [jobs, setJobs] = useState<LiveJob[]>(initial);
   const [now, setNow] = useState(serverNow);
   const opened = useRef(false);
+  // One 3D preview open at a time keeps the board tidy on a shared screen.
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -165,7 +169,16 @@ export function LiveBoardClient({ initial, colors, serverNow }: Props) {
               </header>
               <div className="flex flex-col gap-2">
                 {g.jobs.map((r, i) => (
-                  <BoardRow key={r.id} job={r} index={i} colors={colors} now={now} t={t} />
+                  <BoardRow
+                    key={r.id}
+                    job={r}
+                    index={i}
+                    colors={colors}
+                    now={now}
+                    t={t}
+                    open={openId === r.id}
+                    onToggle={() => setOpenId((cur) => (cur === r.id ? null : r.id))}
+                  />
                 ))}
               </div>
             </section>
@@ -189,25 +202,45 @@ type RowProps = {
   colors: FilamentColor[];
   now: number;
   t: Strings;
+  open: boolean;
+  onToggle: () => void;
 };
 
-function BoardRow({ job: r, index, colors, now, t }: RowProps) {
+function BoardRow({ job: r, index, colors, now, t, open, onToggle }: RowProps) {
   const stages = stageNames(t, r.kind);
   const cur = r.status;
   const ready = cur === 3;
   const ago = agoBucket(r.at, now);
   const stageColor = ready ? GREEN : cur === 0 ? "#8c7a68" : RED;
+  const canOpen = !!r.model;
+  const ref = useRef<HTMLElement>(null);
+
+  // Once the panel has grown, make sure it is on screen (matters on phones).
+  useEffect(() => {
+    if (!open) return;
+    const tm = window.setTimeout(
+      () => ref.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }),
+      400,
+    );
+    return () => window.clearTimeout(tm);
+  }, [open]);
+
   return (
     <article
+      ref={ref}
       className="st-board-row"
       data-ready={ready}
+      data-open={open}
+      data-can-open={canOpen}
       style={{ animationDelay: `${index * 0.06}s` }}
+      // The whole row is the tap target; the button below is the accessible control.
+      onClick={canOpen ? onToggle : undefined}
     >
       <div className="st-board-tile" aria-hidden>
         <span className="st-board-swatch" style={{ background: swatchOf(r.color, colors) }} />
         <span className="st-board-tag">{t.board.kindTag[r.kind]}</span>
       </div>
-      <div className="min-w-0">
+      <div className="st-board-main min-w-0">
         <div className="flex min-w-0 flex-wrap items-baseline gap-2.5">
           <span className="max-w-full truncate text-[19px] font-semibold">{r.file}</span>
           <span className="st-mono text-[10.5px] tracking-[0.1em] text-[#8c7a68]">
@@ -232,6 +265,36 @@ function BoardRow({ job: r, index, colors, now, t }: RowProps) {
           {t.board.ago[ago.unit](ago.n)}
         </span>
       </div>
+      {canOpen && (
+        <>
+          <button
+            type="button"
+            className="st-board-plus"
+            data-open={open}
+            aria-expanded={open}
+            aria-controls={`board-preview-${r.id}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggle();
+            }}
+          >
+            <span className="st-plus-glyph" aria-hidden>
+              +
+            </span>
+            {open ? t.board.close : t.board.view}
+          </button>
+          <div className="st-board-reveal" onClick={(e) => e.stopPropagation()}>
+            <Reveal open={open} id={`board-preview-${r.id}`}>
+              <ModelViewer
+                url={r.model!}
+                fileName={r.file}
+                color={swatchOf(r.color, colors)}
+                labels={t.board.viewer}
+              />
+            </Reveal>
+          </div>
+        </>
+      )}
     </article>
   );
 }

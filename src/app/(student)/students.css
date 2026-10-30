@@ -1129,8 +1129,13 @@ a.st-ghost-btn {
 .st-board-row {
   display: grid;
   grid-template-columns: 54px minmax(0, 1fr) auto;
-  gap: 16px;
+  /* Row gap stays 0: the empty "plus" and "reveal" tracks must not add space. */
+  gap: 0 16px;
   align-items: center;
+  grid-template-areas:
+    "tile main right"
+    "tile main plus"
+    "reveal reveal reveal";
   background: #fff;
   border: 1px solid var(--st-hair);
   padding: 12px 16px;
@@ -1171,8 +1176,60 @@ a.st-ghost-btn {
   padding: 2px 5px;
 }
 .st-board-right {
+  grid-area: right;
   text-align: right;
   flex: none;
+}
+.st-board-tile {
+  grid-area: tile;
+}
+.st-board-main {
+  grid-area: main;
+}
+.st-board-row[data-can-open="true"] {
+  cursor: pointer;
+}
+.st-board-row[data-open="true"] {
+  border-color: var(--st-ink);
+}
+/* VIEW 3D: a quiet mono chip under the stage; the + turns into × when open. */
+.st-board-plus {
+  grid-area: plus;
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 6px 10px;
+  min-height: 34px;
+  border: 1px solid var(--st-hair);
+  background: #fff;
+  font-family: "Space Mono", var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--st-red);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+.st-board-plus:hover,
+.st-board-row[data-can-open="true"]:hover .st-board-plus {
+  border-color: var(--st-red);
+}
+.st-board-plus[data-open="true"] {
+  background: var(--st-ink);
+  border-color: var(--st-ink);
+  color: var(--st-ground);
+}
+.st-board-reveal {
+  grid-area: reveal;
+  cursor: default;
+}
+.st-board-reveal .st-viewer {
+  margin-top: 4px;
+}
+.st-board-reveal .st-viewer-canvas {
+  height: clamp(220px, 40vh, 380px);
 }
 .st-readypulse {
   animation: st-readypulse 1.4s ease-in-out infinite;
@@ -1235,14 +1292,21 @@ a.st-ghost-btn {
 @media (max-width: 359px) {
   .st-board-row {
     grid-template-columns: 54px minmax(0, 1fr);
-    gap: 12px 14px;
+    gap: 0 14px;
+    grid-template-areas:
+      "tile main"
+      "right plus"
+      "reveal reveal";
   }
   .st-board-right {
-    grid-column: 1 / -1;
+    margin-top: 12px;
     text-align: left;
     display: flex;
     align-items: baseline;
     gap: 10px;
+  }
+  .st-board-plus {
+    margin-top: 12px;
   }
   .st-board-right > span {
     margin-top: 0 !important;

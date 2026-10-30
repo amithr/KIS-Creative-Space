@@ -80,6 +80,10 @@ export type Strings = {
     footer: string;
     footerLink: string;
     openToast: (n: number) => string;
+    /** Inline 3D preview on a row. */
+    view: string;
+    close: string;
+    viewer: { loading: string; failed: string; hint: string; over: (cm: number) => string };
   };
   form: {
     eyebrow: string;
@@ -193,6 +197,14 @@ const en: Strings = {
     footer: "Updates on its own as the studio team moves jobs along. Yours shows up here the moment you send it.",
     footerLink: "Send a print →",
     openToast: (n) => `LIVE · ${n} JOBS ON THE GO`,
+    view: "VIEW 3D",
+    close: "CLOSE",
+    viewer: {
+      loading: "LOADING MODEL…",
+      failed: "COULDN'T SHOW THIS FILE",
+      hint: "DRAG TO SPIN · PINCH OR SCROLL TO ZOOM",
+      over: (cm) => `OVER ${cm} CM`,
+    },
   },
   form: {
     eyebrow: "× PRINT REQUEST ×",
@@ -342,6 +354,14 @@ const uk: Strings = {
     footer: "Оновлюється сама, коли команда студії просуває роботи. Ваше замовлення з'явиться тут одразу після надсилання.",
     footerLink: "Надіслати друк →",
     openToast: (n) => `НАЖИВО · ${n} ${ukJobs(n)} У РОБОТІ`,
+    view: "3D-ПЕРЕГЛЯД",
+    close: "ЗАКРИТИ",
+    viewer: {
+      loading: "ЗАВАНТАЖУЄМО МОДЕЛЬ…",
+      failed: "НЕ ВДАЛОСЯ ПОКАЗАТИ ФАЙЛ",
+      hint: "ТЯГНІТЬ, ЩОБ ОБЕРТАТИ · ЩИПОК АБО СКРОЛ — МАСШТАБ",
+      over: (cm) => `БІЛЬШЕ ${cm} СМ`,
+    },
   },
   form: {
     eyebrow: "× ЗАМОВЛЕННЯ ДРУКУ ×",

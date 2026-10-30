@@ -2,6 +2,21 @@
 
 import { useEffect, useRef, useState } from "react";
 
+export type ViewerLabels = {
+  loading: string;
+  failed: string;
+  hint: string;
+  /** "OVER 18 CM" — appended when a side exceeds maxMm. */
+  over: (cm: number) => string;
+};
+
+const EN_LABELS: ViewerLabels = {
+  loading: "LOADING MODEL…",
+  failed: "COULDN'T SHOW THIS FILE",
+  hint: "DRAG TO ORBIT · SCROLL TO ZOOM",
+  over: (cm) => `OVER ${cm} CM`,
+};
+
 type Props = {
   /** Public URL of the upload (.stl / .3mf / .obj). */
   url: string;
@@ -10,6 +25,7 @@ type Props = {
   color: string;
   /** Prints over this size (mm) are flagged. */
   maxMm?: number;
+  labels?: ViewerLabels;
 };
 
 type Dims = { x: number; y: number; z: number };
@@ -24,7 +40,7 @@ const MUTED = 0xd9cdbb;
  * Everything heavy is imported on first mount, so the admin page only pays
  * for three.js once someone opens a preview.
  */
-export function ModelViewer({ url, fileName, color, maxMm = 180 }: Props) {
+export function ModelViewer({ url, fileName, color, maxMm = 180, labels = EN_LABELS }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
   const [dims, setDims] = useState<Dims | null>(null);
@@ -159,14 +175,14 @@ export function ModelViewer({ url, fileName, color, maxMm = 180 }: Props) {
       <div ref={host} className="st-viewer-canvas" aria-label={`3D preview of ${fileName}`} />
       {state !== "ready" && (
         <p className="st-viewer-note" aria-live="polite">
-          {state === "loading" ? "LOADING MODEL…" : `COULDN'T SHOW THIS FILE · ${error.toUpperCase()}`}
+          {state === "loading" ? labels.loading : `${labels.failed} · ${error.toUpperCase()}`}
         </p>
       )}
       {dims && (
         <p className="st-viewer-dims" style={{ color: tooBig ? "#b5342c" : undefined }}>
           {mm(dims.x)} × {mm(dims.y)} × {mm(dims.z)} MM
-          {tooBig ? ` · OVER ${maxMm / 10} CM` : ""}
-          <span className="st-viewer-hint">DRAG TO ORBIT · SCROLL TO ZOOM</span>
+          {tooBig ? ` · ${labels.over(maxMm / 10)}` : ""}
+          <span className="st-viewer-hint">{labels.hint}</span>
         </p>
       )}
     </div>
